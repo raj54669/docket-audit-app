@@ -110,7 +110,7 @@ else:
         maxi_care=int(selected_row["Maxi Care"].iloc[0])
     ), unsafe_allow_html=True)
 
-    # RTO Table (maintaining original style)
+    # RTO Table
     st.markdown("---")
     st.subheader("🚦 RTO Charges")
     
