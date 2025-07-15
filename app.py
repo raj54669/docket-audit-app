@@ -6,32 +6,30 @@ price_data = pd.read_excel("PV Price List Master D. 08.07.2025.xlsx")
 
 st.title("🚗 Mahindra Vehicle Pricing Viewer")
 
-# --- Step 1: Select Model(s) ---
-models = st.multiselect("Select Model(s)", sorted(price_data["Model"].unique()))
+# --- Step 1: Select Model ---
+model = st.selectbox("Select Model", sorted(price_data["Model"].unique()))
 
-# --- Step 2: Select Fuel Type(s) ---
-fuel_options = price_data[price_data["Model"].isin(models)]["Fuel Type"].unique()
-fuel_types = st.multiselect("Select Fuel Type(s)", sorted(fuel_options))
+# --- Step 2: Select Fuel Type ---
+fuel_options = price_data[price_data["Model"] == model]["Fuel Type"].unique()
+fuel_type = st.selectbox("Select Fuel Type", sorted(fuel_options))
 
-# --- Step 3: Select Variant(s) ---
-filtered_variants = price_data[(price_data["Model"].isin(models)) & (price_data["Fuel Type"].isin(fuel_types))]
+# --- Step 3: Select Variant ---
+filtered_variants = price_data[(price_data["Model"] == model) & (price_data["Fuel Type"] == fuel_type)]
 variant_options = filtered_variants["Variant"].unique()
-variants = st.multiselect("Select Variant(s)", sorted(variant_options))
+variant = st.selectbox("Select Variant", sorted(variant_options))
 
 # --- Final Filter ---
-selected_rows = price_data[(price_data["Model"].isin(models)) &
-                           (price_data["Fuel Type"].isin(fuel_types)) &
-                           (price_data["Variant"].isin(variants))]
+selected_row = price_data[(price_data["Model"] == model) &
+                          (price_data["Fuel Type"] == fuel_type) &
+                          (price_data["Variant"] == variant)]
 
-if selected_rows.empty:
-    st.warning("No matching entries found for selected filters.")
+if selected_row.empty:
+    st.warning("No matching entry found for selected filters.")
 else:
     st.markdown("---")
-    st.subheader("📊 Price Comparison Table")
+    st.subheader("📋 Vehicle Pricing Details")
 
-    # Columns to display
-    display_columns = [
-        "Model", "Fuel Type", "Variant",
+    display_fields = [
         "Ex-Showroom Price",
         "TCS 1%",
         "Insurance 1 Yr OD + 3 Yr TP + Zero Dep.",
@@ -45,15 +43,12 @@ else:
         "RTO (With HYPO) - Corporate"
     ]
 
-    # Format and show table
-    def format_currency(val):
-        try:
-            return f"₹{int(val):,}"
-        except:
-            return val
+    # Format vertical table
+    data = {"Component": [], "Amount": []}
+    for field in display_fields:
+        value = selected_row.iloc[0].get(field, None)
+        amount = f"₹{int(value):,}" if pd.notnull(value) else "Not Available"
+        data["Component"].append(field)
+        data["Amount"].append(amount)
 
-    formatted_df = selected_rows[display_columns].copy()
-    for col in display_columns[3:]:  # Format pricing columns
-        formatted_df[col] = formatted_df[col].apply(format_currency)
-
-    st.dataframe(formatted_df.reset_index(drop=True), use_container_width=True)
+    st.table(pd.DataFrame(data))
