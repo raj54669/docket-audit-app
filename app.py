@@ -102,3 +102,6 @@ else:
 
     rto_table += "</table>"
     st.markdown(rto_table, unsafe_allow_html=True)
+
+# --- Excel File Refresh Note ---
+st.caption("📁 To update pricing, upload the new Excel file to your GitHub repo with
