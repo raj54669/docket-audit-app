@@ -40,37 +40,44 @@ else:
         "Maxi Care"
     ]
 
+    pricing_html = "<ul>"
     for field in display_fields:
         value = selected_row.iloc[0].get(field, None)
         amount = f"₹{int(value):,}" if pd.notnull(value) else "Not Available"
-        st.markdown(f"- **{field}**: {amount}")
+        pricing_html += f"<li><strong>{field}</strong>: {amount}</li>"
+    pricing_html += "</ul>"
+    st.markdown(pricing_html, unsafe_allow_html=True)
 
-    # --- Styled RTO Table ---
+    # --- Styled Unified RTO Table ---
     st.markdown("""
         <style>
-        .rto-table {
-            border-collapse: collapse;
+        .rto-layout {
             width: 100%;
+            border-collapse: collapse;
         }
-        .rto-table th, .rto-table td {
-            border: 1px solid #ddd;
+        .rto-layout th, .rto-layout td {
+            border: 1px solid #999;
             padding: 8px;
             text-align: center;
         }
-        .rto-table th {
-            background-color: #f44336;
+        .rto-layout th {
+            background-color: #004d40;
             color: white;
         }
-        .rto-table td:first-child {
+        .rto-layout td:first-child {
             font-weight: bold;
-            background-color: #f9f9f9;
+            background-color: #e0f2f1;
         }
         </style>
     """, unsafe_allow_html=True)
 
-    table_html = """
-    <table class='rto-table'>
-        <tr><th></th><th>RTO (W/O HYPO)</th><th>RTO (With HYPO)</th></tr>
+    rto_table = """
+    <table class='rto-layout'>
+        <tr>
+            <th>Category</th>
+            <th>RTO (W/O HYPO)</th>
+            <th>RTO (With HYPO)</th>
+        </tr>
     """
 
     for category in ["Individual", "Corporate"]:
@@ -78,7 +85,7 @@ else:
         rto_with = selected_row.iloc[0].get(f"RTO (With HYPO) - {category}", None)
         rto_wo_amt = f"₹{int(rto_wo):,}" if pd.notnull(rto_wo) else "-"
         rto_with_amt = f"₹{int(rto_with):,}" if pd.notnull(rto_with) else "-"
-        table_html += f"<tr><td>{category}</td><td>{rto_wo_amt}</td><td>{rto_with_amt}</td></tr>"
+        rto_table += f"<tr><td>{category}</td><td>{rto_wo_amt}</td><td>{rto_with_amt}</td></tr>"
 
-    table_html += "</table>"
-    st.markdown(table_html, unsafe_allow_html=True)
+    rto_table += "</table>"
+    st.markdown(rto_table, unsafe_allow_html=True)
