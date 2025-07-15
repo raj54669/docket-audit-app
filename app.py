@@ -6,12 +6,17 @@ price_data = pd.read_excel("PV Price List Master D. 08.07.2025.xlsx")
 
 st.title("🚗 Mahindra Vehicle Pricing Viewer")
 
-# --- User Inputs ---
+# --- Step 1: Select Model ---
 model = st.selectbox("Select Model", sorted(price_data["Model"].unique()))
-variant_list = price_data[price_data["Model"] == model]["Variant"].unique()
-variant = st.selectbox("Select Variant", sorted(variant_list))
-fuel_list = price_data[(price_data["Model"] == model) & (price_data["Variant"] == variant)]["Fuel Type"].unique()
+
+# --- Step 2: Select Fuel Type ---
+fuel_list = price_data[price_data["Model"] == model]["Fuel Type"].unique()
 fuel_type = st.selectbox("Select Fuel Type", sorted(fuel_list))
+
+# --- Step 3: Filtered Variant List Based on Model and Fuel Type ---
+filtered_variants = price_data[(price_data["Model"] == model) & (price_data["Fuel Type"] == fuel_type)]
+variant_list = filtered_variants["Variant"].unique()
+variant = st.selectbox("Select Variant", sorted(variant_list))
 
 # --- Fetch and Display Official Price Data ---
 row = price_data[(price_data["Model"] == model) &
@@ -42,6 +47,3 @@ else:
     for field in display_fields:
         value = row.iloc[0].get(field, None)
         if pd.notnull(value):
-            st.write(f"**{field}:** ₹{int(value):,}")
-        else:
-            st.write(f"**{field}:** Not Available")
