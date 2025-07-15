@@ -38,4 +38,4 @@ with st.sidebar:
 model = st.selectbox("Select Model", sorted(price_data["Model"].unique()))
 
 # --- Step 2: Select Fuel Type ---
-fuel_options = price_data[price_data["Model"] ==
+fuel_options = price_data[price_data["Model"] == model]["Fuel Type"].unique()
