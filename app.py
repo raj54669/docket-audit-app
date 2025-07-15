@@ -38,90 +38,123 @@ else:
     st.markdown("---")
     st.subheader("📋 Vehicle Pricing Details")
     
-    # Create unified table
+    # Unified Pricing Table
     st.markdown("""
     <style>
-    .pricing-table {
+    .unified-table {
         width: 100%;
         border-collapse: collapse;
-        margin-top: 20px;
+        margin: 15px 0;
+        font-family: Arial, sans-serif;
     }
-    .pricing-table th, .pricing-table td {
-        border: 1px solid #999;
-        padding: 10px;
-        text-align: center;
-    }
-    .pricing-table th {
+    .unified-table th {
         background-color: #004d40;
         color: white;
+        padding: 10px;
+        text-align: left;
     }
-    .pricing-table tr:nth-child(even) {
+    .unified-table td {
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+    }
+    .unified-table tr:nth-child(even) {
         background-color: #e0f2f1;
     }
     .price-value {
         font-weight: bold;
+        text-align: right;
     }
     </style>
-    """, unsafe_allow_html=True)
-    
-    # Main Pricing Table
-    pricing_table = """
-    <table class='pricing-table'>
+
+    <table class='unified-table'>
         <tr>
             <th>Item</th>
             <th>Amount (₹)</th>
         </tr>
-    """
-    
-    pricing_items = [
-        ("Ex-Showroom Price", "Ex-Showroom Price"),
-        ("TCS 1%", "TCS 1%"),
-        ("Insurance", "Insurance 1 Yr OD + 3 Yr TP + Zero Dep."),
-        ("Accessories Kit", "Accessories Kit"),
-        ("SMC", "SMC"),
-        ("Extended Warranty", "Extended Warranty"),
-        ("Maxi Care", "Maxi Care")
-    ]
-    
-    for display_name, field_name in pricing_items:
-        value = selected_row.iloc[0].get(field_name, None)
-        amount = f"{int(value):,}" if pd.notnull(value) else "-"
-        pricing_table += f"""
         <tr>
-            <td><strong>{display_name}</strong></td>
-            <td class='price-value'>₹{amount}</td>
+            <td><strong>Ex-Showroom Price</strong></td>
+            <td class='price-value'>₹{ex_showroom:,}</td>
         </tr>
-        """
-    
-    pricing_table += "</table>"
-    st.markdown(pricing_table, unsafe_allow_html=True)
-    
-    # RTO Table (same style)
+        <tr>
+            <td><strong>TCS 1%</strong></td>
+            <td class='price-value'>₹{tcs:,}</td>
+        </tr>
+        <tr>
+            <td><strong>Insurance</strong></td>
+            <td class='price-value'>₹{insurance:,}</td>
+        </tr>
+        <tr>
+            <td><strong>Accessories Kit</strong></td>
+            <td class='price-value'>₹{accessories:,}</td>
+        </tr>
+        <tr>
+            <td><strong>SMC</strong></td>
+            <td class='price-value'>₹{smc:,}</td>
+        </tr>
+        <tr>
+            <td><strong>Extended Warranty</strong></td>
+            <td class='price-value'>₹{warranty:,}</td>
+        </tr>
+        <tr>
+            <td><strong>Maxi Care</strong></td>
+            <td class='price-value'>₹{maxi_care:,}</td>
+        </tr>
+    </table>
+    """.format(
+        ex_showroom=int(selected_row["Ex-Showroom Price"].iloc[0]),
+        tcs=int(selected_row["TCS 1%"].iloc[0]),
+        insurance=int(selected_row["Insurance 1 Yr OD + 3 Yr TP + Zero Dep."].iloc[0]),
+        accessories=int(selected_row["Accessories Kit"].iloc[0]),
+        smc=int(selected_row["SMC"].iloc[0]),
+        warranty=int(selected_row["Extended Warranty"].iloc[0]),
+        maxi_care=int(selected_row["Maxi Care"].iloc[0])
+    ), unsafe_allow_html=True)
+
+    # RTO Table (maintaining original style)
     st.markdown("---")
     st.subheader("🚦 RTO Charges")
     
-    rto_table = """
-    <table class='pricing-table'>
+    st.markdown("""
+    <style>
+    .rto-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .rto-table th, .rto-table td {
+        border: 1px solid #999;
+        padding: 8px;
+        text-align: center;
+    }
+    .rto-table th {
+        background-color: #004d40;
+        color: white;
+    }
+    .rto-table td:first-child {
+        font-weight: bold;
+        background-color: #e0f2f1;
+    }
+    </style>
+
+    <table class='rto-table'>
         <tr>
             <th>Category</th>
             <th>RTO (W/O HYPO)</th>
             <th>RTO (With HYPO)</th>
         </tr>
-    """
-    
-    for category in ["Individual", "Corporate"]:
-        rto_wo = selected_row.iloc[0].get(f"RTO (W/O HYPO) - {category}", None)
-        rto_with = selected_row.iloc[0].get(f"RTO (With HYPO) - {category}", None)
-        rto_wo_amt = f"₹{int(rto_wo):,}" if pd.notnull(rto_wo) else "-"
-        rto_with_amt = f"₹{int(rto_with):,}" if pd.notnull(rto_with) else "-"
-        
-        rto_table += f"""
         <tr>
-            <td>{category}</td>
-            <td class='price-value'>{rto_wo_amt}</td>
-            <td class='price-value'>{rto_with_amt}</td>
+            <td>Individual</td>
+            <td>₹{rto_wo_ind:,}</td>
+            <td>₹{rto_with_ind:,}</td>
         </tr>
-        """
-    
-    rto_table += "</table>"
-    st.markdown(rto_table, unsafe_allow_html=True)
+        <tr>
+            <td>Corporate</td>
+            <td>₹{rto_wo_corp:,}</td>
+            <td>₹{rto_with_corp:,}</td>
+        </tr>
+    </table>
+    """.format(
+        rto_wo_ind=int(selected_row["RTO (W/O HYPO) - Individual"].iloc[0]),
+        rto_with_ind=int(selected_row["RTO (With HYPO) - Individual"].iloc[0]),
+        rto_wo_corp=int(selected_row["RTO (W/O HYPO) - Corporate"].iloc[0]),
+        rto_with_corp=int(selected_row["RTO (With HYPO) - Corporate"].iloc[0])
+    ), unsafe_allow_html=True)
