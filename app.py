@@ -145,53 +145,65 @@ st.markdown(render_registration_table(row, grouped_fields, group_keys), unsafe_a
 
 # --- PDF Download using reportlab.platypus ---
 def generate_pdf(row):
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    pdfmetrics.registerFont(TTFont('Helvetica', 'Helvetica.ttf'))
+
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-        doc = SimpleDocTemplate(tmp.name, pagesize=letter)
+        doc = SimpleDocTemplate(
+            tmp.name,
+            pagesize=letter,
+            title=f"Mahindra Pricing - {model} / {variant} ({fuel_type})"
+        )
+
         elements = []
         styles = getSampleStyleSheet()
         elements.append(Paragraph(f"<b>Mahindra Pricing - {model} / {variant} ({fuel_type})</b>", styles['Heading2']))
         elements.append(Spacer(1, 12))
 
-        # Shared Costs Table
+        # --- Shared Costs Table ---
         data_shared = [["Description", "Amount"]]
         for field in shared_fields:
             val = row.get(field)
             if pd.notnull(val):
-                amount = f"₹{int(val):,}"
+                amount = format_indian_currency(val).replace("<b>", "").replace("</b>", "").replace("₹", "₹ ")
+                amount = amount.replace("<i style='color:gray;'>N/A</i>", "N/A")
             else:
                 amount = "N/A"
             data_shared.append([field, amount])
 
-        table1 = Table(data_shared, hAlign='LEFT', colWidths=[250, 150])
+        table1 = Table(data_shared, colWidths=[260, 140])
         table1.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.teal),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
             ('ALIGN', (1, 1), (-1, -1), 'RIGHT'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
         ]))
         elements.append(table1)
         elements.append(Spacer(1, 18))
 
-        # Registration Costs Table
+        # --- Registration Costs Table ---
         data_grouped = [["Registration", "Individual", "Corporate"]]
         for field in grouped_fields:
             ind_key, corp_key = group_keys[field]
             ind_val = row.get(ind_key)
             corp_val = row.get(corp_key)
-            ind_text = f"₹{int(ind_val):,}" if pd.notnull(ind_val) else "N/A"
-            corp_text = f"₹{int(corp_val):,}" if pd.notnull(corp_val) else "N/A"
+            ind_text = format_indian_currency(ind_val).replace("<b>", "").replace("</b>", "").replace("₹", "₹ ") if pd.notnull(ind_val) else "N/A"
+            corp_text = format_indian_currency(corp_val).replace("<b>", "").replace("</b>", "").replace("₹", "₹ ") if pd.notnull(corp_val) else "N/A"
             data_grouped.append([field, ind_text, corp_text])
 
-        table2 = Table(data_grouped, hAlign='LEFT', colWidths=[250, 150, 150])
+        table2 = Table(data_grouped, colWidths=[260, 120, 120])
         table2.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.teal),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
             ('ALIGN', (1, 1), (-1, -1), 'RIGHT'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
         ]))
         elements.append(table2)
 
