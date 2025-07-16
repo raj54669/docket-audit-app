@@ -2,9 +2,11 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 import os
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
 import tempfile
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -110,11 +112,9 @@ model = st.selectbox("Select Model", models)
 fuel_types = sorted(price_data[price_data["Model"] == model]["Fuel Type"].dropna().unique())
 fuel_type = st.selectbox("Select Fuel Type", fuel_types)
 
-# Filter variant options using text_input for searchable dropdown
-variant_options = sorted(price_data[(price_data["Model"] == model) & (price_data["Fuel Type"] == fuel_type)]["Variant"].dropna().unique())
-variant_search = st.text_input("Type to search Variant")
-filtered_variants = [v for v in variant_options if variant_search.lower() in v.lower()]
-variant = st.selectbox("Select Variant", filtered_variants if filtered_variants else variant_options)
+variant_df = price_data[(price_data["Model"] == model) & (price_data["Fuel Type"] == fuel_type)]
+variant_options = sorted(variant_df["Variant"].dropna().unique())
+variant = st.selectbox("Select Variant", variant_options, placeholder="Type or select variant")
 
 selected_row = price_data[(price_data["Model"] == model) & (price_data["Fuel Type"] == fuel_type) & (price_data["Variant"] == variant)]
 
@@ -142,44 +142,59 @@ st.subheader("📋 Vehicle Pricing Details")
 st.markdown(render_shared_table(row, shared_fields), unsafe_allow_html=True)
 st.markdown(render_registration_table(row, grouped_fields, group_keys), unsafe_allow_html=True)
 
-# --- PDF Download using reportlab ---
+# --- PDF Download using reportlab.platypus ---
 def generate_pdf(row):
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-        c = canvas.Canvas(tmp.name, pagesize=letter)
-        width, height = letter
-        y = height - 40
+        doc = SimpleDocTemplate(tmp.name, pagesize=letter)
+        elements = []
+        styles = getSampleStyleSheet()
+        elements.append(Paragraph(f"<b>Mahindra Pricing - {model} / {variant} ({fuel_type})</b>", styles['Heading2']))
+        elements.append(Spacer(1, 12))
 
-        c.setFont("Helvetica-Bold", 14)
-        c.drawString(40, y, f"Mahindra Pricing - {model} / {variant} ({fuel_type})")
-        y -= 30
-
-        c.setFont("Helvetica-Bold", 12)
-        c.drawString(40, y, "Shared Costs")
-        y -= 20
-        c.setFont("Helvetica", 10)
+        # Shared Costs Table
+        data_shared = [["Description", "Amount"]]
         for field in shared_fields:
             val = row.get(field)
-            text = f"{field}: ₹{int(val):,}" if pd.notnull(val) else f"{field}: N/A"
-            c.drawString(50, y, text)
-            y -= 14
+            if pd.notnull(val):
+                amount = f"₹{int(val):,}"
+            else:
+                amount = "N/A"
+            data_shared.append([field, amount])
 
-        y -= 10
-        c.setFont("Helvetica-Bold", 12)
-        c.drawString(40, y, "Registration Costs")
-        y -= 20
-        c.setFont("Helvetica", 10)
+        table1 = Table(data_shared, hAlign='LEFT', colWidths=[250, 150])
+        table1.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.teal),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('ALIGN', (1, 1), (-1, -1), 'RIGHT'),
+        ]))
+        elements.append(table1)
+        elements.append(Spacer(1, 18))
+
+        # Registration Costs Table
+        data_grouped = [["Registration", "Individual", "Corporate"]]
         for field in grouped_fields:
             ind_key, corp_key = group_keys[field]
             ind_val = row.get(ind_key)
             corp_val = row.get(corp_key)
-            text1 = f"{field} - Individual: ₹{int(ind_val):,}" if pd.notnull(ind_val) else f"{field} - Individual: N/A"
-            text2 = f"{field} - Corporate: ₹{int(corp_val):,}" if pd.notnull(corp_val) else f"{field} - Corporate: N/A"
-            c.drawString(50, y, text1)
-            y -= 14
-            c.drawString(50, y, text2)
-            y -= 18
+            ind_text = f"₹{int(ind_val):,}" if pd.notnull(ind_val) else "N/A"
+            corp_text = f"₹{int(corp_val):,}" if pd.notnull(corp_val) else "N/A"
+            data_grouped.append([field, ind_text, corp_text])
 
-        c.save()
+        table2 = Table(data_grouped, hAlign='LEFT', colWidths=[250, 150, 150])
+        table2.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.teal),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('ALIGN', (1, 1), (-1, -1), 'RIGHT'),
+        ]))
+        elements.append(table2)
+
+        doc.build(elements)
         return tmp.name
 
 if st.button("📥 Download as PDF"):
