@@ -118,10 +118,8 @@ html = """
 }
 </style>
 """
-
-
     # --- First Table (Shared Costs) ---
-    html += """
+  html += """
     <div class="table-wrapper">
     <table class="styled-table">
         <tr><th>Description</th><th>Amount</th></tr>
