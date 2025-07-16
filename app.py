@@ -28,9 +28,9 @@ if os.path.exists(file_path):
     st.caption(f"📅 Data last updated on: {ist_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
 
 # --- Dropdowns ---
-model = st.selectbox("Select Model", sorted(price_data["Model"].unique()))
-fuel_type = st.selectbox("Select Fuel Type", sorted(price_data[price_data["Model"] == model]["Fuel Type"].unique()))
-variant = st.selectbox("Select Variant", sorted(price_data[(price_data["Model"] == model) & (price_data["Fuel Type"] == fuel_type)]["Variant"].unique()))
+model = st.selectbox("Select Model", sorted(price_data["Model"].dropna().unique()))
+fuel_type = st.selectbox("Select Fuel Type", sorted(price_data[price_data["Model"] == model]["Fuel Type"].dropna().unique()))
+variant = st.selectbox("Select Variant", sorted(price_data[(price_data["Model"] == model) & (price_data["Fuel Type"] == fuel_type)]["Variant"].dropna().unique()))
 selected_row = price_data[(price_data["Model"] == model) & (price_data["Fuel Type"] == fuel_type) & (price_data["Variant"] == variant)]
 
 # --- Formatting Helper ---
@@ -61,67 +61,63 @@ else:
         "On Road Price (With HYPO)": ("On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"),
     }
 
-    # --- Custom CSS ---
+    # --- CSS Styling ---
     html = """
-<style>
-.table-wrapper {
-    border: 2px solid black;
-    border-radius: 10px;
-    padding: 0;
-    margin-bottom: 20px;
-    width: 100%;
-    display: block;
-    line-height: normal;
-}
+    <style>
+        .table-wrapper {
+            border: 2px solid black;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
 
-.styled-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 16px;
-    line-height: 1.2;
-}
+        .styled-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 16px;
+            line-height: 1.2;
+        }
 
-.styled-table th, .styled-table td {
-    border: 1px solid black;
-    padding: 10px 12px;
-    text-align: center;
-    height: 44px;
-}
+        .styled-table th, .styled-table td {
+            border: 1px solid black;
+            padding: 10px 12px;
+            text-align: center;
+            height: 44px;
+        }
 
-.styled-table th {
-    background-color: #004d40;
-    color: white;
-    font-weight: bold;
-}
+        .styled-table th {
+            background-color: #004d40;
+            color: white;
+            font-weight: bold;
+        }
 
-.styled-table td:first-child {
-    text-align: left;
-    font-weight: 600;
-    background-color: #f7f7f7;
-}
+        .styled-table td:first-child {
+            text-align: left;
+            font-weight: 600;
+            background-color: #f7f7f7;
+        }
 
-/* Dark Mode Support */
-@media (prefers-color-scheme: dark) {
-    .table-wrapper {
-        border: 2px solid white;
-    }
+        /* Dark Mode Support */
+        @media (prefers-color-scheme: dark) {
+            .table-wrapper {
+                border: 2px solid white;
+            }
 
-    .styled-table td {
-        background-color: #111;
-        color: #eee;
-    }
+            .styled-table td {
+                background-color: #111;
+                color: #eee;
+            }
 
-    .styled-table td:first-child {
-        background-color: #1e1e1e;
-        color: white;
-    }
+            .styled-table td:first-child {
+                background-color: #1e1e1e;
+                color: white;
+            }
 
-    .styled-table th, .styled-table td {
-        border: 1px solid white;
-    }
-}
-</style>
-
+            .styled-table th, .styled-table td {
+                border: 1px solid white;
+            }
+        }
+    </style>
     """
 
     # --- First Table (Shared Costs) ---
@@ -146,5 +142,5 @@ else:
         html += f"<tr><td>{field}</td><td>{fmt(row.get(ind_key), is_onroad)}</td><td>{fmt(row.get(corp_key), is_onroad)}</td></tr>"
     html += "</table></div>"
 
-    # --- Display Tables ---
+    # --- Render Tables ---
     st.markdown(html, unsafe_allow_html=True)
