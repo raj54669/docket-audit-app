@@ -33,7 +33,7 @@ fuel_type = st.selectbox("Select Fuel Type", sorted(price_data[price_data["Model
 variant = st.selectbox("Select Variant", sorted(price_data[(price_data["Model"] == model) & (price_data["Fuel Type"] == fuel_type)]["Variant"].unique()))
 selected_row = price_data[(price_data["Model"] == model) & (price_data["Fuel Type"] == fuel_type) & (price_data["Variant"] == variant)]
 
-# --- Formatting Helper ---
+# --- Formatter ---
 def fmt(val, bold=False):
     formatted = f"₹{int(val):,}" if pd.notnull(val) else "<i style='color:gray;'>N/A</i>"
     return f"<b>{formatted}</b>" if bold else formatted
@@ -49,26 +49,20 @@ else:
         "Accessories Kit", "SMC", "Extended Warranty", "Maxi Care", "RSA (1 Year)", "Fastag"
     ]
 
-    grouped_fields = [
-        "RTO (W/O HYPO)", "RTO (With HYPO)",
-        "On Road Price (W/O HYPO)", "On Road Price (With HYPO)"
+    rto_fields = [
+        ("RTO (W/O HYPO)", "RTO (W/O HYPO) - Individual", "RTO (W/O HYPO) - Corporate"),
+        ("RTO (With HYPO)", "RTO (With HYPO) - Individual", "RTO (With HYPO) - Corporate"),
+        ("On Road Price (W/O HYPO)", "On Road Price (W/O HYPO) - Individual", "On Road Price (W/O HYPO) - Corporate"),
+        ("On Road Price (With HYPO)", "On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate")
     ]
 
-    group_keys = {
-        "RTO (W/O HYPO)": ("RTO (W/O HYPO) - Individual", "RTO (W/O HYPO) - Corporate"),
-        "RTO (With HYPO)": ("RTO (With HYPO) - Individual", "RTO (With HYPO) - Corporate"),
-        "On Road Price (W/O HYPO)": ("On Road Price (W/O HYPO) - Individual", "On Road Price (W/O HYPO) - Corporate"),
-        "On Road Price (With HYPO)": ("On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"),
-    }
-
-    # --- CSS with rounded outer border containers ---
+    # --- CSS Styling ---
     html = """
     <style>
         .table-wrapper {
             border: 2px solid black;
             border-radius: 12px;
             overflow: hidden;
-            margin-bottom: 20px;
         }
 
         .styled-table {
@@ -99,49 +93,56 @@ else:
             background-color: white;
         }
 
+        .rto-header {
+            background-color: #004d40;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+        }
+
         /* Dark Mode */
         @media (prefers-color-scheme: dark) {
             .table-wrapper {
                 border: 2px solid white;
             }
-
+            .styled-table th, .styled-table td {
+                border: 1px solid white;
+            }
             .styled-table td {
                 background-color: #111;
                 color: #eee;
             }
-
             .styled-table td:first-child {
                 background-color: #1e1e1e;
                 color: white;
             }
-
-            .styled-table th, .styled-table td {
-                border: 1px solid white;
+            .rto-header {
+                background-color: #222;
+                color: white;
             }
         }
     </style>
     """
 
-    # --- First Table ---
     html += """
     <div class="table-wrapper">
     <table class="styled-table">
         <tr><th>Description</th><th>Amount</th></tr>
     """
+
     for field in shared_fields:
         html += f"<tr><td>{field}</td><td>{fmt(row.get(field))}</td></tr>"
-    html += "</table></div>"
 
-    # --- Second Table ---
     html += """
-    <div class="table-wrapper">
-    <table class="styled-table">
-        <tr><th>Registration</th><th>Individual</th><th>Corporate</th></tr>
+        <tr><th colspan="2" class="rto-header">Registration</th></tr>
+        <tr><th>Registration</th><th>Individual / Corporate</th></tr>
     """
-    for field in grouped_fields:
-        ind_key, corp_key = group_keys[field]
-        is_onroad = "On Road" in field
-        html += f"<tr><td>{field}</td><td>{fmt(row.get(ind_key), is_onroad)}</td><td>{fmt(row.get(corp_key), is_onroad)}</td></tr>"
+
+    for label, ind_key, corp_key in rto_fields:
+        ind_val = fmt(row.get(ind_key), bold="On Road" in label)
+        corp_val = fmt(row.get(corp_key), bold="On Road" in label)
+        html += f"<tr><td>{label}</td><td>{ind_val} / {corp_val}</td></tr>"
+
     html += "</table></div>"
 
     st.markdown(html, unsafe_allow_html=True)
