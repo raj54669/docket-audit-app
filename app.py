@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 import os
+import re
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -11,20 +12,22 @@ st.set_page_config(
 )
 
 # --- Load Excel Data ---
-@st.cache_data
-def load_data():
-    try:
-        return pd.read_excel("PV Price List Master D. 08.07.2025.xlsx")
-    except FileNotFoundError:
+@st.cache_data(show_spinner=False)
+def load_data(file_path):
+    if not os.path.exists(file_path):
         st.error("❌ Pricing file not found.")
         st.stop()
+    try:
+        return pd.read_excel(file_path)
+    except Exception as e:
+        st.error(f"❌ Failed to load Excel file: {e}")
+        st.stop()
 
-price_data = load_data()
 file_path = "PV Price List Master D. 08.07.2025.xlsx"
+price_data = load_data(file_path)
 
 # --- Currency Formatter (Indian style) ---
 def format_indian_currency(value):
-    import re
     if pd.isnull(value):
         return "<i style='color:gray;'>N/A</i>"
     try:
@@ -38,10 +41,10 @@ def format_indian_currency(value):
             other = re.sub(r'(\d)(?=(\d{2})+$)', r'\1,', other)
             formatted = f"{other},{last_three}"
         else:
-            formatted = f"{last_three}"
+            formatted = last_three
         result = f"₹{formatted}"
         return f"<b>{'-' if is_negative else ''}{result}</b>"
-    except:
+    except Exception:
         return "<i style='color:red;'>Invalid</i>"
 
 # --- Table Generators ---
@@ -52,7 +55,8 @@ def render_shared_table(row, fields):
         <tr><th>Description</th><th>Amount</th></tr>
     """
     for field in fields:
-        html += f"<tr><td>{field}</td><td>{format_indian_currency(row.get(field))}</td></tr>"
+        value = row.get(field, None)
+        html += f"<tr><td>{field}</td><td>{format_indian_currency(value)}</td></tr>"
     html += "</table></div>"
     return html
 
@@ -63,7 +67,7 @@ def render_registration_table(row, groups, keys):
         <tr><th>Registration</th><th>Individual</th><th>Corporate</th></tr>
     """
     for field in groups:
-        ind_key, corp_key = keys[field]
+        ind_key, corp_key = keys.get(field, ("", ""))
         html += f"<tr><td>{field}</td><td>{format_indian_currency(row.get(ind_key))}</td><td>{format_indian_currency(row.get(corp_key))}</td></tr>"
     html += "</table></div>"
     return html
@@ -95,30 +99,45 @@ st.markdown("""
 # --- Title ---
 st.title("🚗 Mahindra Vehicle Pricing Viewer")
 
-# --- Timestamp ---
-if os.path.exists(file_path):
+# --- Timestamp Display ---
+try:
     ist_time = datetime.fromtimestamp(os.path.getmtime(file_path)) + timedelta(hours=5, minutes=30)
     st.caption(f"📅 Data last updated on: {ist_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
+except Exception:
+    st.caption("📅 Last update timestamp not available.")
 
 # --- Dropdowns ---
 models = sorted(price_data["Model"].dropna().unique())
-model = st.selectbox("Select Model", models)
+if not models:
+    st.error("❌ No models found in data.")
+    st.stop()
 
-fuel_types = sorted(price_data[price_data["Model"] == model]["Fuel Type"].dropna().unique())
-fuel_type = st.selectbox("Select Fuel Type", fuel_types)
+model = st.selectbox("🚘 Select Model", models)
 
-variant_df = price_data[(price_data["Model"] == model) & (price_data["Fuel Type"] == fuel_type)]
+fuel_df = price_data[price_data["Model"] == model]
+fuel_types = sorted(fuel_df["Fuel Type"].dropna().unique())
+if not fuel_types:
+    st.error("❌ No fuel types found for selected model.")
+    st.stop()
+
+fuel_type = st.selectbox("⛽ Select Fuel Type", fuel_types)
+
+variant_df = fuel_df[fuel_df["Fuel Type"] == fuel_type]
 variant_options = sorted(variant_df["Variant"].dropna().unique())
+if not variant_options:
+    st.error("❌ No variants available for selected fuel type.")
+    st.stop()
 
-variant = st.selectbox("Select Variant", variant_options)
+variant = st.selectbox("🎯 Select Variant", variant_options)
 
-selected_row = price_data[(price_data["Model"] == model) & (price_data["Fuel Type"] == fuel_type) & (price_data["Variant"] == variant)]
-
+selected_row = variant_df[variant_df["Variant"] == variant]
 if selected_row.empty:
-    st.warning("No data found for selected filters.")
+    st.warning("⚠️ No data found for selected filters.")
     st.stop()
 
 row = selected_row.iloc[0]
+
+# --- Field Configs ---
 shared_fields = [
     "Ex-Showroom Price", "TCS 1%", "Insurance 1 Yr OD + 3 Yr TP + Zero Dep.",
     "Accessories Kit", "SMC", "Extended Warranty", "Maxi Care", "RSA (1 Year)", "Fastag"
@@ -134,6 +153,7 @@ group_keys = {
     "On Road Price (With HYPO)": ("On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"),
 }
 
+# --- Output Tables ---
 st.subheader("📋 Vehicle Pricing Details")
 st.markdown(render_shared_table(row, shared_fields), unsafe_allow_html=True)
 st.markdown(render_registration_table(row, grouped_fields, group_keys), unsafe_allow_html=True)
