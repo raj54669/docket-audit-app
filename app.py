@@ -145,8 +145,6 @@ st.markdown(render_registration_table(row, grouped_fields, group_keys), unsafe_a
 
 # --- PDF Download using reportlab.platypus ---
 def generate_pdf(row):
-    from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
     
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
         doc = SimpleDocTemplate(
