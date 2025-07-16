@@ -100,18 +100,6 @@ else:
     background-color: #f7f7f7;
 }
 
-/* Fix: Ensure consistent row height, especially last row */
-.styled-table tr:last-child td {
-    border-bottom: none;
-    background-color: white;
-}
-
-/* Fix visual issues caused by rounding */
-.styled-table tr:last-child {
-    margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
-}
-
 /* Dark Mode Support */
 @media (prefers-color-scheme: dark) {
     .table-wrapper {
@@ -131,12 +119,9 @@ else:
     .styled-table th, .styled-table td {
         border: 1px solid white;
     }
-
-    .styled-table tr:last-child td {
-        background-color: #111;
-    }
 }
 </style>
+
     """
 
     # --- First Table (Shared Costs) ---
