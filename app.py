@@ -24,7 +24,7 @@ st.title("🚗 Mahindra Vehicle Pricing Viewer")
 
 # --- Timestamp in IST ---
 if os.path.exists(file_path):
-    ist_time = datetime.fromtimestamp(os.path.getmtime(file_path)) + timedelta(hours=5, minutes=30)
+    ist_time = datetime.fromtimestamp(os.path.getmtime(file_path)) + timedelta(hours=5, 30)
     st.caption(f"📅 Data last updated on: {ist_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
 
 # --- Dropdowns ---
@@ -61,22 +61,16 @@ else:
         "On Road Price (With HYPO)": ("On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"),
     }
 
-    # --- Updated CSS with tighter table layout ---
+    # --- Custom CSS ---
     html = """
     <style>
         .table-wrapper {
-    border: 2px solid black;
-    border-radius: 10px;
-    overflow: hidden;
-    margin-bottom: 20px;
-    width: 100%;
-    display: block;
-        }
-
-    /* ... other table styles remain unchanged ... */
-
-    .styled-table tr:last-child td {
-    border-bottom: none !important;  /* 💥 Key fix */
+            border: 2px solid black;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            width: 100%;
+            display: block;
         }
 
         .styled-table {
@@ -107,6 +101,12 @@ else:
             background-color: white;
         }
 
+        /* Fix bottom row overlapping with border radius */
+        .styled-table tr:last-child td {
+            background-color: white;
+            border-bottom: none !important;
+        }
+
         /* Dark Mode */
         @media (prefers-color-scheme: dark) {
             .table-wrapper {
@@ -126,11 +126,15 @@ else:
             .styled-table th, .styled-table td {
                 border: 1px solid white;
             }
+
+            .styled-table tr:last-child td {
+                background-color: #111;
+            }
         }
     </style>
     """
 
-    # --- First Table ---
+    # --- First Table (Shared Costs) ---
     html += """
     <div class="table-wrapper">
     <table class="styled-table">
@@ -140,7 +144,7 @@ else:
         html += f"<tr><td>{field}</td><td>{fmt(row.get(field))}</td></tr>"
     html += "</table></div>"
 
-    # --- Second Table ---
+    # --- Second Table (Registration Costs) ---
     html += """
     <div class="table-wrapper">
     <table class="styled-table">
@@ -152,4 +156,5 @@ else:
         html += f"<tr><td>{field}</td><td>{fmt(row.get(ind_key), is_onroad)}</td><td>{fmt(row.get(corp_key), is_onroad)}</td></tr>"
     html += "</table></div>"
 
+    # --- Display Tables ---
     st.markdown(html, unsafe_allow_html=True)
