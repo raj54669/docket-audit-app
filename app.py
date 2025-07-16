@@ -69,6 +69,7 @@ else:
             border-radius: 10px;
             overflow: hidden;
             margin-bottom: 20px;
+            padding: 0;             /* <-- Add this */
             width: 100%;
             display: block;
         }
@@ -99,6 +100,10 @@ else:
 
         .styled-table td {
             background-color: white;
+            height: 40px; /* Add consistent row height */
+            margin: 0;
+            padding: 10px 12px;
+            vertical-align: middle;
         }
 
         /* Fix bottom row overlapping with border radius */
