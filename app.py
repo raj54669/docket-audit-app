@@ -3,19 +3,19 @@ import pandas as pd
 from datetime import datetime, timedelta
 import os
 
-# --- Load Excel File ---
+# --- Cached Data Loading with Error Handling ---
 @st.cache_data
 def load_data():
     try:
         return pd.read_excel("PV Price List Master D. 08.07.2025.xlsx")
     except FileNotFoundError:
-        st.error("Error: Pricing file not found.")
+        st.error("❌ Pricing file not found.")
         st.stop()
 
 file_path = "PV Price List Master D. 08.07.2025.xlsx"
 price_data = load_data()
 
-# --- Streamlit Setup ---
+# --- Streamlit Page Setup ---
 st.set_page_config(
     page_title="Mahindra Pricing Viewer",
     layout="centered",
@@ -24,13 +24,12 @@ st.set_page_config(
 
 st.title("🚗 Mahindra Vehicle Pricing Viewer")
 
-# --- Show Last Modified Timestamp in IST ---
+# --- Last Modified Timestamp in IST ---
 if os.path.exists(file_path):
     mod_time = datetime.fromtimestamp(os.path.getmtime(file_path)) + timedelta(hours=5, minutes=30)
-    formatted_time = mod_time.strftime("%d-%b-%Y %I:%M %p")
-    st.caption(f"📅 Data last updated on: {formatted_time} (IST)")
+    st.caption(f"📅 Data last updated on: {mod_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
 
-# --- Model-Fuel-Variant Selection ---
+# --- Model Selection ---
 model = st.selectbox("Select Model", sorted(price_data["Model"].unique()))
 fuel_options = price_data[price_data["Model"] == model]["Fuel Type"].unique()
 fuel_type = st.selectbox("Select Fuel Type", sorted(fuel_options))
@@ -38,7 +37,7 @@ variant_options = price_data[(price_data["Model"] == model) &
                              (price_data["Fuel Type"] == fuel_type)]["Variant"].unique()
 variant = st.selectbox("Select Variant", sorted(variant_options))
 
-# --- Filter Data Row ---
+# --- Retrieve Selected Row ---
 selected_row = price_data[
     (price_data["Model"] == model) &
     (price_data["Fuel Type"] == fuel_type) &
@@ -46,7 +45,7 @@ selected_row = price_data[
 ]
 
 if selected_row.empty:
-    st.warning("No matching entry found.")
+    st.warning("No matching data found.")
 else:
     st.subheader("📋 Vehicle Pricing Details")
     row = selected_row.iloc[0]
@@ -55,7 +54,7 @@ else:
         formatted = f"₹{int(val):,}" if pd.notnull(val) else "<i style='color:gray;'>N/A</i>"
         return f"<b>{formatted}</b>" if bold else formatted
 
-    # --- Field Definitions ---
+    # --- Columns as per Excel ---
     shared_fields = [
         "Ex-Showroom Price", "TCS 1%", "Insurance 1 Yr OD + 3 Yr TP + Zero Dep.",
         "Accessories Kit", "SMC", "Extended Warranty", "Maxi Care", "RSA (1 Year)", "Fastag"
@@ -75,86 +74,85 @@ else:
             "On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"),
     }
 
-    # --- Table Styling + HTML ---
+    # --- HTML Table Styling ---
     html = """
     <style>
-        .full-table {
+        .styled-table {
             width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
+            border-collapse: collapse;
             font-size: 16px;
+            margin-bottom: 16px;
             border: 2px solid #004d40;
             border-radius: 12px;
             overflow: hidden;
-            margin-bottom: 1rem;
         }
-        .full-table th, .full-table td {
+        .styled-table th, .styled-table td {
             padding: 10px 12px;
+            border: 1px solid #999;
             text-align: center;
-            border-bottom: 1px solid #ccc;
         }
-        .full-table th {
+        .styled-table th {
             background-color: #004d40;
             color: white;
-            font-weight: 600;
         }
-        .full-table td:first-child {
+        .styled-table td:first-child {
             text-align: left;
             font-weight: 600;
-            background-color: #f0f0f0;
+            background-color: #f2f2f2;
         }
-        .full-table td {
+        .styled-table td {
             background-color: white;
-            color: black;
         }
 
-        /* Rounded corners on top and bottom */
-        .full-table tr:first-child th:first-child {
+        /* Rounded corners */
+        .styled-table tr:first-child th:first-child {
             border-top-left-radius: 12px;
         }
-        .full-table tr:first-child th:last-child {
+        .styled-table tr:first-child th:last-child {
             border-top-right-radius: 12px;
         }
-        .full-table tr:last-child td:first-child {
+        .styled-table tr:last-child td:first-child {
             border-bottom-left-radius: 12px;
         }
-        .full-table tr:last-child td:last-child {
+        .styled-table tr:last-child td:last-child {
             border-bottom-right-radius: 12px;
         }
 
-        /* Dark mode compatibility */
+        /* Dark Mode */
         @media (prefers-color-scheme: dark) {
-            .full-table td {
+            .styled-table td {
                 background-color: #111;
                 color: #eee;
             }
-            .full-table td:first-child {
-                background-color: #1e1e1e;
+            .styled-table td:first-child {
+                background-color: #1a1a1a;
             }
         }
     </style>
-
-    <table class="full-table">
-        <tr><th>Description</th><th>Amount</th></tr>
     """
 
+    # --- First Table: Description + Amount ---
+    html += """
+    <table class="styled-table">
+        <tr><th>Description</th><th>Amount</th></tr>
+    """
     for field in shared_fields:
         val = row.get(field)
         html += f"<tr><td>{field}</td><td>{fmt(val)}</td></tr>"
+    html += "</table>"
 
+    # --- Second Table: RTO / On-Road Price ---
     html += """
-    </table>
-    <table class="full-table">
+    <table class="styled-table">
         <tr><th>Registration</th><th>Individual</th><th>Corporate</th></tr>
     """
-
     for label in grouped_fields:
         ind_key, corp_key = group_keys[label]
         is_onroad = "On Road" in label
         ind_val = fmt(row.get(ind_key), bold=is_onroad)
         corp_val = fmt(row.get(corp_key), bold=is_onroad)
         html += f"<tr><td>{label}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
-
     html += "</table>"
 
+    # --- Display Tables ---
     st.markdown(html, unsafe_allow_html=True)
