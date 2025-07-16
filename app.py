@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime, timedelta
-import os
+from datetime import datetime
 import re
 
 # --- Page Configuration ---
@@ -11,20 +10,17 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
-# --- Load Excel Data ---
+# --- Load Excel Data from GitHub ---
 @st.cache_data(show_spinner=False)
-def load_data(file_path):
-    if not os.path.exists(file_path):
-        st.error("❌ Pricing file not found.")
-        st.stop()
+def load_data_from_github():
+    url = "https://raw.githubusercontent.com/your-username/your-repo/main/PV%20Price%20List%20Master%20D.%2008.07.2025.xlsx"
     try:
-        return pd.read_excel(file_path)
+        return pd.read_excel(url)
     except Exception as e:
-        st.error(f"❌ Failed to load Excel file: {e}")
+        st.error(f"❌ Failed to load Excel file from GitHub: {e}")
         st.stop()
 
-file_path = "PV Price List Master D. 08.07.2025.xlsx"
-price_data = load_data(file_path)
+price_data = load_data_from_github()
 
 # --- Currency Formatter (Indian style) ---
 def format_indian_currency(value):
@@ -42,7 +38,8 @@ def format_indian_currency(value):
             formatted = f"{other},{last_three}"
         else:
             formatted = last_three
-        result = f"₹{formatted}"
+        decimal_part = f"{value:.2f}".split('.')[-1]
+        result = f"₹{formatted}.{decimal_part}"
         return f"<b>{'-' if is_negative else ''}{result}</b>"
     except Exception:
         return "<i style='color:red;'>Invalid</i>"
@@ -72,41 +69,75 @@ def render_registration_table(row, groups, keys):
     html += "</table></div>"
     return html
 
-# --- Table Styling ---
+# --- Theme Styling (light/dark responsive) ---
 st.markdown("""
-    <style>
-    .table-wrapper { margin-bottom: 15px; padding: 0; }
+<style>
+/* Table Styling */
+.table-wrapper { margin-bottom: 15px; padding: 0; }
+.styled-table {
+    width: 100%; border-collapse: collapse;
+    font-size: 16px; line-height: 1.2; border: 2px solid black;
+}
+.styled-table th, .styled-table td {
+    border: 1px solid black; padding: 8px 10px; text-align: center;
+}
+.styled-table th {
+    background-color: #004d40; color: white; font-weight: bold;
+}
+.styled-table td:first-child {
+    text-align: left; font-weight: 600; background-color: #f7f7f7;
+}
+
+/* Light Mode */
+@media (prefers-color-scheme: light) {
+    body, .stApp {
+        background-color: #ffffff;
+        color: #000000;
+        font-family: 'Segoe UI', sans-serif;
+    }
+    section[data-testid="stSidebar"] {
+        background-color: #004d40;
+        color: white;
+    }
+    h1, h2, label {
+        color: #004d40;
+    }
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+    body, .stApp {
+        background-color: #0d0d0d;
+        color: #e0e0e0;
+    }
+    section[data-testid="stSidebar"] {
+        background-color: #00251a;
+    }
+    h1, h2, label {
+        color: #80cbc4;
+    }
     .styled-table {
-        width: 100%; border-collapse: collapse;
-        font-size: 16px; line-height: 1.2; border: 2px solid black;
+        border: 2px solid white;
     }
     .styled-table th, .styled-table td {
-        border: 1px solid black; padding: 8px 10px; text-align: center;
+        border: 1px solid white;
     }
-    .styled-table th { background-color: #004d40; color: white; font-weight: bold; }
+    .styled-table td {
+        background-color: #111;
+        color: #eee;
+    }
     .styled-table td:first-child {
-        text-align: left; font-weight: 600; background-color: #f7f7f7;
+        background-color: #1e1e1e;
+        color: white;
     }
-    @media (prefers-color-scheme: dark) {
-        .styled-table { border: 2px solid white; }
-        .styled-table th, .styled-table td { border: 1px solid white; }
-        .styled-table td { background-color: #111; color: #eee; }
-        .styled-table td:first-child { background-color: #1e1e1e; color: white; }
-    }
-    </style>
+}
+</style>
 """, unsafe_allow_html=True)
 
 # --- Title ---
 st.title("🚗 Mahindra Vehicle Pricing Viewer")
 
-# --- Timestamp Display ---
-try:
-    ist_time = datetime.fromtimestamp(os.path.getmtime(file_path)) + timedelta(hours=5, minutes=30)
-    st.caption(f"📅 Data last updated on: {ist_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
-except Exception:
-    st.caption("📅 Last update timestamp not available.")
-
-# --- Dropdowns ---
+# --- Dropdown Filters ---
 models = sorted(price_data["Model"].dropna().unique())
 if not models:
     st.error("❌ No models found in data.")
