@@ -63,80 +63,80 @@ else:
 
     # --- Custom CSS ---
     html = """
-    <style>
-        .table-wrapper {
-            border: 2px solid black;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 20px;
-            padding: 0;             /* <-- Add this */
-            width: 100%;
-            display: block;
-        }
+<style>
+.table-wrapper {
+    border: 2px solid black;
+    border-radius: 10px;
+    padding: 0;
+    margin-bottom: 20px;
+    width: 100%;
+    display: block;
+    line-height: normal;
+}
 
-        .styled-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 16px;
-        }
+.styled-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 16px;
+    line-height: 1.2;
+}
 
-        .styled-table th, .styled-table td {
-            border: 1px solid black;
-            padding: 10px 12px;
-            text-align: center;
-        }
+.styled-table th, .styled-table td {
+    border: 1px solid black;
+    padding: 10px 12px;
+    text-align: center;
+    height: 44px;
+}
 
-        .styled-table th {
-            background-color: #004d40;
-            color: white;
-            font-weight: bold;
-        }
+.styled-table th {
+    background-color: #004d40;
+    color: white;
+    font-weight: bold;
+}
 
-        .styled-table td:first-child {
-            text-align: left;
-            font-weight: 600;
-            background-color: #f7f7f7;
-        }
+.styled-table td:first-child {
+    text-align: left;
+    font-weight: 600;
+    background-color: #f7f7f7;
+}
 
-        .styled-table td {
-            background-color: white;
-            height: 40px; /* Add consistent row height */
-            margin: 0;
-            padding: 10px 12px;
-            vertical-align: middle;
-        }
+/* Fix: Ensure consistent row height, especially last row */
+.styled-table tr:last-child td {
+    border-bottom: none;
+    background-color: white;
+}
 
-        /* Fix bottom row overlapping with border radius */
-        .styled-table tr:last-child td {
-            background-color: white;
-            border-bottom: none !important;
-        }
+/* Fix visual issues caused by rounding */
+.styled-table tr:last-child {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
 
-        /* Dark Mode */
-        @media (prefers-color-scheme: dark) {
-            .table-wrapper {
-                border: 2px solid white;
-            }
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .table-wrapper {
+        border: 2px solid white;
+    }
 
-            .styled-table td {
-                background-color: #111;
-                color: #eee;
-            }
+    .styled-table td {
+        background-color: #111;
+        color: #eee;
+    }
 
-            .styled-table td:first-child {
-                background-color: #1e1e1e;
-                color: white;
-            }
+    .styled-table td:first-child {
+        background-color: #1e1e1e;
+        color: white;
+    }
 
-            .styled-table th, .styled-table td {
-                border: 1px solid white;
-            }
+    .styled-table th, .styled-table td {
+        border: 1px solid white;
+    }
 
-            .styled-table tr:last-child td {
-                background-color: #111;
-            }
-        }
-    </style>
+    .styled-table tr:last-child td {
+        background-color: #111;
+    }
+}
+</style>
     """
 
     # --- First Table (Shared Costs) ---
