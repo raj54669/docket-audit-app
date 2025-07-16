@@ -65,10 +65,11 @@ else:
     html = """
     <style>
         .table-wrapper {
-           margin-bottom: 20px;
-           border: 2px solid black;         /* Outer thick border */
-           border-radius: 10px;             /* Rounded corners */
+           margin-bottom: 15px;
+           border: 2px solid black;
+           border-radius: 10px;
            overflow: hidden;
+           padding: 0;
         }
 
         .styled-table {
@@ -77,14 +78,15 @@ else:
             font-size: 16px;
             line-height: 1.2;
             border: 2px solid black;
-            border-radius: 10px;
-            overflow: hidden;
+            margin: 0;
+            padding: 0;
         }
 
         .styled-table th, .styled-table td {
             border: 1px solid black;
-            padding: 10px 12px;
+            padding: 8px 10px;
             text-align: center;
+            margin: 0;
         }
 
         .styled-table th {
@@ -99,7 +101,6 @@ else:
             background-color: #f7f7f7;
         }
 
-        /* Rounded corners */
         .styled-table th:first-child {
             border-top-left-radius: 10px;
         }
@@ -116,15 +117,16 @@ else:
             border-bottom-right-radius: 10px;
         }
 
-        /* Dark Mode Support */
         @media (prefers-color-scheme: dark) {
-
             .table-wrapper {
                 border: 2px solid white;
-            }        
-            
+                padding: 0;
+            }
+
             .styled-table {
                 border: 2px solid white;
+                margin: 0;
+                padding: 0;
             }
 
             .styled-table td {
@@ -139,6 +141,8 @@ else:
 
             .styled-table th, .styled-table td {
                 border: 1px solid white;
+                padding: 8px 10px;
+                margin: 0;
             }
 
             .styled-table th:first-child {
