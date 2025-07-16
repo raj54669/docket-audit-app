@@ -3,7 +3,6 @@ import pandas as pd
 from datetime import datetime, timedelta
 import os
 
-# --- Load Excel Data ---
 @st.cache_data
 def load_data():
     try:
@@ -15,7 +14,6 @@ def load_data():
 file_path = "PV Price List Master D. 08.07.2025.xlsx"
 price_data = load_data()
 
-# --- Page Setup ---
 st.set_page_config(
     page_title="Mahindra Pricing Viewer",
     layout="centered",
@@ -24,37 +22,24 @@ st.set_page_config(
 
 st.title("🚗 Mahindra Vehicle Pricing Viewer")
 
-# --- Timestamp (Indian Timezone) ---
+# --- Timestamp in IST ---
 if os.path.exists(file_path):
     ist_time = datetime.fromtimestamp(os.path.getmtime(file_path)) + timedelta(hours=5, minutes=30)
     st.caption(f"📅 Data last updated on: {ist_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
 
-# --- Dropdown Selection ---
+# --- Dropdowns ---
 model = st.selectbox("Select Model", sorted(price_data["Model"].unique()))
-fuel_type = st.selectbox(
-    "Select Fuel Type", 
-    sorted(price_data[price_data["Model"] == model]["Fuel Type"].unique())
-)
-variant = st.selectbox(
-    "Select Variant", 
-    sorted(price_data[(price_data["Model"] == model) & 
-                      (price_data["Fuel Type"] == fuel_type)]["Variant"].unique())
-)
+fuel_type = st.selectbox("Select Fuel Type", sorted(price_data[price_data["Model"] == model]["Fuel Type"].unique()))
+variant = st.selectbox("Select Variant", sorted(price_data[(price_data["Model"] == model) & (price_data["Fuel Type"] == fuel_type)]["Variant"].unique()))
+selected_row = price_data[(price_data["Model"] == model) & (price_data["Fuel Type"] == fuel_type) & (price_data["Variant"] == variant)]
 
-selected_row = price_data[
-    (price_data["Model"] == model) & 
-    (price_data["Fuel Type"] == fuel_type) & 
-    (price_data["Variant"] == variant)
-]
-
-# --- Utility Function ---
+# --- Formatting Helper ---
 def fmt(val, bold=False):
     formatted = f"₹{int(val):,}" if pd.notnull(val) else "<i style='color:gray;'>N/A</i>"
     return f"<b>{formatted}</b>" if bold else formatted
 
-# --- Display Vehicle Pricing Details ---
 if selected_row.empty:
-    st.warning("No matching data found.")
+    st.warning("No data found for selected filters.")
 else:
     st.subheader("📋 Vehicle Pricing Details")
     row = selected_row.iloc[0]
@@ -72,26 +57,28 @@ else:
     group_keys = {
         "RTO (W/O HYPO)": ("RTO (W/O HYPO) - Individual", "RTO (W/O HYPO) - Corporate"),
         "RTO (With HYPO)": ("RTO (With HYPO) - Individual", "RTO (With HYPO) - Corporate"),
-        "On Road Price (W/O HYPO)": (
-            "On Road Price (W/O HYPO) - Individual", "On Road Price (W/O HYPO) - Corporate"),
-        "On Road Price (With HYPO)": (
-            "On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"),
+        "On Road Price (W/O HYPO)": ("On Road Price (W/O HYPO) - Individual", "On Road Price (W/O HYPO) - Corporate"),
+        "On Road Price (With HYPO)": ("On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"),
     }
 
-    # --- Style ---
+    # --- CSS with rounded outer border containers ---
     html = """
     <style>
-        .styled-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            font-size: 16px;
-            margin-bottom: 20px;
+        .table-wrapper {
+            border: 2px solid black;
             border-radius: 12px;
             overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .styled-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 16px;
         }
 
         .styled-table th, .styled-table td {
+            border: 1px solid black;
             padding: 10px 12px;
             text-align: center;
         }
@@ -112,50 +99,49 @@ else:
             background-color: white;
         }
 
-        .styled-table, .styled-table th, .styled-table td {
-            border: 1px solid black;
-        }
-
-        .styled-table tr:first-child th:first-child { border-top-left-radius: 12px; }
-        .styled-table tr:first-child th:last-child { border-top-right-radius: 12px; }
-        .styled-table tr:last-child td:first-child { border-bottom-left-radius: 12px; }
-        .styled-table tr:last-child td:last-child { border-bottom-right-radius: 12px; }
-
-        /* Dark mode overrides */
+        /* Dark Mode */
         @media (prefers-color-scheme: dark) {
+            .table-wrapper {
+                border: 2px solid white;
+            }
+
             .styled-table td {
                 background-color: #111;
                 color: #eee;
             }
+
             .styled-table td:first-child {
                 background-color: #1e1e1e;
-                color: #fff;
+                color: white;
             }
-            .styled-table, .styled-table th, .styled-table td {
+
+            .styled-table th, .styled-table td {
                 border: 1px solid white;
             }
         }
     </style>
     """
 
-    # --- Description Table ---
+    # --- First Table ---
     html += """
+    <div class="table-wrapper">
     <table class="styled-table">
         <tr><th>Description</th><th>Amount</th></tr>
     """
     for field in shared_fields:
         html += f"<tr><td>{field}</td><td>{fmt(row.get(field))}</td></tr>"
-    html += "</table>"
+    html += "</table></div>"
 
-    # --- Registration Table ---
+    # --- Second Table ---
     html += """
+    <div class="table-wrapper">
     <table class="styled-table">
         <tr><th>Registration</th><th>Individual</th><th>Corporate</th></tr>
     """
     for field in grouped_fields:
-        key_ind, key_corp = group_keys[field]
+        ind_key, corp_key = group_keys[field]
         is_onroad = "On Road" in field
-        html += f"<tr><td>{field}</td><td>{fmt(row.get(key_ind), is_onroad)}</td><td>{fmt(row.get(key_corp), is_onroad)}</td></tr>"
-    html += "</table>"
+        html += f"<tr><td>{field}</td><td>{fmt(row.get(ind_key), is_onroad)}</td><td>{fmt(row.get(corp_key), is_onroad)}</td></tr>"
+    html += "</table></div>"
 
     st.markdown(html, unsafe_allow_html=True)
