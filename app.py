@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import os
 
 # --- Cached Data Loading with Error Handling ---
 @st.cache_data
@@ -11,16 +12,22 @@ def load_data():
         st.error("Error: Pricing file not found. Please ensure 'PV Price List Master D. 08.07.2025.xlsx' exists in the app directory.")
         st.stop()
 
+file_path = "PV Price List Master D. 08.07.2025.xlsx"
 price_data = load_data()
 
 # --- Main App (Original Visual Design) ---
 st.set_page_config(
     page_title="Mahindra Pricing Viewer", 
     layout="centered",
-    initial_sidebar_state="auto"  # This enables system dark mode without visual changes
+    initial_sidebar_state="auto"
 )
 
 st.title("🚗 Mahindra Vehicle Pricing Viewer")
+
+# --- Show Last Modified Timestamp ---
+if os.path.exists(file_path):
+    mod_time = datetime.fromtimestamp(os.path.getmtime(file_path)).strftime("%d-%b-%Y %I:%M %p")
+    st.caption(f"📅 Data last updated on: {mod_time}")
 
 # --- Original 3-Step Selection ---
 model = st.selectbox("Select Model", sorted(price_data["Model"].unique()))
@@ -56,7 +63,10 @@ else:
     pricing_html = "<ul>"
     for field in display_fields:
         value = selected_row.iloc[0].get(field, None)
-        amount = f"₹{int(value):,}" if pd.notnull(value) else "Not Available"
+        if pd.notnull(value):
+            amount = f"₹{int(value):,}"
+        else:
+            amount = "<i style='color:gray;'>Not Available</i>"
         pricing_html += f"<li><strong>{field}</strong>: {amount}</li>"
     pricing_html += "</ul>"
     st.markdown(pricing_html, unsafe_allow_html=True)
