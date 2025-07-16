@@ -100,6 +100,9 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# --- Title ---
+st.title("🚗 Mahindra Vehicle Pricing Viewer")
+
 # --- Timestamp ---
 if os.path.exists(file_path):
     ist_time = datetime.fromtimestamp(os.path.getmtime(file_path)) + timedelta(hours=5, minutes=30)
@@ -112,10 +115,8 @@ model = st.selectbox("Select Model", models)
 fuel_types = sorted(price_data[price_data["Model"] == model]["Fuel Type"].dropna().unique())
 fuel_type = st.selectbox("Select Fuel Type", fuel_types)
 
-search_query = st.text_input("🔍 Search Variant")
 variants = price_data[(price_data["Model"] == model) & (price_data["Fuel Type"] == fuel_type)]["Variant"].dropna().unique()
-filtered_variants = [v for v in sorted(variants) if search_query.lower() in v.lower()]
-variant = st.selectbox("Select Variant", filtered_variants)
+variant = st.selectbox("Select Variant", sorted(variants))
 
 selected_row = price_data[(price_data["Model"] == model) & (price_data["Fuel Type"] == fuel_type) & (price_data["Variant"] == variant)]
 
