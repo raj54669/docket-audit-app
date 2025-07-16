@@ -114,7 +114,10 @@ fuel_type = st.selectbox("Select Fuel Type", fuel_types)
 
 variant_df = price_data[(price_data["Model"] == model) & (price_data["Fuel Type"] == fuel_type)]
 variant_options = sorted(variant_df["Variant"].dropna().unique())
-variant = st.selectbox("Select Variant", variant_options, placeholder="Type or select variant")
+
+variant_input = st.text_input("Type to filter Variant")
+filtered_variants = [v for v in variant_options if variant_input.lower() in v.lower()] if variant_input else variant_options
+variant = st.selectbox("Select Variant", filtered_variants)
 
 selected_row = price_data[(price_data["Model"] == model) & (price_data["Fuel Type"] == fuel_type) & (price_data["Variant"] == variant)]
 
