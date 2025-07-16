@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 
 # --- Load Excel File ---
@@ -24,10 +24,11 @@ st.set_page_config(
 
 st.title("🚗 Mahindra Vehicle Pricing Viewer")
 
-# --- File Timestamp ---
+# --- File Timestamp in IST (+5:30) ---
 if os.path.exists(file_path):
-    mod_time = datetime.fromtimestamp(os.path.getmtime(file_path)).strftime("%d-%b-%Y %I:%M %p")
-    st.caption(f"📅 Data last updated on: {mod_time}")
+    mod_time = datetime.fromtimestamp(os.path.getmtime(file_path)) + timedelta(hours=5, minutes=30)
+    formatted_time = mod_time.strftime("%d-%b-%Y %I:%M %p")
+    st.caption(f"📅 Data last updated on: {formatted_time} (IST)")
 
 # --- 3-Step Filter ---
 model = st.selectbox("Select Model", sorted(price_data["Model"].unique()))
@@ -95,12 +96,11 @@ else:
     <style>
         .full-table {
             width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
+            border-collapse: collapse;
             font-size: 16px;
-            border-radius: 10px;
+            border: 1px solid #444;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
         .full-table th, .full-table td {
             border: 1px solid #444;
@@ -113,30 +113,22 @@ else:
             font-weight: 600;
         }
         .full-table td {
-            background-color: rgba(255, 255, 255, 0.02);
-            color: inherit;
-        }
-        .full-table tr:nth-child(even) td {
-            background-color: rgba(255, 255, 255, 0.05);
-        }
-        .full-table tr:hover td {
-            background-color: rgba(76, 175, 80, 0.1);
+            background-color: white;
+            color: black;
         }
         .full-table td:first-child {
             text-align: left;
             font-weight: 600;
-            background-color: rgba(0, 77, 64, 0.2);
+            background-color: #f0f0f0;
         }
+
         @media (prefers-color-scheme: dark) {
-            .full-table th {
-                background-color: #0a3d3d;
-                color: #ffffff;
-            }
             .full-table td {
-                color: #f0f0f0;
+                background-color: #111;
+                color: #eee;
             }
             .full-table td:first-child {
-                background-color: rgba(0, 77, 64, 0.3);
+                background-color: #1e1e1e;
             }
         }
     </style>
@@ -151,7 +143,8 @@ else:
 
     html += """
     </table>
-    <table class="full-table" style="margin-top: 0;">
+    <br>
+    <table class="full-table">
         <tr><th>Registration</th><th>Individual</th><th>Corporate</th></tr>
     """
 
