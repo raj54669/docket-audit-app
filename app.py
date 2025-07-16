@@ -71,44 +71,81 @@ else:
     pricing_html += "</ul>"
     st.markdown(pricing_html, unsafe_allow_html=True)
 
-    # --- Original Styled RTO Table ---
-    st.markdown("""
-        <style>
-        .rto-layout {
+if selected_row.empty:
+    st.warning("No matching entry found for selected filters.")
+else:
+    st.markdown("---")
+    st.subheader("📋 Side-by-Side Pricing Comparison")
+
+    row = selected_row.iloc[0]
+
+    # --- Format currency ---
+    def fmt(val):
+        return f"₹{int(val):,}" if pd.notnull(val) else "<i style='color:gray;'>N/A</i>"
+
+    # --- Define fields and keys ---
+    pricing_fields = [
+        ("Ex-Showroom Price", "Ex-Showroom Price"),
+        ("TCS 1%", "TCS 1%"),
+        ("Insurance", "Insurance 1 Yr OD + 3 Yr TP + Zero Dep."),
+        ("Accessories", "Accessories Kit"),
+        ("SMC", "SMC"),
+        ("Extended Warranty", "Extended Warranty"),
+        ("Maxi Care", "Maxi Care"),
+        ("RTO (W/O HYPO)", ("RTO (W/O HYPO) - Individual", "RTO (W/O HYPO) - Corporate")),
+        ("RTO (With HYPO)", ("RTO (With HYPO) - Individual", "RTO (With HYPO) - Corporate")),
+        ("On Road Price", ("On Road Price - Individual", "On Road Price - Corporate"))
+    ]
+
+    # --- HTML table styling with dark mode support ---
+    comparison_html = """
+    <style>
+        .side-table {
             width: 100%;
             border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 16px;
         }
-        .rto-layout th, .rto-layout td {
-            border: 1px solid #999;
-            padding: 8px;
+        .side-table th, .side-table td {
+            border: 1px solid rgba(120, 120, 120, 0.5);
+            padding: 10px;
             text-align: center;
         }
-        .rto-layout th {
-            background-color: #004d40;
-            color: white;
+        .side-table th {
+            background-color: rgba(0, 77, 64, 0.85);
+            color: #ffffff;
         }
-        .rto-layout td:first-child {
+        .side-table td:first-child {
+            text-align: left;
             font-weight: bold;
-            background-color: #e0f2f1;
+            background-color: rgba(224, 242, 241, 0.08);
+            color: inherit;
         }
-        </style>
-    """, unsafe_allow_html=True)
+        .side-table td {
+            background-color: rgba(255, 255, 255, 0.02);
+            color: inherit;
+        }
+    </style>
 
-    rto_table = """
-    <table class='rto-layout'>
+    <table class="side-table">
         <tr>
-            <th>Category</th>
-            <th>RTO (W/O HYPO)</th>
-            <th>RTO (With HYPO)</th>
+            <th>Component</th>
+            <th>Individual</th>
+            <th>Corporate</th>
         </tr>
     """
 
-    for category in ["Individual", "Corporate"]:
-        rto_wo = selected_row.iloc[0].get(f"RTO (W/O HYPO) - {category}", None)
-        rto_with = selected_row.iloc[0].get(f"RTO (With HYPO) - {category}", None)
-        rto_wo_amt = f"₹{int(rto_wo):,}" if pd.notnull(rto_wo) else "-"
-        rto_with_amt = f"₹{int(rto_with):,}" if pd.notnull(rto_with) else "-"
-        rto_table += f"<tr><td>{category}</td><td>{rto_wo_amt}</td><td>{rto_with_amt}</td></tr>"
+    # --- Build table rows ---
+    for label, key in pricing_fields:
+        if isinstance(key, tuple):
+            ind_val = fmt(row.get(key[0]))
+            corp_val = fmt(row.get(key[1]))
+        else:
+            value = fmt(row.get(key))
+            ind_val = corp_val = value
+        comparison_html += f"<tr><td>{label}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
 
-    rto_table += "</table>"
-    st.markdown(rto_table, unsafe_allow_html=True)
+    comparison_html += "</table>"
+
+    # --- Show table ---
+    st.markdown(comparison_html, unsafe_allow_html=True)
