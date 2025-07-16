@@ -61,15 +61,12 @@ else:
         "On Road Price (With HYPO)": ("On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"),
     }
 
-    # --- CSS Styling ---
+    # --- Cleaned-Up CSS (No outer rounded border) ---
     html = """
     <style>
         .table-wrapper {
-           margin-bottom: 15px;
-           border: 2px solid black;
-           border-radius: 10px;
-           overflow: hidden;
-           padding: 0;
+            margin-bottom: 15px;
+            padding: 0;
         }
 
         .styled-table {
@@ -101,32 +98,15 @@ else:
             background-color: #f7f7f7;
         }
 
-        .styled-table th:first-child {
-            border-top-left-radius: 10px;
-        }
-
-        .styled-table th:last-child {
-            border-top-right-radius: 10px;
-        }
-
-        .styled-table tr:last-child td:first-child {
-            border-bottom-left-radius: 10px;
-        }
-
-        .styled-table tr:last-child td:last-child {
-            border-bottom-right-radius: 10px;
-        }
-
         @media (prefers-color-scheme: dark) {
-            .table-wrapper {
-                border: 2px solid white;
-                padding: 0;
-            }
-
             .styled-table {
                 border: 2px solid white;
+            }
+
+            .styled-table th, .styled-table td {
+                border: 1px solid white;
+                padding: 8px 10px;
                 margin: 0;
-                padding: 0;
             }
 
             .styled-table td {
@@ -137,28 +117,6 @@ else:
             .styled-table td:first-child {
                 background-color: #1e1e1e;
                 color: white;
-            }
-
-            .styled-table th, .styled-table td {
-                border: 1px solid white;
-                padding: 8px 10px;
-                margin: 0;
-            }
-
-            .styled-table th:first-child {
-                border-top-left-radius: 10px;
-            }
-
-            .styled-table th:last-child {
-                border-top-right-radius: 10px;
-            }
-
-            .styled-table tr:last-child td:first-child {
-                border-bottom-left-radius: 10px;
-            }
-
-            .styled-table tr:last-child td:last-child {
-                border-bottom-right-radius: 10px;
             }
         }
     </style>
