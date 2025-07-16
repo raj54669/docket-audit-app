@@ -142,4 +142,4 @@ else:
     html += "</table></div>"
 
     # --- Render Tables ---
-    st.markdown(html, unsafe_allow_html=True)
+  st.markdown(html, unsafe_allow_html=True)  # ✅ Correct way
