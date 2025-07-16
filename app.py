@@ -65,8 +65,10 @@ else:
     html = """
     <style>
         .table-wrapper {
-            margin-bottom: 20px;
-            overflow: hidden;
+           margin-bottom: 20px;
+           border: 2px solid black;         /* Outer thick border */
+           border-radius: 10px;             /* Rounded corners */
+           overflow: hidden;
         }
 
         .styled-table {
@@ -116,6 +118,11 @@ else:
 
         /* Dark Mode Support */
         @media (prefers-color-scheme: dark) {
+
+            .table-wrapper {
+                border: 2px solid white;
+            }        
+            
             .styled-table {
                 border: 2px solid white;
             }
