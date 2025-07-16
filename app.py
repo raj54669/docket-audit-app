@@ -24,13 +24,13 @@ st.set_page_config(
 
 st.title("🚗 Mahindra Vehicle Pricing Viewer")
 
-# --- File Timestamp in IST (+5:30) ---
+# --- Show Last Modified Timestamp in IST ---
 if os.path.exists(file_path):
     mod_time = datetime.fromtimestamp(os.path.getmtime(file_path)) + timedelta(hours=5, minutes=30)
     formatted_time = mod_time.strftime("%d-%b-%Y %I:%M %p")
     st.caption(f"📅 Data last updated on: {formatted_time} (IST)")
 
-# --- 3-Step Filter ---
+# --- Model-Fuel-Variant Selection ---
 model = st.selectbox("Select Model", sorted(price_data["Model"].unique()))
 fuel_options = price_data[price_data["Model"] == model]["Fuel Type"].unique()
 fuel_type = st.selectbox("Select Fuel Type", sorted(fuel_options))
@@ -38,16 +38,15 @@ variant_options = price_data[(price_data["Model"] == model) &
                              (price_data["Fuel Type"] == fuel_type)]["Variant"].unique()
 variant = st.selectbox("Select Variant", sorted(variant_options))
 
-# --- Extract Selection ---
+# --- Filter Data Row ---
 selected_row = price_data[
     (price_data["Model"] == model) &
     (price_data["Fuel Type"] == fuel_type) &
     (price_data["Variant"] == variant)
 ]
 
-# --- Display Table ---
 if selected_row.empty:
-    st.warning("No matching entry found for selected filters.")
+    st.warning("No matching entry found.")
 else:
     st.subheader("📋 Vehicle Pricing Details")
     row = selected_row.iloc[0]
@@ -56,72 +55,74 @@ else:
         formatted = f"₹{int(val):,}" if pd.notnull(val) else "<i style='color:gray;'>N/A</i>"
         return f"<b>{formatted}</b>" if bold else formatted
 
-    # --- Fields ---
+    # --- Field Definitions ---
     shared_fields = [
-        "Ex-Showroom Price",
-        "TCS 1%",
-        "Insurance 1 Yr OD + 3 Yr TP + Zero Dep.",
-        "Accessories Kit",
-        "SMC",
-        "Extended Warranty",
-        "Maxi Care",
-        "RSA (1 Year)",
-        "Fastag"
+        "Ex-Showroom Price", "TCS 1%", "Insurance 1 Yr OD + 3 Yr TP + Zero Dep.",
+        "Accessories Kit", "SMC", "Extended Warranty", "Maxi Care", "RSA (1 Year)", "Fastag"
     ]
 
     grouped_fields = [
-        "RTO (W/O HYPO)",
-        "RTO (With HYPO)",
-        "On Road Price (W/O HYPO)",
-        "On Road Price (With HYPO)"
+        "RTO (W/O HYPO)", "RTO (With HYPO)",
+        "On Road Price (W/O HYPO)", "On Road Price (With HYPO)"
     ]
 
     group_keys = {
-        "RTO (W/O HYPO)": (
-            "RTO (W/O HYPO) - Individual", "RTO (W/O HYPO) - Corporate"
-        ),
-        "RTO (With HYPO)": (
-            "RTO (With HYPO) - Individual", "RTO (With HYPO) - Corporate"
-        ),
+        "RTO (W/O HYPO)": ("RTO (W/O HYPO) - Individual", "RTO (W/O HYPO) - Corporate"),
+        "RTO (With HYPO)": ("RTO (With HYPO) - Individual", "RTO (With HYPO) - Corporate"),
         "On Road Price (W/O HYPO)": (
-            "On Road Price (W/O HYPO) - Individual", "On Road Price (W/O HYPO) - Corporate"
-        ),
+            "On Road Price (W/O HYPO) - Individual", "On Road Price (W/O HYPO) - Corporate"),
         "On Road Price (With HYPO)": (
-            "On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"
-        )
+            "On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"),
     }
 
-    # --- Table HTML Styling ---
+    # --- Table Styling + HTML ---
     html = """
     <style>
         .full-table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             font-size: 16px;
-            border: 1px solid #444;
+            border: 2px solid #004d40;
             border-radius: 12px;
             overflow: hidden;
+            margin-bottom: 1rem;
         }
         .full-table th, .full-table td {
-            border: 1px solid #444;
             padding: 10px 12px;
             text-align: center;
+            border-bottom: 1px solid #ccc;
         }
         .full-table th {
             background-color: #004d40;
             color: white;
             font-weight: 600;
         }
-        .full-table td {
-            background-color: white;
-            color: black;
-        }
         .full-table td:first-child {
             text-align: left;
             font-weight: 600;
             background-color: #f0f0f0;
         }
+        .full-table td {
+            background-color: white;
+            color: black;
+        }
 
+        /* Rounded corners on top and bottom */
+        .full-table tr:first-child th:first-child {
+            border-top-left-radius: 12px;
+        }
+        .full-table tr:first-child th:last-child {
+            border-top-right-radius: 12px;
+        }
+        .full-table tr:last-child td:first-child {
+            border-bottom-left-radius: 12px;
+        }
+        .full-table tr:last-child td:last-child {
+            border-bottom-right-radius: 12px;
+        }
+
+        /* Dark mode compatibility */
         @media (prefers-color-scheme: dark) {
             .full-table td {
                 background-color: #111;
@@ -143,7 +144,6 @@ else:
 
     html += """
     </table>
-    <br>
     <table class="full-table">
         <tr><th>Registration</th><th>Individual</th><th>Corporate</th></tr>
     """
