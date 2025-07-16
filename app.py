@@ -56,32 +56,54 @@ else:
         formatted = f"₹{int(val):,}" if pd.notnull(val) else "<i style='color:gray;'>N/A</i>"
         return f"<b>{formatted}</b>" if bold else formatted
 
-    # Shared pricing (single column)
+    # --- Fields (same as Excel) ---
     shared_fields = [
-        ("Ex-Showroom Price", "Ex-Showroom Price"),
-        ("TCS", "TCS 1%"),
-        ("Comprehensive + ZeroDep. Insurance", "Insurance 1 Yr OD + 3 Yr TP + Zero Dep."),
-        ("RSA (Road SideAssistance) For 1 Year", "RSA"),  # If column exists
-        ("SMC Road - Tax (IfApplicable)", "SMC"),
-        ("MAXI CARE", "Maxi Care"),
-        ("Accessories", "Accessories Kit")
+        "Ex-Showroom Price",
+        "TCS 1%",
+        "Insurance 1 Yr OD + 3 Yr TP + Zero Dep.",
+        "Accessories Kit",
+        "SMC",
+        "Extended Warranty",
+        "Maxi Care",
+        "RSA (1 Year)",
+        "Fastag"
     ]
 
-    # Registration-specific
-    reg_fields = [
-        ("RTO (W/O HYPO)", ("RTO (W/O HYPO) - Individual", "RTO (W/O HYPO) - Corporate")),
-        ("RTO (With HYPO)", ("RTO (With HYPO) - Individual", "RTO (With HYPO) - Corporate")),
-        ("On Road Price", ("On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"))
+    grouped_fields = [
+        "RTO (W/O HYPO)",
+        "RTO (With HYPO)",
+        "On Road Price (W/O HYPO)",
+        "On Road Price (With HYPO)"
     ]
 
-    # --- HTML Table Styling ---
+    # --- Column keys for grouped fields ---
+    group_keys = {
+        "RTO (W/O HYPO)": (
+            "RTO (W/O HYPO) - Individual", 
+            "RTO (W/O HYPO) - Corporate"
+        ),
+        "RTO (With HYPO)": (
+            "RTO (With HYPO) - Individual", 
+            "RTO (With HYPO) - Corporate"
+        ),
+        "On Road Price (W/O HYPO)": (
+            "On Road Price (W/O HYPO) - Individual", 
+            "On Road Price (W/O HYPO) - Corporate"
+        ),
+        "On Road Price (With HYPO)": (
+            "On Road Price (With HYPO) - Individual", 
+            "On Road Price (With HYPO) - Corporate"
+        )
+    }
+
+    # --- Styling ---
     html = """
     <style>
         .full-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 16px;
-            margin-top: 16px;
+            margin: 0;
         }
         .full-table th, .full-table td {
             border: 1px solid #666;
@@ -96,29 +118,30 @@ else:
             text-align: left;
             font-weight: bold;
         }
+        .gapless-section {
+            margin-bottom: 0;
+        }
     </style>
 
-    <table class="full-table">
+    <table class="full-table gapless-section">
         <tr><th>Description</th><th>Amount</th></tr>
     """
 
-    # Add shared pricing rows
-    for label, key in shared_fields:
-        value = fmt(row.get(key))
-        html += f"<tr><td>{label}</td><td>{value}</td></tr>"
+    for field in shared_fields:
+        val = row.get(field)
+        html += f"<tr><td>{field}</td><td>{fmt(val)}</td></tr>"
 
-    html += "</table><br><br>"
-
-    # --- Registration table (side-by-side) ---
     html += """
+    </table>
     <table class="full-table">
         <tr><th>Registration</th><th>Individual</th><th>Corporate</th></tr>
     """
 
-    for label, (ind_key, corp_key) in reg_fields:
-        is_on_road = "On Road" in label
-        ind_val = fmt(row.get(ind_key), bold=is_on_road)
-        corp_val = fmt(row.get(corp_key), bold=is_on_road)
+    for label in grouped_fields:
+        ind_key, corp_key = group_keys[label]
+        is_onroad = "On Road" in label
+        ind_val = fmt(row.get(ind_key), bold=is_onroad)
+        corp_val = fmt(row.get(corp_key), bold=is_onroad)
         html += f"<tr><td>{label}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
 
     html += "</table>"
