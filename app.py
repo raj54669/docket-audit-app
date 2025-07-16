@@ -62,65 +62,68 @@ else:
     }
 
     # --- CSS with rounded outer border containers ---
-    html = """
-    <style>
+   # --- Updated CSS with tighter table layout ---
+html = """
+<style>
+    .table-wrapper {
+        border: 2px solid black;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 0px;
+        display: inline-block;
+    }
+
+    .styled-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 16px;
+    }
+
+    .styled-table th, .styled-table td {
+        border: 1px solid black;
+        padding: 10px 12px;
+        text-align: center;
+    }
+
+    .styled-table th {
+        background-color: #004d40;
+        color: white;
+        font-weight: bold;
+    }
+
+    .styled-table td:first-child {
+        text-align: left;
+        font-weight: 600;
+        background-color: #f7f7f7;
+    }
+
+    .styled-table td {
+        background-color: white;
+    }
+
+    /* Dark Mode */
+    @media (prefers-color-scheme: dark) {
         .table-wrapper {
-            border: 2px solid black;
-            border-radius: 12px;
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-
-        .styled-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 16px;
-        }
-
-        .styled-table th, .styled-table td {
-            border: 1px solid black;
-            padding: 10px 12px;
-            text-align: center;
-        }
-
-        .styled-table th {
-            background-color: #004d40;
-            color: white;
-            font-weight: bold;
-        }
-
-        .styled-table td:first-child {
-            text-align: left;
-            font-weight: 600;
-            background-color: #f7f7f7;
+            border: 2px solid white;
         }
 
         .styled-table td {
-            background-color: white;
+            background-color: #111;
+            color: #eee;
         }
 
-        /* Dark Mode */
-        @media (prefers-color-scheme: dark) {
-            .table-wrapper {
-                border: 2px solid white;
-            }
-
-            .styled-table td {
-                background-color: #111;
-                color: #eee;
-            }
-
-            .styled-table td:first-child {
-                background-color: #1e1e1e;
-                color: white;
-            }
-
-            .styled-table th, .styled-table td {
-                border: 1px solid white;
-            }
+        .styled-table td:first-child {
+            background-color: #1e1e1e;
+            color: white;
         }
-    </style>
-    """
+
+        .styled-table th, .styled-table td {
+            border: 1px solid white;
+        }
+    }
+</style>
+"""
+
 
     # --- First Table ---
     html += """
