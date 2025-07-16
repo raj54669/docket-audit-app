@@ -171,10 +171,16 @@ row = selected_row.iloc[0]
 
 # --- Display Tables ---
 st.subheader("📋 Vehicle Pricing Details")
-col1, col2 = st.columns(2)
 
-with col1:
-    st.markdown(render_shared_table(row, SHARED_FIELDS), unsafe_allow_html=True)
+# Main table
+st.markdown(render_shared_table(row, SHARED_FIELDS), unsafe_allow_html=True)
 
-with col2:
-    st.markdown(render_registration_table(row, GROUPED_FIELDS, GROUP_KEYS), unsafe_allow_html=True)
+# CSS to remove space between two tables
+st.markdown("""
+    <style>
+    .table-wrapper + .table-wrapper { margin-top: -8px; }
+    </style>
+""", unsafe_allow_html=True)
+
+# Registration table immediately below
+st.markdown(render_registration_table(row, GROUPED_FIELDS, GROUP_KEYS), unsafe_allow_html=True)
