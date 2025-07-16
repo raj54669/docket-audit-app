@@ -24,7 +24,7 @@ st.title("🚗 Mahindra Vehicle Pricing Viewer")
 
 # --- Timestamp in IST ---
 if os.path.exists(file_path):
-    ist_time = datetime.fromtimestamp(os.path.getmtime(file_path)) + timedelta(hours=5, 30)
+    ist_time = datetime.fromtimestamp(os.path.getmtime(file_path)) + timedelta(hours=5, minutes=30)
     st.caption(f"📅 Data last updated on: {ist_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
 
 # --- Dropdowns ---
