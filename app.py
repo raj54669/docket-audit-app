@@ -110,8 +110,11 @@ model = st.selectbox("Select Model", models)
 fuel_types = sorted(price_data[price_data["Model"] == model]["Fuel Type"].dropna().unique())
 fuel_type = st.selectbox("Select Fuel Type", fuel_types)
 
-variants = price_data[(price_data["Model"] == model) & (price_data["Fuel Type"] == fuel_type)]["Variant"].dropna().unique()
-variant = st.selectbox("Select Variant", sorted(variants))
+# Filter variant options using text_input for searchable dropdown
+variant_options = sorted(price_data[(price_data["Model"] == model) & (price_data["Fuel Type"] == fuel_type)]["Variant"].dropna().unique())
+variant_search = st.text_input("Type to search Variant")
+filtered_variants = [v for v in variant_options if variant_search.lower() in v.lower()]
+variant = st.selectbox("Select Variant", filtered_variants if filtered_variants else variant_options)
 
 selected_row = price_data[(price_data["Model"] == model) & (price_data["Fuel Type"] == fuel_type) & (price_data["Variant"] == variant)]
 
