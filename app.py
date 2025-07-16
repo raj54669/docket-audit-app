@@ -33,7 +33,7 @@ fuel_type = st.selectbox("Select Fuel Type", sorted(price_data[price_data["Model
 variant = st.selectbox("Select Variant", sorted(price_data[(price_data["Model"] == model) & (price_data["Fuel Type"] == fuel_type)]["Variant"].dropna().unique()))
 selected_row = price_data[(price_data["Model"] == model) & (price_data["Fuel Type"] == fuel_type) & (price_data["Variant"] == variant)]
 
-# --- Formatter ---
+# --- Formatting Helper ---
 def fmt(val, bold=False):
     formatted = f"₹{int(val):,}" if pd.notnull(val) else "<i style='color:gray;'>N/A</i>"
     return f"<b>{formatted}</b>" if bold else formatted
@@ -61,27 +61,29 @@ else:
         "On Road Price (With HYPO)": ("On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"),
     }
 
-    # --- Responsive CSS ---
+    # --- Cleaned-Up CSS (No outer rounded border) ---
     html = """
     <style>
         .table-wrapper {
-            margin-bottom: 16px;
-            overflow-x: auto;
+            margin-bottom: 15px;
+            padding: 0;
         }
 
         .styled-table {
             width: 100%;
-            min-width: 450px;
             border-collapse: collapse;
-            font-size: 1rem;
-            line-height: 1.4;
+            font-size: 16px;
+            line-height: 1.2;
             border: 2px solid black;
+            margin: 0;
+            padding: 0;
         }
 
         .styled-table th, .styled-table td {
             border: 1px solid black;
-            padding: 10px 12px;
+            padding: 8px 10px;
             text-align: center;
+            margin: 0;
         }
 
         .styled-table th {
@@ -96,28 +98,22 @@ else:
             background-color: #f7f7f7;
         }
 
-        /* Smaller fonts/padding on mobile */
-        @media screen and (max-width: 768px) {
-            .styled-table {
-                font-size: 0.9rem;
-            }
-            .styled-table th, .styled-table td {
-                padding: 6px 8px;
-            }
-        }
-
-        /* Dark Mode Support */
         @media (prefers-color-scheme: dark) {
             .styled-table {
                 border: 2px solid white;
             }
+
             .styled-table th, .styled-table td {
                 border: 1px solid white;
+                padding: 8px 10px;
+                margin: 0;
             }
+
             .styled-table td {
                 background-color: #111;
                 color: #eee;
             }
+
             .styled-table td:first-child {
                 background-color: #1e1e1e;
                 color: white;
@@ -148,4 +144,5 @@ else:
         html += f"<tr><td>{field}</td><td>{fmt(row.get(ind_key), is_onroad)}</td><td>{fmt(row.get(corp_key), is_onroad)}</td></tr>"
     html += "</table></div>"
 
+    # --- Render tables ---
     st.markdown(html, unsafe_allow_html=True)
