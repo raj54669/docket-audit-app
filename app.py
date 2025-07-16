@@ -69,7 +69,8 @@ else:
             border-radius: 10px;
             overflow: hidden;
             margin-bottom: 0px;
-            display: inline-block;
+            width: 100%;
+            display: block;
         }
 
         .styled-table {
