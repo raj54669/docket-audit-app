@@ -6,7 +6,12 @@ import tempfile
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.styles import getSampleStyleSheet
+
+# Register Unicode font for ₹ symbol
+pdfmetrics.registerFont(TTFont('DejaVu', 'fonts/DejaVuSans.ttf'))
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -174,7 +179,7 @@ def generate_pdf(row):
             ('BACKGROUND', (0, 0), (-1, 0), colors.teal),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTNAME', (0, 0), (-1, 0), 'DejaVu'),
             ('ALIGN', (1, 1), (-1, -1), 'RIGHT'),
             ('LEFTPADDING', (0, 0), (-1, -1), 6),
             ('RIGHTPADDING', (0, 0), (-1, -1), 6),
@@ -197,7 +202,7 @@ def generate_pdf(row):
             ('BACKGROUND', (0, 0), (-1, 0), colors.teal),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTNAME', (0, 0), (-1, 0), 'DejaVu'),
             ('ALIGN', (1, 1), (-1, -1), 'RIGHT'),
             ('LEFTPADDING', (0, 0), (-1, -1), 6),
             ('RIGHTPADDING', (0, 0), (-1, -1), 6),
