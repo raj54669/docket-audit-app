@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 import os
 
-# --- Load Data ---
+# --- Load Excel Data ---
 @st.cache_data
 def load_data():
     try:
@@ -24,12 +24,12 @@ st.set_page_config(
 
 st.title("🚗 Mahindra Vehicle Pricing Viewer")
 
-# --- Timestamp in IST ---
+# --- Timestamp (Indian Timezone) ---
 if os.path.exists(file_path):
-    mod_time = datetime.fromtimestamp(os.path.getmtime(file_path)) + timedelta(hours=5, minutes=30)
-    st.caption(f"📅 Data last updated on: {mod_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
+    ist_time = datetime.fromtimestamp(os.path.getmtime(file_path)) + timedelta(hours=5, minutes=30)
+    st.caption(f"📅 Data last updated on: {ist_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
 
-# --- Filters ---
+# --- Dropdown Selection ---
 model = st.selectbox("Select Model", sorted(price_data["Model"].unique()))
 fuel_type = st.selectbox(
     "Select Fuel Type", 
@@ -47,17 +47,18 @@ selected_row = price_data[
     (price_data["Variant"] == variant)
 ]
 
+# --- Utility Function ---
+def fmt(val, bold=False):
+    formatted = f"₹{int(val):,}" if pd.notnull(val) else "<i style='color:gray;'>N/A</i>"
+    return f"<b>{formatted}</b>" if bold else formatted
+
+# --- Display Vehicle Pricing Details ---
 if selected_row.empty:
     st.warning("No matching data found.")
 else:
     st.subheader("📋 Vehicle Pricing Details")
     row = selected_row.iloc[0]
 
-    def fmt(val, bold=False):
-        formatted = f"₹{int(val):,}" if pd.notnull(val) else "<i style='color:gray;'>N/A</i>"
-        return f"<b>{formatted}</b>" if bold else formatted
-
-    # --- Fields ---
     shared_fields = [
         "Ex-Showroom Price", "TCS 1%", "Insurance 1 Yr OD + 3 Yr TP + Zero Dep.",
         "Accessories Kit", "SMC", "Extended Warranty", "Maxi Care", "RSA (1 Year)", "Fastag"
@@ -77,7 +78,7 @@ else:
             "On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"),
     }
 
-    # --- CSS for full border ---
+    # --- Style ---
     html = """
     <style>
         .styled-table {
@@ -85,45 +86,42 @@ else:
             border-collapse: separate;
             border-spacing: 0;
             font-size: 16px;
-            margin-bottom: 16px;
-            border: 2px solid #004d40;
+            margin-bottom: 20px;
             border-radius: 12px;
             overflow: hidden;
         }
+
         .styled-table th, .styled-table td {
-            border: 1px solid #999;
             padding: 10px 12px;
             text-align: center;
         }
+
         .styled-table th {
             background-color: #004d40;
             color: white;
             font-weight: bold;
         }
+
         .styled-table td:first-child {
             text-align: left;
             font-weight: 600;
             background-color: #f7f7f7;
         }
+
         .styled-table td {
             background-color: white;
         }
 
-        /* Rounded corners */
-        .styled-table tr:first-child th:first-child {
-            border-top-left-radius: 12px;
-        }
-        .styled-table tr:first-child th:last-child {
-            border-top-right-radius: 12px;
-        }
-        .styled-table tr:last-child td:first-child {
-            border-bottom-left-radius: 12px;
-        }
-        .styled-table tr:last-child td:last-child {
-            border-bottom-right-radius: 12px;
+        .styled-table, .styled-table th, .styled-table td {
+            border: 1px solid black;
         }
 
-        /* Dark mode support */
+        .styled-table tr:first-child th:first-child { border-top-left-radius: 12px; }
+        .styled-table tr:first-child th:last-child { border-top-right-radius: 12px; }
+        .styled-table tr:last-child td:first-child { border-bottom-left-radius: 12px; }
+        .styled-table tr:last-child td:last-child { border-bottom-right-radius: 12px; }
+
+        /* Dark mode overrides */
         @media (prefers-color-scheme: dark) {
             .styled-table td {
                 background-color: #111;
@@ -131,6 +129,10 @@ else:
             }
             .styled-table td:first-child {
                 background-color: #1e1e1e;
+                color: #fff;
+            }
+            .styled-table, .styled-table th, .styled-table td {
+                border: 1px solid white;
             }
         }
     </style>
@@ -152,8 +154,8 @@ else:
     """
     for field in grouped_fields:
         key_ind, key_corp = group_keys[field]
-        html += f"<tr><td>{field}</td><td>{fmt(row.get(key_ind), 'On Road' in field)}</td><td>{fmt(row.get(key_corp), 'On Road' in field)}</td></tr>"
+        is_onroad = "On Road" in field
+        html += f"<tr><td>{field}</td><td>{fmt(row.get(key_ind), is_onroad)}</td><td>{fmt(row.get(key_corp), is_onroad)}</td></tr>"
     html += "</table>"
 
-    # --- Show HTML Tables ---
     st.markdown(html, unsafe_allow_html=True)
