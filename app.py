@@ -48,75 +48,79 @@ if selected_row.empty:
     st.warning("No matching entry found for selected filters.")
 else:
     st.markdown("---")
-    st.subheader("📋 Side-by-Side Pricing Comparison")
+    st.subheader("📋 Vehicle Pricing Details")
 
     row = selected_row.iloc[0]
 
-    def fmt(val):
-        return f"₹{int(val):,}" if pd.notnull(val) else "<i style='color:gray;'>N/A</i>"
+    def fmt(val, bold=False):
+        formatted = f"₹{int(val):,}" if pd.notnull(val) else "<i style='color:gray;'>N/A</i>"
+        return f"<b>{formatted}</b>" if bold else formatted
 
-    # --- Define fields with corrected headers ---
-    pricing_fields = [
+    # Shared pricing (single column)
+    shared_fields = [
         ("Ex-Showroom Price", "Ex-Showroom Price"),
-        ("TCS 1%", "TCS 1%"),
-        ("Insurance", "Insurance 1 Yr OD + 3 Yr TP + Zero Dep."),
-        ("Accessories", "Accessories Kit"),
-        ("SMC", "SMC"),
-        ("Extended Warranty", "Extended Warranty"),
-        ("Maxi Care", "Maxi Care"),
-        ("RTO (W/O HYPO)", ("RTO (W/O HYPO) - Individual", "RTO (W/O HYPO) - Corporate")),
-        ("RTO (With HYPO)", ("RTO (With HYPO) - Individual", "RTO (With HYPO) - Corporate")),
-        ("On Road Price (W/O HYPO)", ("On Road Price (W/O HYPO) - Individual", "On Road Price (W/O HYPO) - Corporate")),
-        ("On Road Price (With HYPO)", ("On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"))
+        ("TCS", "TCS 1%"),
+        ("Comprehensive + ZeroDep. Insurance", "Insurance 1 Yr OD + 3 Yr TP + Zero Dep."),
+        ("RSA (Road SideAssistance) For 1 Year", "RSA"),  # If column exists
+        ("SMC Road - Tax (IfApplicable)", "SMC"),
+        ("MAXI CARE", "Maxi Care"),
+        ("Accessories", "Accessories Kit")
     ]
 
-    # --- HTML table style with dark mode support ---
-    comparison_html = """
+    # Registration-specific
+    reg_fields = [
+        ("RTO (W/O HYPO)", ("RTO (W/O HYPO) - Individual", "RTO (W/O HYPO) - Corporate")),
+        ("RTO (With HYPO)", ("RTO (With HYPO) - Individual", "RTO (With HYPO) - Corporate")),
+        ("On Road Price", ("On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"))
+    ]
+
+    # --- HTML Table Styling ---
+    html = """
     <style>
-        .side-table {
+        .full-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
             font-size: 16px;
+            margin-top: 16px;
         }
-        .side-table th, .side-table td {
-            border: 1px solid rgba(120, 120, 120, 0.5);
-            padding: 10px;
+        .full-table th, .full-table td {
+            border: 1px solid #666;
+            padding: 8px 12px;
             text-align: center;
         }
-        .side-table th {
-            background-color: rgba(0, 77, 64, 0.85);
-            color: #ffffff;
+        .full-table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
         }
-        .side-table td:first-child {
+        .full-table td:first-child {
             text-align: left;
             font-weight: bold;
-            background-color: rgba(224, 242, 241, 0.08);
-            color: inherit;
-        }
-        .side-table td {
-            background-color: rgba(255, 255, 255, 0.02);
-            color: inherit;
         }
     </style>
 
-    <table class="side-table">
-        <tr>
-            <th>Description</th>
-            <th>Individual</th>
-            <th>Corporate</th>
-        </tr>
+    <table class="full-table">
+        <tr><th>Description</th><th>Amount</th></tr>
     """
 
-    for label, key in pricing_fields:
-        if isinstance(key, tuple):
-            ind_val = fmt(row.get(key[0]))
-            corp_val = fmt(row.get(key[1]))
-        else:
-            val = fmt(row.get(key))
-            ind_val = corp_val = val
-        comparison_html += f"<tr><td>{label}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
+    # Add shared pricing rows
+    for label, key in shared_fields:
+        value = fmt(row.get(key))
+        html += f"<tr><td>{label}</td><td>{value}</td></tr>"
 
-    comparison_html += "</table>"
+    html += "</table><br><br>"
 
-    st.markdown(comparison_html, unsafe_allow_html=True)
+    # --- Registration table (side-by-side) ---
+    html += """
+    <table class="full-table">
+        <tr><th>Registration</th><th>Individual</th><th>Corporate</th></tr>
+    """
+
+    for label, (ind_key, corp_key) in reg_fields:
+        is_on_road = "On Road" in label
+        ind_val = fmt(row.get(ind_key), bold=is_on_road)
+        corp_val = fmt(row.get(corp_key), bold=is_on_road)
+        html += f"<tr><td>{label}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
+
+    html += "</table>"
+
+    st.markdown(html, unsafe_allow_html=True)
