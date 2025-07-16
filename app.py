@@ -7,11 +7,11 @@ import re
 # --- Page Configuration ---
 st.set_page_config(
     page_title="Mahindra Pricing Viewer",
-    layout="wide",  # Use full width of screen
+    layout="wide",  # Use full screen width
     initial_sidebar_state="auto"
 )
 
-# --- Remove Header/Footer Padding ---
+# --- Remove Streamlit Header/Footer Padding ---
 st.markdown("""
     <style>
     .block-container {
@@ -38,7 +38,7 @@ GROUP_KEYS = {
     "On Road Price (With HYPO)": ("On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"),
 }
 
-# --- Styling ---
+# --- Table Styling ---
 st.markdown("""
     <style>
     .table-wrapper { margin-bottom: 15px; padding: 0; }
@@ -53,6 +53,7 @@ st.markdown("""
     .styled-table td:first-child {
         text-align: left; font-weight: 600; background-color: #f7f7f7;
     }
+    .table-wrapper + .table-wrapper { margin-top: -8px; }
     @media (prefers-color-scheme: dark) {
         .styled-table { border: 2px solid white; }
         .styled-table th, .styled-table td { border: 1px solid white; }
@@ -120,67 +121,15 @@ def render_registration_table(row: pd.Series, groups: list[str], keys: dict) -> 
     </table></div>
     """
 
+
 # --- App Title ---
 st.title("🚗 Mahindra Vehicle Pricing Viewer")
 
 # --- Load Data ---
 price_data = load_data(FILE_PATH)
 
-# --- Timestamp Display ---
+# --- Last Updated Timestamp ---
 try:
     ist_time = datetime.fromtimestamp(os.path.getmtime(FILE_PATH)) + timedelta(hours=5, minutes=30)
     st.caption(f"📅 Data last updated on: {ist_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
-except Exception:
-    st.caption("📅 Last update timestamp not available.")
-
-# --- Model & Fuel Type Selection ---
-models = sorted(price_data["Model"].dropna().unique())
-if not models:
-    st.error("❌ No models found in data.")
-    st.stop()
-
-col1, col2 = st.columns(2)
-
-with col1:
-    model = st.selectbox("🚘 Select Model", models)
-
-fuel_df = price_data[price_data["Model"] == model]
-fuel_types = sorted(fuel_df["Fuel Type"].dropna().unique())
-if not fuel_types:
-    st.error("❌ No fuel types found for selected model.")
-    st.stop()
-
-with col2:
-    fuel_type = st.selectbox("⛽ Select Fuel Type", fuel_types)
-
-# --- Variant Selection ---
-variant_df = fuel_df[fuel_df["Fuel Type"] == fuel_type]
-variant_options = sorted(variant_df["Variant"].dropna().unique())
-if not variant_options:
-    st.error("❌ No variants available for selected fuel type.")
-    st.stop()
-
-variant = st.selectbox("🎯 Select Variant", variant_options)
-
-selected_row = variant_df[variant_df["Variant"] == variant]
-if selected_row.empty:
-    st.warning("⚠️ No data found for selected filters.")
-    st.stop()
-
-row = selected_row.iloc[0]
-
-# --- Display Tables ---
-st.subheader("📋 Vehicle Pricing Details")
-
-# Main table
-st.markdown(render_shared_table(row, SHARED_FIELDS), unsafe_allow_html=True)
-
-# CSS to remove space between two tables
-st.markdown("""
-    <style>
-    .table-wrapper + .table-wrapper { margin-top: -8px; }
-    </style>
-""", unsafe_allow_html=True)
-
-# Registration table immediately below
-st.markdown(render_registration_table(row, GROUPED_FIELDS, GROUP_KEYS), unsafe_allow_html=True)
+exce
