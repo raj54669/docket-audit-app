@@ -132,4 +132,5 @@ price_data = load_data(FILE_PATH)
 try:
     ist_time = datetime.fromtimestamp(os.path.getmtime(FILE_PATH)) + timedelta(hours=5, minutes=30)
     st.caption(f"📅 Data last updated on: {ist_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
-except
+except Exception as e:
+    st.error(f"Error: {e}")
