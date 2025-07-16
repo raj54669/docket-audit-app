@@ -71,13 +71,13 @@ else:
     margin-bottom: 20px;
     width: 100%;
     display: block;
-}
+        }
 
-/* ... other table styles remain unchanged ... */
+    /* ... other table styles remain unchanged ... */
 
-.styled-table tr:last-child td {
+    .styled-table tr:last-child td {
     border-bottom: none !important;  /* 💥 Key fix */
-}
+        }
 
         .styled-table {
             width: 100%;
