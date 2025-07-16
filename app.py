@@ -63,60 +63,94 @@ else:
 
     # --- CSS Styling ---
     html = """
-<style>
-.table-wrapper {
-    border: 2px solid black;
-    border-radius: 10px;
-    overflow: hidden;
-    margin-bottom: 20px;
-}
+    <style>
+        .table-wrapper {
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
 
-.styled-table {
-    width: 100%;
-    border-collapse: collapse;
-    border-spacing: 0;
-    font-size: 16px;
-}
+        .styled-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 16px;
+            line-height: 1.2;
+            border: 2px solid black;
+            border-radius: 10px;
+            overflow: hidden;
+        }
 
-.styled-table th, .styled-table td {
-    border: 1px solid black;
-    padding: 10px 12px;
-    text-align: center;
-}
+        .styled-table th, .styled-table td {
+            border: 1px solid black;
+            padding: 10px 12px;
+            text-align: center;
+        }
 
-.styled-table th {
-    background-color: #004d40;
-    color: white;
-    font-weight: bold;
-}
+        .styled-table th {
+            background-color: #004d40;
+            color: white;
+            font-weight: bold;
+        }
 
-.styled-table td:first-child {
-    text-align: left;
-    font-weight: 600;
-    background-color: #f7f7f7;
-}
+        .styled-table td:first-child {
+            text-align: left;
+            font-weight: 600;
+            background-color: #f7f7f7;
+        }
 
-/* Dark Mode Support */
-@media (prefers-color-scheme: dark) {
-    .table-wrapper {
-        border: 2px solid white;
-    }
+        /* Rounded corners */
+        .styled-table th:first-child {
+            border-top-left-radius: 10px;
+        }
 
-    .styled-table td {
-        background-color: #111;
-        color: #eee;
-    }
+        .styled-table th:last-child {
+            border-top-right-radius: 10px;
+        }
 
-    .styled-table td:first-child {
-        background-color: #1e1e1e;
-        color: white;
-    }
+        .styled-table tr:last-child td:first-child {
+            border-bottom-left-radius: 10px;
+        }
 
-    .styled-table th, .styled-table td {
-        border: 1px solid white;
-    }
-}
-</style>
+        .styled-table tr:last-child td:last-child {
+            border-bottom-right-radius: 10px;
+        }
+
+        /* Dark Mode Support */
+        @media (prefers-color-scheme: dark) {
+            .styled-table {
+                border: 2px solid white;
+            }
+
+            .styled-table td {
+                background-color: #111;
+                color: #eee;
+            }
+
+            .styled-table td:first-child {
+                background-color: #1e1e1e;
+                color: white;
+            }
+
+            .styled-table th, .styled-table td {
+                border: 1px solid white;
+            }
+
+            .styled-table th:first-child {
+                border-top-left-radius: 10px;
+            }
+
+            .styled-table th:last-child {
+                border-top-right-radius: 10px;
+            }
+
+            .styled-table tr:last-child td:first-child {
+                border-bottom-left-radius: 10px;
+            }
+
+            .styled-table tr:last-child td:last-child {
+                border-bottom-right-radius: 10px;
+            }
+        }
+    </style>
     """
 
     # --- First Table (Shared Costs) ---
@@ -141,5 +175,5 @@ else:
         html += f"<tr><td>{field}</td><td>{fmt(row.get(ind_key), is_onroad)}</td><td>{fmt(row.get(corp_key), is_onroad)}</td></tr>"
     html += "</table></div>"
 
-    # --- Render Tables ---
-  st.markdown(html, unsafe_allow_html=True)  # ✅ Correct way
+    # --- Render tables ---
+    st.markdown(html, unsafe_allow_html=True)
