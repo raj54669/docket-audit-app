@@ -34,19 +34,14 @@ def format_indian_currency(value):
         value = float(value)
         is_negative = value < 0
         value = abs(value)
-        s = f"{value:.2f}"
-        parts = s.split('.')
-        integer_part = parts[0]
-        decimal_part = parts[1]
-
-        last_three = integer_part[-3:]
-        other = integer_part[:-3]
+        s = f"{int(value)}"
+        last_three = s[-3:]
+        other = s[:-3]
         if other:
             other = re.sub(r'(\d)(?=(\d{2})+$)', r'\1,', other)
-            formatted = f"{other},{last_three}.{decimal_part}"
+            formatted = f"{other},{last_three}"
         else:
-            formatted = f"{last_three}.{decimal_part}"
-
+            formatted = f"{last_three}"
         result = f"₹{formatted}"
         return f"<b>{'-' if is_negative else ''}{result}</b>"
     except:
@@ -151,32 +146,35 @@ def generate_pdf(row):
         width, height = letter
         y = height - 40
 
-        c.setFont("Helvetica-Bold", 16)
+        c.setFont("Helvetica-Bold", 14)
         c.drawString(40, y, f"Mahindra Pricing - {model} / {variant} ({fuel_type})")
         y -= 30
 
         c.setFont("Helvetica-Bold", 12)
         c.drawString(40, y, "Shared Costs")
         y -= 20
-        c.setFont("Helvetica", 11)
+        c.setFont("Helvetica", 10)
         for field in shared_fields:
             val = row.get(field)
-            c.drawString(50, y, f"{field}: ₹{val:,.2f}" if pd.notnull(val) else f"{field}: N/A")
-            y -= 16
+            text = f"{field}: ₹{int(val):,}" if pd.notnull(val) else f"{field}: N/A"
+            c.drawString(50, y, text)
+            y -= 14
 
         y -= 10
         c.setFont("Helvetica-Bold", 12)
         c.drawString(40, y, "Registration Costs")
         y -= 20
-        c.setFont("Helvetica", 11)
+        c.setFont("Helvetica", 10)
         for field in grouped_fields:
             ind_key, corp_key = group_keys[field]
             ind_val = row.get(ind_key)
             corp_val = row.get(corp_key)
-            c.drawString(50, y, f"{field} - Individual: ₹{ind_val:,.2f}" if pd.notnull(ind_val) else f"{field} - Individual: N/A")
-            y -= 16
-            c.drawString(50, y, f"{field} - Corporate: ₹{corp_val:,.2f}" if pd.notnull(corp_val) else f"{field} - Corporate: N/A")
-            y -= 20
+            text1 = f"{field} - Individual: ₹{int(ind_val):,}" if pd.notnull(ind_val) else f"{field} - Individual: N/A"
+            text2 = f"{field} - Corporate: ₹{int(corp_val):,}" if pd.notnull(corp_val) else f"{field} - Corporate: N/A"
+            c.drawString(50, y, text1)
+            y -= 14
+            c.drawString(50, y, text2)
+            y -= 18
 
         c.save()
         return tmp.name
