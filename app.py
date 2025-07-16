@@ -48,42 +48,14 @@ if selected_row.empty:
     st.warning("No matching entry found for selected filters.")
 else:
     st.markdown("---")
-    st.subheader("📋 Vehicle Pricing Details")
-
-    display_fields = [
-        "Ex-Showroom Price",
-        "TCS 1%",
-        "Insurance 1 Yr OD + 3 Yr TP + Zero Dep.",
-        "Accessories Kit",
-        "SMC",
-        "Extended Warranty",
-        "Maxi Care"
-    ]
-
-    pricing_html = "<ul>"
-    for field in display_fields:
-        value = selected_row.iloc[0].get(field, None)
-        if pd.notnull(value):
-            amount = f"₹{int(value):,}"
-        else:
-            amount = "<i style='color:gray;'>Not Available</i>"
-        pricing_html += f"<li><strong>{field}</strong>: {amount}</li>"
-    pricing_html += "</ul>"
-    st.markdown(pricing_html, unsafe_allow_html=True)
-
-if selected_row.empty:
-    st.warning("No matching entry found for selected filters.")
-else:
-    st.markdown("---")
     st.subheader("📋 Side-by-Side Pricing Comparison")
 
     row = selected_row.iloc[0]
 
-    # --- Format currency ---
     def fmt(val):
         return f"₹{int(val):,}" if pd.notnull(val) else "<i style='color:gray;'>N/A</i>"
 
-    # --- Define fields and keys ---
+    # --- Define fields with corrected headers ---
     pricing_fields = [
         ("Ex-Showroom Price", "Ex-Showroom Price"),
         ("TCS 1%", "TCS 1%"),
@@ -94,10 +66,11 @@ else:
         ("Maxi Care", "Maxi Care"),
         ("RTO (W/O HYPO)", ("RTO (W/O HYPO) - Individual", "RTO (W/O HYPO) - Corporate")),
         ("RTO (With HYPO)", ("RTO (With HYPO) - Individual", "RTO (With HYPO) - Corporate")),
-        ("On Road Price", ("On Road Price - Individual", "On Road Price - Corporate"))
+        ("On Road Price (W/O HYPO)", ("On Road Price (W/O HYPO) - Individual", "On Road Price (W/O HYPO) - Corporate")),
+        ("On Road Price (With HYPO)", ("On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"))
     ]
 
-    # --- HTML table styling with dark mode support ---
+    # --- HTML table style with dark mode support ---
     comparison_html = """
     <style>
         .side-table {
@@ -129,23 +102,21 @@ else:
 
     <table class="side-table">
         <tr>
-            <th>Component</th>
+            <th>Description</th>
             <th>Individual</th>
             <th>Corporate</th>
         </tr>
     """
 
-    # --- Build table rows ---
     for label, key in pricing_fields:
         if isinstance(key, tuple):
             ind_val = fmt(row.get(key[0]))
             corp_val = fmt(row.get(key[1]))
         else:
-            value = fmt(row.get(key))
-            ind_val = corp_val = value
+            val = fmt(row.get(key))
+            ind_val = corp_val = val
         comparison_html += f"<tr><td>{label}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
 
     comparison_html += "</table>"
 
-    # --- Show table ---
     st.markdown(comparison_html, unsafe_allow_html=True)
