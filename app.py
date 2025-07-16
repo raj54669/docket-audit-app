@@ -65,13 +65,19 @@ else:
     html = """
     <style>
         .table-wrapper {
-            border: 2px solid black;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 0px;
-            width: 100%;
-            display: block;
-        }
+    border: 2px solid black;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    width: 100%;
+    display: block;
+}
+
+/* ... other table styles remain unchanged ... */
+
+.styled-table tr:last-child td {
+    border-bottom: none !important;  /* 💥 Key fix */
+}
 
         .styled-table {
             width: 100%;
