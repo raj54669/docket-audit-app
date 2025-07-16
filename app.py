@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 import os
 
-# --- Cached Data Loading with Error Handling ---
+# --- Load Data ---
 @st.cache_data
 def load_data():
     try:
@@ -15,7 +15,7 @@ def load_data():
 file_path = "PV Price List Master D. 08.07.2025.xlsx"
 price_data = load_data()
 
-# --- Streamlit Page Setup ---
+# --- Page Setup ---
 st.set_page_config(
     page_title="Mahindra Pricing Viewer",
     layout="centered",
@@ -24,23 +24,26 @@ st.set_page_config(
 
 st.title("🚗 Mahindra Vehicle Pricing Viewer")
 
-# --- Last Modified Timestamp in IST ---
+# --- Timestamp in IST ---
 if os.path.exists(file_path):
     mod_time = datetime.fromtimestamp(os.path.getmtime(file_path)) + timedelta(hours=5, minutes=30)
     st.caption(f"📅 Data last updated on: {mod_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
 
-# --- Model Selection ---
+# --- Filters ---
 model = st.selectbox("Select Model", sorted(price_data["Model"].unique()))
-fuel_options = price_data[price_data["Model"] == model]["Fuel Type"].unique()
-fuel_type = st.selectbox("Select Fuel Type", sorted(fuel_options))
-variant_options = price_data[(price_data["Model"] == model) & 
-                             (price_data["Fuel Type"] == fuel_type)]["Variant"].unique()
-variant = st.selectbox("Select Variant", sorted(variant_options))
+fuel_type = st.selectbox(
+    "Select Fuel Type", 
+    sorted(price_data[price_data["Model"] == model]["Fuel Type"].unique())
+)
+variant = st.selectbox(
+    "Select Variant", 
+    sorted(price_data[(price_data["Model"] == model) & 
+                      (price_data["Fuel Type"] == fuel_type)]["Variant"].unique())
+)
 
-# --- Retrieve Selected Row ---
 selected_row = price_data[
-    (price_data["Model"] == model) &
-    (price_data["Fuel Type"] == fuel_type) &
+    (price_data["Model"] == model) & 
+    (price_data["Fuel Type"] == fuel_type) & 
     (price_data["Variant"] == variant)
 ]
 
@@ -54,7 +57,7 @@ else:
         formatted = f"₹{int(val):,}" if pd.notnull(val) else "<i style='color:gray;'>N/A</i>"
         return f"<b>{formatted}</b>" if bold else formatted
 
-    # --- Columns as per Excel ---
+    # --- Fields ---
     shared_fields = [
         "Ex-Showroom Price", "TCS 1%", "Insurance 1 Yr OD + 3 Yr TP + Zero Dep.",
         "Accessories Kit", "SMC", "Extended Warranty", "Maxi Care", "RSA (1 Year)", "Fastag"
@@ -74,12 +77,13 @@ else:
             "On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"),
     }
 
-    # --- HTML Table Styling ---
+    # --- CSS for full border ---
     html = """
     <style>
         .styled-table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             font-size: 16px;
             margin-bottom: 16px;
             border: 2px solid #004d40;
@@ -87,18 +91,19 @@ else:
             overflow: hidden;
         }
         .styled-table th, .styled-table td {
-            padding: 10px 12px;
             border: 1px solid #999;
+            padding: 10px 12px;
             text-align: center;
         }
         .styled-table th {
             background-color: #004d40;
             color: white;
+            font-weight: bold;
         }
         .styled-table td:first-child {
             text-align: left;
             font-weight: 600;
-            background-color: #f2f2f2;
+            background-color: #f7f7f7;
         }
         .styled-table td {
             background-color: white;
@@ -118,41 +123,37 @@ else:
             border-bottom-right-radius: 12px;
         }
 
-        /* Dark Mode */
+        /* Dark mode support */
         @media (prefers-color-scheme: dark) {
             .styled-table td {
                 background-color: #111;
                 color: #eee;
             }
             .styled-table td:first-child {
-                background-color: #1a1a1a;
+                background-color: #1e1e1e;
             }
         }
     </style>
     """
 
-    # --- First Table: Description + Amount ---
+    # --- Description Table ---
     html += """
     <table class="styled-table">
         <tr><th>Description</th><th>Amount</th></tr>
     """
     for field in shared_fields:
-        val = row.get(field)
-        html += f"<tr><td>{field}</td><td>{fmt(val)}</td></tr>"
+        html += f"<tr><td>{field}</td><td>{fmt(row.get(field))}</td></tr>"
     html += "</table>"
 
-    # --- Second Table: RTO / On-Road Price ---
+    # --- Registration Table ---
     html += """
     <table class="styled-table">
         <tr><th>Registration</th><th>Individual</th><th>Corporate</th></tr>
     """
-    for label in grouped_fields:
-        ind_key, corp_key = group_keys[label]
-        is_onroad = "On Road" in label
-        ind_val = fmt(row.get(ind_key), bold=is_onroad)
-        corp_val = fmt(row.get(corp_key), bold=is_onroad)
-        html += f"<tr><td>{label}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
+    for field in grouped_fields:
+        key_ind, key_corp = group_keys[field]
+        html += f"<tr><td>{field}</td><td>{fmt(row.get(key_ind), 'On Road' in field)}</td><td>{fmt(row.get(key_corp), 'On Road' in field)}</td></tr>"
     html += "</table>"
 
-    # --- Display Tables ---
+    # --- Show HTML Tables ---
     st.markdown(html, unsafe_allow_html=True)
