@@ -53,7 +53,7 @@ st.markdown("""
     }
 
     /* 🔽 Custom Heading Size Overrides */
-    h1 { font-size: 26px !important; }  /* st.title */
+    h1 { font-size: 30px !important; }  /* st.title */
     h2 { font-size: 20px !important; }  /* st.subheader */
     h3 { font-size: 18px !important; }  /* st.markdown("### ...") */
     </style>
