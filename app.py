@@ -7,16 +7,47 @@ import re
 # --- Page Configuration ---
 st.set_page_config(
     page_title="Mahindra Pricing Viewer",
-    layout="wide",  # Use full width of screen
+    layout="wide",
     initial_sidebar_state="auto"
 )
 
-# --- Remove Header/Footer Padding ---
+# --- Styling ---
 st.markdown("""
     <style>
+    /* Limit app width */
     .block-container {
+        max-width: 1100px;
+        margin: auto;
         padding-top: 1rem !important;
         padding-bottom: 1rem !important;
+    }
+
+    .table-wrapper {
+        margin-bottom: 15px; padding: 0;
+    }
+    .styled-table {
+        width: 100%; border-collapse: collapse;
+        font-size: 16px; line-height: 1.2; border: 2px solid black;
+        max-width: 1000px; margin-left: auto; margin-right: auto;
+    }
+    .styled-table th, .styled-table td {
+        border: 1px solid black; padding: 8px 10px; text-align: center;
+    }
+    .styled-table th {
+        background-color: #004d40; color: white; font-weight: bold;
+    }
+    .styled-table td:first-child {
+        text-align: left; font-weight: 600; background-color: #f7f7f7;
+    }
+    .table-wrapper + .table-wrapper {
+        margin-top: -8px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        .styled-table { border: 2px solid white; }
+        .styled-table th, .styled-table td { border: 1px solid white; }
+        .styled-table td { background-color: #111; color: #eee; }
+        .styled-table td:first-child { background-color: #1e1e1e; color: white; }
     }
     </style>
 """, unsafe_allow_html=True)
@@ -37,31 +68,6 @@ GROUP_KEYS = {
     "On Road Price (W/O HYPO)": ("On Road Price (W/O HYPO) - Individual", "On Road Price (W/O HYPO) - Corporate"),
     "On Road Price (With HYPO)": ("On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"),
 }
-
-# --- Styling ---
-st.markdown("""
-    <style>
-    .table-wrapper { margin-bottom: 15px; padding: 0; }
-    .styled-table {
-        width: 100%; border-collapse: collapse;
-        font-size: 16px; line-height: 1.2; border: 2px solid black;
-    }
-    .styled-table th, .styled-table td {
-        border: 1px solid black; padding: 8px 10px; text-align: center;
-    }
-    .styled-table th { background-color: #004d40; color: white; font-weight: bold; }
-    .styled-table td:first-child {
-        text-align: left; font-weight: 600; background-color: #f7f7f7;
-    }
-    @media (prefers-color-scheme: dark) {
-        .styled-table { border: 2px solid white; }
-        .styled-table th, .styled-table td { border: 1px solid white; }
-        .styled-table td { background-color: #111; color: #eee; }
-        .styled-table td:first-child { background-color: #1e1e1e; color: white; }
-    }
-    </style>
-""", unsafe_allow_html=True)
-
 
 # --- Helper Functions ---
 @st.cache_data(show_spinner=False)
@@ -142,7 +148,7 @@ if not models:
 col1, col2 = st.columns(2)
 
 with col1:
-    model = st.selectbox("🚘 Select Model", models)
+    model = st.selectbox("🚘 Select Model", models, help="Choose vehicle model")
 
 fuel_df = price_data[price_data["Model"] == model]
 fuel_types = sorted(fuel_df["Fuel Type"].dropna().unique())
@@ -151,7 +157,7 @@ if not fuel_types:
     st.stop()
 
 with col2:
-    fuel_type = st.selectbox("⛽ Select Fuel Type", fuel_types)
+    fuel_type = st.selectbox("⛽ Select Fuel Type", fuel_types, help="Choose fuel type")
 
 # --- Variant Selection ---
 variant_df = fuel_df[fuel_df["Fuel Type"] == fuel_type]
@@ -169,18 +175,10 @@ if selected_row.empty:
 
 row = selected_row.iloc[0]
 
+# --- Display Selection Summary ---
+st.markdown(f"### 🚙 {model} - {fuel_type} - {variant}")
+
 # --- Display Tables ---
 st.subheader("📋 Vehicle Pricing Details")
-
-# Main table
 st.markdown(render_shared_table(row, SHARED_FIELDS), unsafe_allow_html=True)
-
-# CSS to remove space between two tables
-st.markdown("""
-    <style>
-    .table-wrapper + .table-wrapper { margin-top: -8px; }
-    </style>
-""", unsafe_allow_html=True)
-
-# Registration table immediately below
 st.markdown(render_registration_table(row, GROUPED_FIELDS, GROUP_KEYS), unsafe_allow_html=True)
