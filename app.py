@@ -51,6 +51,11 @@ st.markdown("""
     .stSelectbox label {
         font-weight: 600;
     }
+
+    /* 🔽 Custom Heading Size Overrides */
+    h1 { font-size: 26px !important; }  /* st.title */
+    h2 { font-size: 20px !important; }  /* st.subheader */
+    h3 { font-size: 18px !important; }  /* st.markdown("### ...") */
     </style>
 """, unsafe_allow_html=True)
 
@@ -129,7 +134,8 @@ def render_registration_table(row: pd.Series, groups: list[str], keys: dict) -> 
     """
 
 # --- App Title ---
-st.title("🚗 Mahindra Vehicle Pricing Viewer")
+st.title("🚗 Mahindra Vehicle Pricing Viewer")  
+# 🔹 Uses <h1>
 
 # --- Load Data ---
 price_data = load_data(FILE_PATH)
@@ -138,6 +144,7 @@ price_data = load_data(FILE_PATH)
 try:
     ist_time = datetime.fromtimestamp(os.path.getmtime(FILE_PATH)) + timedelta(hours=5, minutes=30)
     st.caption(f"📅 Data last updated on: {ist_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
+    # 🔹 Uses small <p> text
 except Exception:
     st.caption("📅 Last update timestamp not available.")
 
@@ -178,9 +185,12 @@ if selected_row.empty:
 row = selected_row.iloc[0]
 
 # --- Display Summary ---
-st.markdown(f"### 🚙 {model} - {fuel_type} - {variant}")
+st.markdown(f"### 🚙 {model} - {fuel_type} - {variant}")  
+# 🔹 Uses <h3> via markdown
 
 # --- Display Tables ---
-st.subheader("📋 Vehicle Pricing Details")
+st.subheader("📋 Vehicle Pricing Details")  
+# 🔹 Uses <h2>
+
 st.markdown(render_shared_table(row, SHARED_FIELDS), unsafe_allow_html=True)
 st.markdown(render_registration_table(row, GROUPED_FIELDS, GROUP_KEYS), unsafe_allow_html=True)
