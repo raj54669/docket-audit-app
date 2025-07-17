@@ -11,36 +11,46 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
-# --- Styling ---
+# --- Compact Styling ---
 st.markdown("""
     <style>
-    /* Limit app width */
     .block-container {
-        max-width: 1100px;
+        max-width: 850px;
         margin: auto;
-        padding-top: 1rem !important;
-        padding-bottom: 1rem !important;
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
     }
 
     .table-wrapper {
-        margin-bottom: 15px; padding: 0;
+        margin-bottom: 12px; padding: 0;
     }
     .styled-table {
-        width: 100%; border-collapse: collapse;
-        font-size: 16px; line-height: 1.2; border: 2px solid black;
-        max-width: 1000px; margin-left: auto; margin-right: auto;
+        width: 100%;
+        max-width: 750px;
+        font-size: 14px;
+        line-height: 1.2;
+        border: 2px solid black;
+        border-collapse: collapse;
+        margin-left: auto;
+        margin-right: auto;
     }
     .styled-table th, .styled-table td {
-        border: 1px solid black; padding: 8px 10px; text-align: center;
+        border: 1px solid black;
+        padding: 6px 8px;
+        text-align: center;
     }
     .styled-table th {
-        background-color: #004d40; color: white; font-weight: bold;
+        background-color: #004d40;
+        color: white;
+        font-weight: bold;
     }
     .styled-table td:first-child {
-        text-align: left; font-weight: 600; background-color: #f7f7f7;
+        text-align: left;
+        font-weight: 600;
+        background-color: #f7f7f7;
     }
     .table-wrapper + .table-wrapper {
-        margin-top: -8px;
+        margin-top: -6px;
     }
 
     @media (prefers-color-scheme: dark) {
@@ -126,8 +136,8 @@ def render_registration_table(row: pd.Series, groups: list[str], keys: dict) -> 
     </table></div>
     """
 
-# --- App Title ---
-st.title("🚗 Mahindra Vehicle Pricing Viewer")
+# --- Compact Header ---
+st.markdown("<h1 style='font-size:26px;'>🚗 Mahindra Vehicle Pricing Viewer</h1>", unsafe_allow_html=True)
 
 # --- Load Data ---
 price_data = load_data(FILE_PATH)
@@ -139,16 +149,16 @@ try:
 except Exception:
     st.caption("📅 Last update timestamp not available.")
 
-# --- Model & Fuel Type Selection ---
+# --- Model, Fuel, Variant Selection ---
 models = sorted(price_data["Model"].dropna().unique())
 if not models:
     st.error("❌ No models found in data.")
     st.stop()
 
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns([1, 1, 2])  # Compact 3-column layout
 
 with col1:
-    model = st.selectbox("🚘 Select Model", models, help="Choose vehicle model")
+    model = st.selectbox("🚘 Model", models)
 
 fuel_df = price_data[price_data["Model"] == model]
 fuel_types = sorted(fuel_df["Fuel Type"].dropna().unique())
@@ -157,16 +167,16 @@ if not fuel_types:
     st.stop()
 
 with col2:
-    fuel_type = st.selectbox("⛽ Select Fuel Type", fuel_types, help="Choose fuel type")
+    fuel_type = st.selectbox("⛽ Fuel", fuel_types)
 
-# --- Variant Selection ---
 variant_df = fuel_df[fuel_df["Fuel Type"] == fuel_type]
 variant_options = sorted(variant_df["Variant"].dropna().unique())
 if not variant_options:
     st.error("❌ No variants available for selected fuel type.")
     st.stop()
 
-variant = st.selectbox("🎯 Select Variant", variant_options)
+with col3:
+    variant = st.selectbox("🎯 Variant", variant_options)
 
 selected_row = variant_df[variant_df["Variant"] == variant]
 if selected_row.empty:
@@ -175,10 +185,9 @@ if selected_row.empty:
 
 row = selected_row.iloc[0]
 
-# --- Display Selection Summary ---
-st.markdown(f"### 🚙 {model} - {fuel_type} - {variant}")
+# --- Compact Selection Summary ---
+st.markdown(f"<h4 style='font-size:18px;'>🚙 {model} - {fuel_type} - {variant}</h4>", unsafe_allow_html=True)
 
-# --- Display Tables ---
-st.subheader("📋 Vehicle Pricing Details")
+# --- Pricing Tables ---
 st.markdown(render_shared_table(row, SHARED_FIELDS), unsafe_allow_html=True)
 st.markdown(render_registration_table(row, GROUPED_FIELDS, GROUP_KEYS), unsafe_allow_html=True)
