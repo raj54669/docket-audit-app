@@ -11,40 +11,16 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
-# --- Styling and Layout Tweaks ---
+# --- Remove Top White Space & Streamlit Header ---
 st.markdown("""
     <style>
     .block-container {
-        padding-top: 0.25rem !important;
-        padding-bottom: 0.25rem !important;
-        max-width: 850px;
-        margin: auto;
+        padding-top: 0.5rem !important;
     }
     header[data-testid="stHeader"] {
         height: 0rem;
         visibility: hidden;
     }
-    .table-wrapper { margin-bottom: 15px; padding: 0; }
-    .styled-table {
-        width: 750px; border-collapse: collapse;
-        font-size: 14px; line-height: 1.2; border: 2px solid black;
-    }
-    .styled-table th, .styled-table td {
-        border: 1px solid black; padding: 6px 8px; text-align: center;
-    }
-    .styled-table th {
-        background-color: #004d40; color: white; font-weight: bold;
-    }
-    .styled-table td:first-child {
-        text-align: left; font-weight: 600; background-color: #f7f7f7;
-    }
-    @media (prefers-color-scheme: dark) {
-        .styled-table { border: 2px solid white; }
-        .styled-table th, .styled-table td { border: 1px solid white; }
-        .styled-table td { background-color: #111; color: #eee; }
-        .styled-table td:first-child { background-color: #1e1e1e; color: white; }
-    }
-    .table-wrapper + .table-wrapper { margin-top: -8px; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -64,6 +40,31 @@ GROUP_KEYS = {
     "On Road Price (W/O HYPO)": ("On Road Price (W/O HYPO) - Individual", "On Road Price (W/O HYPO) - Corporate"),
     "On Road Price (With HYPO)": ("On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"),
 }
+
+# --- Styling ---
+st.markdown("""
+    <style>
+    .table-wrapper { margin-bottom: 15px; padding: 0; }
+    .styled-table {
+        width: 100%; border-collapse: collapse;
+        font-size: 16px; line-height: 1.2; border: 2px solid black;
+    }
+    .styled-table th, .styled-table td {
+        border: 1px solid black; padding: 8px 10px; text-align: center;
+    }
+    .styled-table th { background-color: #004d40; color: white; font-weight: bold; }
+    .styled-table td:first-child {
+        text-align: left; font-weight: 600; background-color: #f7f7f7;
+    }
+    @media (prefers-color-scheme: dark) {
+        .styled-table { border: 2px solid white; }
+        .styled-table th, .styled-table td { border: 1px solid white; }
+        .styled-table td { background-color: #111; color: #eee; }
+        .styled-table td:first-child { background-color: #1e1e1e; color: white; }
+    }
+    .table-wrapper + .table-wrapper { margin-top: -8px; }
+    </style>
+""", unsafe_allow_html=True)
 
 # --- Helper Functions ---
 @st.cache_data(show_spinner=False)
@@ -141,7 +142,7 @@ if not models:
     st.error("❌ No models found in data.")
     st.stop()
 
-col1, col2, col3 = st.columns([3, 1.5, 3.5])
+col1, col2, col3 = st.columns([3, 1.5, 3.5])  # Custom widths
 
 with col1:
     model = st.selectbox("🚙 Model", models)
