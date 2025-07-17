@@ -7,85 +7,19 @@ import re
 # --- Page Configuration ---
 st.set_page_config(
     page_title="Mahindra Pricing Viewer",
-    layout="wide",
+    layout="wide",  # Use full width of screen
     initial_sidebar_state="auto"
 )
 
+# --- Remove Header/Footer Padding ---
 st.markdown("""
-<style>
-/* Container Layout */
-.block-container {
-    padding-top: 0.25rem !important;
-    padding-bottom: 0.25rem !important;
-    max-width: 850px;
-    margin: auto;
-}
-
-header[data-testid="stHeader"] {
-    height: 0rem;
-    visibility: hidden;
-}
-
-/* ----- CUSTOM FONT SIZES ----- */
-h1 { font-size: 28px !important; }  /* st.title() */
-h2 { font-size: 24px !important; }  /* st.header() */
-h3 { font-size: 20px !important; }  /* st.subheader(), ### */
-h4 { font-size: 18px !important; }  /* #### */
-h5 { font-size: 16px !important; }  /* ##### */
-
-h1, h2, h3, h4, h5, h6 {
-    font-weight: 600 !important;
-    margin-top: 0.5rem !important;
-    margin-bottom: 0.3rem !important;
-    line-height: 1.2 !important;
-}
-
-/* Tables */
-.table-wrapper { margin-bottom: 15px; padding: 0; }
-
-.styled-table {
-    width: 750px; border-collapse: collapse;
-    font-size: 14px; line-height: 1.2; border: 2px solid black;
-}
-
-.styled-table th, .styled-table td {
-    border: 1px solid black;
-    padding: 6px 8px;
-    text-align: center;
-}
-
-.styled-table th {
-    background-color: #004d40;
-    color: white;
-    font-weight: bold;
-}
-
-.styled-table td:first-child {
-    text-align: left;
-    font-weight: 600;
-    background-color: #f7f7f7;
-}
-
-@media (prefers-color-scheme: dark) {
-    .styled-table { border: 2px solid white; }
-    .styled-table th, .styled-table td { border: 1px solid white; }
-    .styled-table td { background-color: #111; color: #eee; }
-    .styled-table td:first-child { background-color: #1e1e1e; color: white; }
-}
-
-.table-wrapper + .table-wrapper {
-    margin-top: -8px;
-}
-
-.row-widget.stSelectbox > div {
-    width: 100% !important;
-}
-.stSelectbox label {
-    font-weight: 600;
-}
-</style>
+    <style>
+    .block-container {
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+    }
+    </style>
 """, unsafe_allow_html=True)
-
 
 # --- Constants ---
 FILE_PATH = "PV Price List Master D. 08.07.2025.xlsx"
@@ -103,6 +37,31 @@ GROUP_KEYS = {
     "On Road Price (W/O HYPO)": ("On Road Price (W/O HYPO) - Individual", "On Road Price (W/O HYPO) - Corporate"),
     "On Road Price (With HYPO)": ("On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"),
 }
+
+# --- Styling ---
+st.markdown("""
+    <style>
+    .table-wrapper { margin-bottom: 15px; padding: 0; }
+    .styled-table {
+        width: 100%; border-collapse: collapse;
+        font-size: 16px; line-height: 1.2; border: 2px solid black;
+    }
+    .styled-table th, .styled-table td {
+        border: 1px solid black; padding: 8px 10px; text-align: center;
+    }
+    .styled-table th { background-color: #004d40; color: white; font-weight: bold; }
+    .styled-table td:first-child {
+        text-align: left; font-weight: 600; background-color: #f7f7f7;
+    }
+    @media (prefers-color-scheme: dark) {
+        .styled-table { border: 2px solid white; }
+        .styled-table th, .styled-table td { border: 1px solid white; }
+        .styled-table td { background-color: #111; color: #eee; }
+        .styled-table td:first-child { background-color: #1e1e1e; color: white; }
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 
 # --- Helper Functions ---
 @st.cache_data(show_spinner=False)
@@ -180,10 +139,10 @@ if not models:
     st.error("❌ No models found in data.")
     st.stop()
 
-col1, col2, col3 = st.columns([3.2, 1.3, 3.5])
+col1, col2 = st.columns(2)
 
 with col1:
-    model = st.selectbox("🚙 Model", models)
+    model = st.selectbox("🚘 Select Model", models)
 
 fuel_df = price_data[price_data["Model"] == model]
 fuel_types = sorted(fuel_df["Fuel Type"].dropna().unique())
@@ -192,16 +151,16 @@ if not fuel_types:
     st.stop()
 
 with col2:
-    fuel_type = st.selectbox("⛽ Fuel", fuel_types)
+    fuel_type = st.selectbox("⛽ Select Fuel Type", fuel_types)
 
+# --- Variant Selection ---
 variant_df = fuel_df[fuel_df["Fuel Type"] == fuel_type]
 variant_options = sorted(variant_df["Variant"].dropna().unique())
 if not variant_options:
     st.error("❌ No variants available for selected fuel type.")
     st.stop()
 
-with col3:
-    variant = st.selectbox("🎯 Variant", variant_options)
+variant = st.selectbox("🎯 Select Variant", variant_options)
 
 selected_row = variant_df[variant_df["Variant"] == variant]
 if selected_row.empty:
@@ -210,10 +169,18 @@ if selected_row.empty:
 
 row = selected_row.iloc[0]
 
-# --- Display Summary ---
-st.markdown(f"### 🚙 {model} - {fuel_type} - {variant}")
-
 # --- Display Tables ---
 st.subheader("📋 Vehicle Pricing Details")
+
+# Main table
 st.markdown(render_shared_table(row, SHARED_FIELDS), unsafe_allow_html=True)
+
+# CSS to remove space between two tables
+st.markdown("""
+    <style>
+    .table-wrapper + .table-wrapper { margin-top: -8px; }
+    </style>
+""", unsafe_allow_html=True)
+
+# Registration table immediately below
 st.markdown(render_registration_table(row, GROUPED_FIELDS, GROUP_KEYS), unsafe_allow_html=True)
