@@ -161,7 +161,7 @@ if not models:
     st.error("❌ No models found in data.")
     st.stop()
 
-col1, col2, col3 = st.columns([3.2, 1.3, 3.5])
+col1, col2, col3 = st.columns([3.2, 1.5, 4.5])
 
 with col1:
     model = st.selectbox("🚙 Model", models)
