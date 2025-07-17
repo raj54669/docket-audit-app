@@ -10,6 +10,14 @@ st.set_page_config(
     layout="centered",
     initial_sidebar_state="auto"
 )
+st.markdown("""
+    <style>
+    .block-container {
+        padding-top: 0rem;
+    }
+    header {visibility: hidden;}
+    </style>
+""", unsafe_allow_html=True)
 
 # --- Load Excel Data ---
 @st.cache_data(show_spinner=False)
