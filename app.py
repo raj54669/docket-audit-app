@@ -11,8 +11,7 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
-# --- Styling and Layout Tweaks ---
-st.markdown("""
+# --- Styling and Layout Tweaks ---st.markdown("""
     <style>
     .block-container {
         padding-top: 0.25rem !important;
@@ -20,39 +19,75 @@ st.markdown("""
         max-width: 850px;
         margin: auto;
     }
+
     header[data-testid="stHeader"] {
         height: 0rem;
         visibility: hidden;
     }
+
+    /* --- Customizable Font Sizes for Headers --- */
+    h1 { font-size: 28px !important; }  /* st.title() */
+    h2 { font-size: 24px !important; }  /* st.header() */
+    h3 { font-size: 20px !important; }  /* st.subheader() or ### */
+    h4 { font-size: 18px !important; }  /* #### */
+    h5 { font-size: 16px !important; }  /* ##### */
+    h6 { font-size: 14px !important; }
+
+    h1, h2, h3, h4, h5, h6 {
+        font-weight: 600 !important;
+        line-height: 1.2 !important;
+        margin-top: 0.5rem !important;
+        margin-bottom: 0.3rem !important;
+    }
+
+    /* --- Table Styling --- */
     .table-wrapper { margin-bottom: 15px; padding: 0; }
+
     .styled-table {
-        width: 750px; border-collapse: collapse;
-        font-size: 14px; line-height: 1.2; border: 2px solid black;
+        width: 750px;
+        border-collapse: collapse;
+        font-size: 14px;
+        line-height: 1.2;
+        border: 2px solid black;
     }
+
     .styled-table th, .styled-table td {
-        border: 1px solid black; padding: 6px 8px; text-align: center;
+        border: 1px solid black;
+        padding: 6px 8px;
+        text-align: center;
     }
+
     .styled-table th {
-        background-color: #004d40; color: white; font-weight: bold;
+        background-color: #004d40;
+        color: white;
+        font-weight: bold;
     }
+
     .styled-table td:first-child {
-        text-align: left; font-weight: 600; background-color: #f7f7f7;
+        text-align: left;
+        font-weight: 600;
+        background-color: #f7f7f7;
     }
+
     @media (prefers-color-scheme: dark) {
         .styled-table { border: 2px solid white; }
         .styled-table th, .styled-table td { border: 1px solid white; }
         .styled-table td { background-color: #111; color: #eee; }
         .styled-table td:first-child { background-color: #1e1e1e; color: white; }
     }
+
     .table-wrapper + .table-wrapper { margin-top: -8px; }
+
     .row-widget.stSelectbox > div {
         width: 100% !important;
     }
+
     .stSelectbox label {
         font-weight: 600;
     }
     </style>
 """, unsafe_allow_html=True)
+
 
 # --- Constants ---
 FILE_PATH = "PV Price List Master D. 08.07.2025.xlsx"
