@@ -38,61 +38,26 @@ GROUP_KEYS = {
     "On Road Price (With HYPO)": ("On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"),
 }
 
-# --- Styling ---st.markdown("""
+# --- Styling ---
+st.markdown("""
     <style>
-    .table-wrapper {
-        margin-bottom: 15px;
-        padding: 0;
-        max-width: 100%;
-        overflow-x: auto;
-    }
-
+    .table-wrapper { margin-bottom: 15px; padding: 0; }
     .styled-table {
-        width: 100%;
-        max-width: 1100px;
-        margin: auto;
-        border-collapse: collapse;
-        font-size: 16px;
-        line-height: 1.2;
-        border: 2px solid black;
-        table-layout: fixed;
+        width: 100%; border-collapse: collapse;
+        font-size: 16px; line-height: 1.2; border: 2px solid black;
     }
-
     .styled-table th, .styled-table td {
-        border: 1px solid black;
-        padding: 8px 10px;
-        text-align: center;
-        word-wrap: break-word;
-        word-break: break-word;
+        border: 1px solid black; padding: 8px 10px; text-align: center;
     }
-
-    .styled-table th {
-        background-color: #004d40;
-        color: white;
-        font-weight: bold;
-    }
-
+    .styled-table th { background-color: #004d40; color: white; font-weight: bold; }
     .styled-table td:first-child {
-        text-align: left;
-        font-weight: 600;
-        background-color: #f7f7f7;
+        text-align: left; font-weight: 600; background-color: #f7f7f7;
     }
-
     @media (prefers-color-scheme: dark) {
-        .styled-table {
-            border: 2px solid white;
-        }
-        .styled-table th, .styled-table td {
-            border: 1px solid white;
-        }
-        .styled-table td {
-            background-color: #111;
-            color: #eee;
-        }
-        .styled-table td:first-child {
-            background-color: #1e1e1e;
-            color: white;
-        }
+        .styled-table { border: 2px solid white; }
+        .styled-table th, .styled-table td { border: 1px solid white; }
+        .styled-table td { background-color: #111; color: #eee; }
+        .styled-table td:first-child { background-color: #1e1e1e; color: white; }
     }
     </style>
 """, unsafe_allow_html=True)
