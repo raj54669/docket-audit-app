@@ -197,6 +197,7 @@ group_keys = {
 }
 
 # --- Output Tables ---
+st.markdown(f"### 🚙 {model} - {fuel_type} - {variant}")
 st.subheader("📋 Vehicle Pricing Details")
 st.markdown(render_shared_table(row, shared_fields), unsafe_allow_html=True)
 st.markdown(render_registration_table(row, grouped_fields, group_keys), unsafe_allow_html=True)
