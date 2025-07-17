@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import os, re
 
 # --- Config & Constants ---
-st.set_page_config(page_title="Mahindra Pricing Viewer", layout="wide")
+st.set_page_config(page_title="Mahindra Pricing Viewer", layout="centered")  # Changed from "wide"
 FILE_PATH = "PV Price List Master D. 08.07.2025.xlsx"
 SHARED_FIELDS = [
     "Ex-Showroom Price", "TCS 1%", "Insurance 1 Yr OD + 3 Yr TP + Zero Dep.",
@@ -22,18 +22,41 @@ GROUP_KEYS = {
 # --- Styles ---
 st.markdown("""
 <style>
-.block-container { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+.block-container {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+    max-width: 900px;
+    margin: auto;
+}
+.table-wrapper {
+    margin-bottom: 15px;
+    padding: 0;
+    overflow-x: auto;
+    max-width: 100%;
+}
 .styled-table {
-    width: 100%; border-collapse: collapse; font-size: 16px; line-height: 1.2; border: 2px solid black;
+    width: 100%;
+    max-width: 800px;
+    margin: auto;
+    border-collapse: collapse;
+    font-size: 16px;
+    line-height: 1.2;
+    border: 2px solid black;
 }
 .styled-table th, .styled-table td {
-    border: 1px solid black; padding: 8px 10px; text-align: center;
+    border: 1px solid black;
+    padding: 8px 10px;
+    text-align: center;
 }
 .styled-table th {
-    background-color: #004d40; color: white; font-weight: bold;
+    background-color: #004d40;
+    color: white;
+    font-weight: bold;
 }
 .styled-table td:first-child {
-    text-align: left; font-weight: 600; background-color: #f7f7f7;
+    text-align: left;
+    font-weight: 600;
+    background-color: #f7f7f7;
 }
 @media (prefers-color-scheme: dark) {
     .styled-table { border: 2px solid white; }
@@ -42,7 +65,6 @@ st.markdown("""
     .styled-table td:first-child { background-color: #1e1e1e; color: white; }
 }
 .table-wrapper + .table-wrapper { margin-top: -8px; }
-.table-wrapper { margin-bottom: 15px; padding: 0; }
 </style>
 """, unsafe_allow_html=True)
 
