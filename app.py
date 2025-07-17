@@ -11,15 +11,27 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
-# --- Remove Top White Space & Streamlit Header ---
+# --- Adjust padding and max width (preserve all logic/style) ---
 st.markdown("""
     <style>
-    .block-container {
-        padding-top: 0.5rem !important;
-    }
+    /* Remove Streamlit's default header */
     header[data-testid="stHeader"] {
         height: 0rem;
         visibility: hidden;
+    }
+
+    /* Shrink top white space, but allow space for title */
+    .block-container {
+        padding-top: 0.5rem !important;
+        padding-bottom: 1rem !important;
+        max-width: 850px;
+        margin: auto;
+    }
+
+    /* Optional: control table width inside wrapper */
+    .table-wrapper {
+        max-width: 750px;
+        margin: auto;
     }
     </style>
 """, unsafe_allow_html=True)
