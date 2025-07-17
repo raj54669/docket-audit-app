@@ -53,7 +53,7 @@ st.markdown("""
     }
 
     /* 🔽 Custom Heading Size Overrides */
-    h1 { font-size: 30px !important; }  /* st.title */
+    h1 { font-size: 32px !important; }  /* st.title */
     h2 { font-size: 20px !important; }  /* st.subheader */
     h3 { font-size: 18px !important; }  /* st.markdown("### ...") */
     </style>
@@ -154,7 +154,7 @@ if not models:
     st.error("❌ No models found in data.")
     st.stop()
 
-col1, col2, col3 = st.columns([3.2, 1.5, 4])
+col1, col2, col3 = st.columns([3.2, 1.5, 5])
 
 with col1:
     model = st.selectbox("🚙 Model", models)
