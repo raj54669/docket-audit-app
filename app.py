@@ -45,6 +45,7 @@ st.markdown("""
         .styled-table td:first-child { background-color: #1e1e1e; color: white; }
     }
     .table-wrapper + .table-wrapper { margin-top: -8px; }
+
     .row-widget.stSelectbox > div {
         width: 100% !important;
     }
@@ -52,10 +53,15 @@ st.markdown("""
         font-weight: 600;
     }
 
+    /* 🔽 Custom dropdown width for fuel and variant */
+    div[data-baseweb="select"] {
+        min-width: 250px !important;
+    }
+
     /* 🔽 Custom Heading Size Overrides */
-    h1 { font-size: 32px !important; }  /* st.title */
-    h2 { font-size: 20px !important; }  /* st.subheader */
-    h3 { font-size: 18px !important; }  /* st.markdown("### ...") */
+    h1 { font-size: 32px !important; }
+    h2 { font-size: 20px !important; }
+    h3 { font-size: 18px !important; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -134,8 +140,7 @@ def render_registration_table(row: pd.Series, groups: list[str], keys: dict) -> 
     """
 
 # --- App Title ---
-st.title("🚗 Mahindra Vehicle Pricing Viewer")  
-# 🔹 Uses <h1>
+st.title("🚗 Mahindra Vehicle Pricing Viewer")
 
 # --- Load Data ---
 price_data = load_data(FILE_PATH)
@@ -144,7 +149,6 @@ price_data = load_data(FILE_PATH)
 try:
     ist_time = datetime.fromtimestamp(os.path.getmtime(FILE_PATH)) + timedelta(hours=5, minutes=30)
     st.caption(f"📅 Data last updated on: {ist_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
-    # 🔹 Uses small <p> text
 except Exception:
     st.caption("📅 Last update timestamp not available.")
 
@@ -154,7 +158,8 @@ if not models:
     st.error("❌ No models found in data.")
     st.stop()
 
-col1, col2, col3 = st.columns([3.2, 1.5, 5])
+# 🔽 Adjusted column widths here
+col1, col2, col3 = st.columns([3.2, 2.2, 5.2])
 
 with col1:
     model = st.selectbox("🚙 Model", models)
@@ -185,12 +190,9 @@ if selected_row.empty:
 row = selected_row.iloc[0]
 
 # --- Display Summary ---
-st.markdown(f"### 🚙 {model} - {fuel_type} - {variant}")  
-# 🔹 Uses <h3> via markdown
+st.markdown(f"### 🚙 {model} - {fuel_type} - {variant}")
 
 # --- Display Tables ---
-st.subheader("📋 Vehicle Pricing Details")  
-# 🔹 Uses <h2>
-
+st.subheader("📋 Vehicle Pricing Details")
 st.markdown(render_shared_table(row, SHARED_FIELDS), unsafe_allow_html=True)
 st.markdown(render_registration_table(row, GROUPED_FIELDS, GROUP_KEYS), unsafe_allow_html=True)
