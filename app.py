@@ -15,11 +15,12 @@ st.set_page_config(
 st.markdown("""
     <style>
     :root {
-        --title-size: 32px;
-        --subtitle-size: 24px;
-        --caption-size: 14px;
-        --label-size: 16px;
-        --table-font-size: 16px;
+        --title-size: 40px;           /* st.title() */
+        --subtitle-size: 24px;        /* st.subheader() */
+        --caption-size: 16px;         /* st.caption() */
+        --label-size: 16px;           /* Label above selectboxes */
+        --select-font-size: 16px;     /* Dropdown option text */
+        --table-font-size: 18px;      /* Table text */
     }
 
     .block-container {
