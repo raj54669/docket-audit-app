@@ -20,7 +20,7 @@ st.markdown("""
         --caption-size: 16px;         /* st.caption() */
         --label-size: 16px;           /* Label above selectboxes */
         --select-font-size: 16px;     /* Dropdown option text */
-        --table-font-size: 18px;      /* Table text */
+        --table-font-size: 14px;      /* Table text */
     }
 
     .block-container {
