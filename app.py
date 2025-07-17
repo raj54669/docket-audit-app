@@ -149,7 +149,11 @@ if not models:
     st.error("❌ No models found in data.")
     st.stop()
 
-model = st.selectbox("🚘 Select Model", models)
+# First row: Model and Fuel Type (Model gets more width)
+col1, col2 = st.columns([2, 1])  # Adjust ratio as needed
+
+with col1:
+    model = st.selectbox("🚘 Select Model", models)
 
 fuel_df = price_data[price_data["Model"] == model]
 fuel_types = sorted(fuel_df["Fuel Type"].dropna().unique())
@@ -157,8 +161,10 @@ if not fuel_types:
     st.error("❌ No fuel types found for selected model.")
     st.stop()
 
-fuel_type = st.selectbox("⛽ Select Fuel Type", fuel_types)
+with col2:
+    fuel_type = st.selectbox("⛽ Select Fuel Type", fuel_types)
 
+# Second row: Variant dropdown full width
 variant_df = fuel_df[fuel_df["Fuel Type"] == fuel_type]
 variant_options = sorted(variant_df["Variant"].dropna().unique())
 if not variant_options:
