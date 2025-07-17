@@ -152,7 +152,7 @@ def render_registration_table(row: pd.Series, groups: list[str], keys: dict) -> 
     """
 
 # --- Compact Header ---
-st.markdown("<h1 style='font-size:26px;'>🚗 Mahindra Vehicle Pricing Viewer</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='font-size:30px;'>🚗 Mahindra Vehicle Pricing Viewer</h1>", unsafe_allow_html=True)
 
 # --- Load Data ---
 price_data = load_data(FILE_PATH)
