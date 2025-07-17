@@ -1,3 +1,12 @@
+"""
+📦 Backup Note:
+This version applies:
+- Max width of 850px to content
+- No clipping of title (padding-top: 1rem)
+- Minimal bottom spacing (padding-bottom: 0.25rem)
+- Compact table size and fonts
+"""
+
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
@@ -11,19 +20,21 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
-# --- Compact Styling ---
+# --- Compact, Clean Styling ---
 st.markdown("""
     <style>
     .block-container {
         max-width: 850px;
         margin: auto;
-        padding-top: 0.5rem !important;
-        padding-bottom: 0.5rem !important;
+        padding-top: 1rem !important;
+        padding-bottom: 0.25rem !important;
     }
 
     .table-wrapper {
-        margin-bottom: 12px; padding: 0;
+        margin-bottom: 12px;
+        padding: 0;
     }
+
     .styled-table {
         width: 100%;
         max-width: 750px;
@@ -34,21 +45,25 @@ st.markdown("""
         margin-left: auto;
         margin-right: auto;
     }
+
     .styled-table th, .styled-table td {
         border: 1px solid black;
         padding: 6px 8px;
         text-align: center;
     }
+
     .styled-table th {
         background-color: #004d40;
         color: white;
         font-weight: bold;
     }
+
     .styled-table td:first-child {
         text-align: left;
         font-weight: 600;
         background-color: #f7f7f7;
     }
+
     .table-wrapper + .table-wrapper {
         margin-top: -6px;
     }
