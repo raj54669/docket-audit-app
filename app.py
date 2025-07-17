@@ -26,7 +26,7 @@ st.markdown("""
     .block-container {
         max-width: 850px;
         margin: auto;
-        padding-top: 1rem !important;
+        padding-top: 1.4rem !important;
         padding-bottom: 0.25rem !important;
     }
 
@@ -170,7 +170,7 @@ if not models:
     st.error("❌ No models found in data.")
     st.stop()
 
-col1, col2, col3 = st.columns([1, 1, 2])  # Compact 3-column layout
+col1, col2, col3 = st.columns([1.6, 0.8, 1.6])  # Compact 3-column layout
 
 with col1:
     model = st.selectbox("🚘 Model", models)
