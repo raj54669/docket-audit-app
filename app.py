@@ -21,6 +21,7 @@ st.markdown("""
         --label-size: 16px;           /* Label above selectboxes */
         --select-font-size: 16px;     /* Dropdown option text */
         --table-font-size: 14px;      /* Table text */
+        --variant-title-size: 20px;   /* 🚙 {model} - {fuel_type} - {variant} */
     }
 
     .block-container {
@@ -33,6 +34,9 @@ st.markdown("""
     }
     h2 {
         font-size: var(--subtitle-size) !important;
+    h3 {
+    font-size: var(--variant-title-size) !important;
+     
     }
     .stCaption {
         font-size: var(--caption-size) !important;
