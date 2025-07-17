@@ -34,10 +34,11 @@ st.markdown("""
     }
     h2 {
         font-size: var(--subtitle-size) !important;
+    }
     h3 {
     font-size: var(--variant-title-size) !important;
-     
     }
+        
     .stCaption {
         font-size: var(--caption-size) !important;
     }
