@@ -17,7 +17,8 @@ st.markdown("""
     .block-container {
         padding-top: 0.25rem !important;
         padding-bottom: 0.25rem !important;
-        max-width: 750px;  /* Match table width */
+        max-width: 90vw;
+        width: 100%;
         margin: auto;
     }
     header[data-testid="stHeader"] {
@@ -27,17 +28,29 @@ st.markdown("""
 
     .table-wrapper { margin-bottom: 15px; padding: 0; }
     .styled-table {
-        width: 750px; border-collapse: collapse;
-        font-size: 14px; line-height: 1.2; border: 2px solid black;
+        width: 100%;
+        max-width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        line-height: 1.2;
+        border: 2px solid black;
+        table-layout: fixed;
+        word-wrap: break-word;
     }
     .styled-table th, .styled-table td {
-        border: 1px solid black; padding: 6px 8px; text-align: center;
+        border: 1px solid black;
+        padding: 6px 8px;
+        text-align: center;
     }
     .styled-table th {
-        background-color: #004d40; color: white; font-weight: bold;
+        background-color: #004d40;
+        color: white;
+        font-weight: bold;
     }
     .styled-table td:first-child {
-        text-align: left; font-weight: 600; background-color: #f7f7f7;
+        text-align: left;
+        font-weight: 600;
+        background-color: #f7f7f7;
     }
     @media (prefers-color-scheme: dark) {
         .styled-table { border: 2px solid white; }
@@ -56,12 +69,10 @@ st.markdown("""
         font-weight: 600;
     }
 
-    /* Override spacing issue between selectboxes */
     .stColumns > div {
         padding-right: 8px !important;
     }
 
-    /* Heading Size Tweaks */
     h1 { font-size: 32px !important; }
     h2 { font-size: 20px !important; }
     h3 { font-size: 18px !important; }
