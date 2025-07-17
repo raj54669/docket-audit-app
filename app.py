@@ -10,14 +10,42 @@ st.set_page_config(
     layout="centered",
     initial_sidebar_state="auto"
 )
+
+# --- Global Styling: Padding + Font Sizes ---
 st.markdown("""
     <style>
+    :root {
+        --title-size: 32px;
+        --subtitle-size: 24px;
+        --caption-size: 14px;
+        --label-size: 16px;
+        --table-font-size: 16px;
+    }
+
     .block-container {
         padding-top: 0rem;
     }
     header {visibility: hidden;}
+
+    h1 {
+        font-size: var(--title-size) !important;
+    }
+    h2 {
+        font-size: var(--subtitle-size) !important;
+    }
+    .stCaption {
+        font-size: var(--caption-size) !important;
+    }
+    .stSelectbox label {
+        font-size: var(--label-size) !important;
+        font-weight: 600;
+    }
+    .styled-table {
+        font-size: var(--table-font-size) !important;
+    }
     </style>
 """, unsafe_allow_html=True)
+
 
 # --- Load Excel Data ---
 @st.cache_data(show_spinner=False)
