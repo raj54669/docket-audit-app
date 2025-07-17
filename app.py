@@ -17,13 +17,14 @@ st.markdown("""
     .block-container {
         padding-top: 0.25rem !important;
         padding-bottom: 0.25rem !important;
-        max-width: 850px;
+        max-width: 750px;  /* Match table width */
         margin: auto;
     }
     header[data-testid="stHeader"] {
         height: 0rem;
         visibility: hidden;
     }
+
     .table-wrapper { margin-bottom: 15px; padding: 0; }
     .styled-table {
         width: 750px; border-collapse: collapse;
@@ -48,17 +49,19 @@ st.markdown("""
 
     .row-widget.stSelectbox > div {
         width: 100% !important;
+        max-width: 100% !important;
     }
+
     .stSelectbox label {
         font-weight: 600;
     }
 
-    /* 🔽 Custom dropdown width for fuel and variant */
-    div[data-baseweb="select"] {
-        min-width: 250px !important;
+    /* Override spacing issue between selectboxes */
+    .stColumns > div {
+        padding-right: 8px !important;
     }
 
-    /* 🔽 Custom Heading Size Overrides */
+    /* Heading Size Tweaks */
     h1 { font-size: 32px !important; }
     h2 { font-size: 20px !important; }
     h3 { font-size: 18px !important; }
@@ -152,14 +155,13 @@ try:
 except Exception:
     st.caption("📅 Last update timestamp not available.")
 
-# --- Model & Fuel Type Selection ---
+# --- Dropdown Section: 3 Equal Columns ---
 models = sorted(price_data["Model"].dropna().unique())
 if not models:
     st.error("❌ No models found in data.")
     st.stop()
 
-# 🔽 Adjusted column widths here
-col1, col2, col3 = st.columns([3.2, 2.2, 5.2])
+col1, col2, col3 = st.columns(3)
 
 with col1:
     model = st.selectbox("🚙 Model", models)
