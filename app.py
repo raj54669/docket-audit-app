@@ -1,12 +1,3 @@
-"""
-📦 Backup Note:
-This version applies:
-- Max width of 850px to content
-- No clipping of title (padding-top: 1rem)
-- Minimal bottom spacing (padding-bottom: 0.25rem)
-- Compact table size and fonts
-"""
-
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
@@ -20,59 +11,15 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
-# --- Compact, Clean Styling ---
+# --- Remove Top White Space & Streamlit Header ---
 st.markdown("""
     <style>
     .block-container {
-        max-width: 850px;
-        margin: auto;
-        padding-top: 1.5rem !important;
-        padding-bottom: 0.25rem !important;
+        padding-top: 0.5rem !important;
     }
-
-    .table-wrapper {
-        margin-bottom: 12px;
-        padding: 0;
-    }
-
-    .styled-table {
-        width: 100%;
-        max-width: 750px;
-        font-size: 14px;
-        line-height: 1.2;
-        border: 2px solid black;
-        border-collapse: collapse;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    .styled-table th, .styled-table td {
-        border: 1px solid black;
-        padding: 6px 8px;
-        text-align: center;
-    }
-
-    .styled-table th {
-        background-color: #004d40;
-        color: white;
-        font-weight: bold;
-    }
-
-    .styled-table td:first-child {
-        text-align: left;
-        font-weight: 600;
-        background-color: #f7f7f7;
-    }
-
-    .table-wrapper + .table-wrapper {
-        margin-top: -6px;
-    }
-
-    @media (prefers-color-scheme: dark) {
-        .styled-table { border: 2px solid white; }
-        .styled-table th, .styled-table td { border: 1px solid white; }
-        .styled-table td { background-color: #111; color: #eee; }
-        .styled-table td:first-child { background-color: #1e1e1e; color: white; }
+    header[data-testid="stHeader"] {
+        height: 0rem;
+        visibility: hidden;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -93,6 +40,31 @@ GROUP_KEYS = {
     "On Road Price (W/O HYPO)": ("On Road Price (W/O HYPO) - Individual", "On Road Price (W/O HYPO) - Corporate"),
     "On Road Price (With HYPO)": ("On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"),
 }
+
+# --- Styling ---
+st.markdown("""
+    <style>
+    .table-wrapper { margin-bottom: 15px; padding: 0; }
+    .styled-table {
+        width: 100%; border-collapse: collapse;
+        font-size: 16px; line-height: 1.2; border: 2px solid black;
+    }
+    .styled-table th, .styled-table td {
+        border: 1px solid black; padding: 8px 10px; text-align: center;
+    }
+    .styled-table th { background-color: #004d40; color: white; font-weight: bold; }
+    .styled-table td:first-child {
+        text-align: left; font-weight: 600; background-color: #f7f7f7;
+    }
+    @media (prefers-color-scheme: dark) {
+        .styled-table { border: 2px solid white; }
+        .styled-table th, .styled-table td { border: 1px solid white; }
+        .styled-table td { background-color: #111; color: #eee; }
+        .styled-table td:first-child { background-color: #1e1e1e; color: white; }
+    }
+    .table-wrapper + .table-wrapper { margin-top: -8px; }
+    </style>
+""", unsafe_allow_html=True)
 
 # --- Helper Functions ---
 @st.cache_data(show_spinner=False)
@@ -151,8 +123,8 @@ def render_registration_table(row: pd.Series, groups: list[str], keys: dict) -> 
     </table></div>
     """
 
-# --- Compact Header ---
-st.markdown("<h1 style='font-size:30px;'>🚗 Mahindra Vehicle Pricing Viewer</h1>", unsafe_allow_html=True)
+# --- App Title ---
+st.title("🚗 Mahindra Vehicle Pricing Viewer")
 
 # --- Load Data ---
 price_data = load_data(FILE_PATH)
@@ -164,16 +136,16 @@ try:
 except Exception:
     st.caption("📅 Last update timestamp not available.")
 
-# --- Model, Fuel, Variant Selection ---
+# --- Model & Fuel Type Selection ---
 models = sorted(price_data["Model"].dropna().unique())
 if not models:
     st.error("❌ No models found in data.")
     st.stop()
 
-col1, col2, col3 = st.columns([1.6, 0.8, 2])  # Compact 3-column layout
+col1, col2, col3 = st.columns([3, 1.5, 3.5])  # Custom widths
 
 with col1:
-    model = st.selectbox("🚘 Model", models)
+    model = st.selectbox("🚙 Model", models)
 
 fuel_df = price_data[price_data["Model"] == model]
 fuel_types = sorted(fuel_df["Fuel Type"].dropna().unique())
@@ -200,9 +172,10 @@ if selected_row.empty:
 
 row = selected_row.iloc[0]
 
-# --- Compact Selection Summary ---
-st.markdown(f"<h4 style='font-size:18px;'>🚙 {model} - {fuel_type} - {variant}</h4>", unsafe_allow_html=True)
+# --- Display Summary ---
+st.markdown(f"### 🚙 {model} - {fuel_type} - {variant}")
 
-# --- Pricing Tables ---
+# --- Display Tables ---
+st.subheader("📋 Vehicle Pricing Details")
 st.markdown(render_shared_table(row, SHARED_FIELDS), unsafe_allow_html=True)
 st.markdown(render_registration_table(row, GROUPED_FIELDS, GROUP_KEYS), unsafe_allow_html=True)
