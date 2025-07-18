@@ -86,7 +86,7 @@ def render_combined_table(row, shared_fields, grouped_fields, group_keys):
     """
     for field in shared_fields:
         val = format_indian_currency(row.get(field))
-        html += f"<tr><td>{field}</td><td colspan='2'>{val}</td></tr>"
+        html += f"<tr><td>{field}</td><td>{val}</td><td>{val}</td></tr>"
     for field in grouped_fields:
         ind_key, corp_key = group_keys.get(field, ("", ""))
         ind_val = format_indian_currency(row.get(ind_key))
