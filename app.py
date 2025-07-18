@@ -44,24 +44,36 @@ st.markdown("""
     .stSelectbox div[data-baseweb="select"] > div {
         font-size: var(--select-font-size) !important;
         font-weight: bold !important;
-        padding-top: 4px !important;
-        padding-bottom: 4px !important;
-        line-height: 1.2 !important;
-        min-height: 32px !important;
+        padding-top: 2px !important;
+        padding-bottom: 2px !important;
+        line-height: 1 !important;
+        min-height: 28px !important;
+    }
+
+    .stSelectbox div[data-baseweb="select"] {
+        align-items: center !important;
+        height: 32px !important;
     }
 
     /* Dropdown menu popup spacing */
     .stSelectbox [data-baseweb="menu"] > div {
-        padding-top: 4px !important;
-        padding-bottom: 4px !important;
+        padding-top: 2px !important;
+        padding-bottom: 2px !important;
     }
 
     /* Each selectable option */
     .stSelectbox [data-baseweb="option"] {
-        padding: 6px 10px !important;
+        padding: 4px 10px !important;
         font-size: var(--select-font-size) !important;
         font-weight: 500 !important;
         line-height: 1.2 !important;
+        min-height: 28px !important;
+    }
+
+    /* Hover effect for dropdown options */
+    .stSelectbox [data-baseweb="option"]:hover {
+        background-color: #f0f0f0 !important;
+        font-weight: 600 !important;
     }
 
     .styled-table { font-size: var(--table-font-size) !important; }
