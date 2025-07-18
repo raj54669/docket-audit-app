@@ -11,10 +11,34 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
+# --- Theme Toggle ---
+if "theme" not in st.session_state:
+    st.session_state.theme = "light"
+
+toggle_icon = "🌙" if st.session_state.theme == "light" else "☀️"
+new_theme = "dark" if st.session_state.theme == "light" else "light"
+
+# Display top-right icon
+toggle_html = f"""
+    <div style='position: fixed; top: 10px; right: 20px; z-index: 9999; font-size: 26px; cursor: pointer;'
+         onclick=\"window.location.href += '?toggle=1';\">
+        {toggle_icon}
+    </div>
+"""
+st.markdown(toggle_html, unsafe_allow_html=True)
+
+# Toggle theme via query param
+query_params = st.experimental_get_query_params()
+if "toggle" in query_params:
+    st.session_state.theme = new_theme
+    st.experimental_set_query_params()
+
 # --- Global Styling ---
-st.markdown("""
+theme = st.session_state.theme
+
+st.markdown(f"""
     <style>
-    :root {
+    :root {{
         --title-size: 40px;
         --subtitle-size: 18px;
         --caption-size: 16px;
@@ -22,61 +46,64 @@ st.markdown("""
         --select-font-size: 15px;
         --table-font-size: 14px;
         --variant-title-size: 20px;
-    }
 
-    .block-container {
-        padding-top: 0rem;
-    }
-    header {visibility: hidden;}
+        --bg-color: {'#ffffff' if theme == 'light' else '#121212'};
+        --text-color: {'#000000' if theme == 'light' else '#ffffff'};
+        --dropdown-bg: {'#f1f1f1' if theme == 'light' else '#1f1f1f'};
+        --dropdown-hover: {'#dddddd' if theme == 'light' else '#333333'};
+    }}
 
-    h1 { font-size: var(--title-size) !important; }
-    h2 { font-size: var(--subtitle-size) !important; }
-    h3 { font-size: var(--variant-title-size) !important; }
-    .stCaption { font-size: var(--caption-size) !important; }
+    html, body, .main {{
+        background-color: var(--bg-color) !important;
+        color: var(--text-color) !important;
+    }}
 
-    /* Label above dropdown */
-    .stSelectbox label {
+    .block-container {{ padding-top: 0rem; }}
+    header {{ visibility: hidden; }}
+
+    h1 {{ font-size: var(--title-size) !important; }}
+    h2 {{ font-size: var(--subtitle-size) !important; }}
+    h3 {{ font-size: var(--variant-title-size) !important; }}
+    .stCaption {{ font-size: var(--caption-size) !important; }}
+
+    .stSelectbox label {{
         font-size: var(--label-size) !important;
-        font-weight: 600 !important;
-    }
+        font-weight: 600;
+    }}
 
-    /* Selected value in dropdown (closed state) */
-    .stSelectbox div[data-baseweb="select"] > div {
+    .stSelectbox div[data-baseweb="select"] > div {{
         font-size: var(--select-font-size) !important;
         font-weight: bold !important;
         padding-top: 2px !important;
         padding-bottom: 2px !important;
         line-height: 1 !important;
         min-height: 24px !important;
-    }
+        background-color: var(--dropdown-bg) !important;
+        color: var(--text-color) !important;
+    }}
 
-    .stSelectbox div[data-baseweb="select"] {
+    .stSelectbox div[data-baseweb="select"] {{
         align-items: center !important;
         height: 28px !important;
-    }
+    }}
 
-    /* Dropdown menu popup spacing */
-    .stSelectbox [data-baseweb="menu"] > div {
+    .stSelectbox [data-baseweb="menu"] > div {{
         padding-top: 2px !important;
         padding-bottom: 2px !important;
-    }
+    }}
 
-    /* Each selectable option */
-    .stSelectbox [data-baseweb="option"] {
-        padding: 4px 10px !important;
+    .stSelectbox [data-baseweb="option"] {{
         font-size: var(--select-font-size) !important;
-        font-weight: 500 !important;
-        line-height: 1.2 !important;
-        min-height: 28px !important;
-    }
+        padding: 4px 10px !important;
+    }}
 
-    /* Hover effect for dropdown options */
-    .stSelectbox [data-baseweb="option"]:hover {
-        background-color: #f0f0f0 !important;
-        font-weight: 600 !important;
-    }
+    .stSelectbox [data-baseweb="option"]:hover {{
+        background-color: var(--dropdown-hover) !important;
+        font-weight: bold;
+        color: var(--text-color) !important;
+    }}
 
-    .styled-table { font-size: var(--table-font-size) !important; }
+    .styled-table {{ font-size: var(--table-font-size) !important; }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -95,7 +122,7 @@ def load_data(file_path):
 file_path = "PV Price List Master D. 08.07.2025.xlsx"
 price_data = load_data(file_path)
 
-# --- Currency Formatter (Indian style) ---
+# --- Currency Formatter ---
 def format_indian_currency(value):
     if pd.isnull(value):
         return "<i style='color:gray;'>N/A</i>"
@@ -107,7 +134,7 @@ def format_indian_currency(value):
         last_three = s[-3:]
         other = s[:-3]
         if other:
-            other = re.sub(r'(\d)(?=(\d{2})+$)', r'\1,', other)
+            other = re.sub(r'(\d)(?=(\d{{2}})+$)', r'\1,', other)
             formatted = f"{other},{last_three}"
         else:
             formatted = last_three
@@ -131,8 +158,7 @@ def render_combined_table(row, shared_fields, grouped_fields, group_keys):
         ind_key, corp_key = group_keys.get(field, ("", ""))
         ind_val = format_indian_currency(row.get(ind_key))
         corp_val = format_indian_currency(row.get(corp_key))
-        highlight = " style='background-color:#fff3cd;font-weight:bold;'" if field.startswith("On Road Price") else ""
-        html += f"<tr{highlight}><td>{field}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
+        html += f"<tr><td>{field}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
     html += "</table></div>"
     return html
 
