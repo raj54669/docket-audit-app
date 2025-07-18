@@ -20,7 +20,7 @@ st.markdown("""
         --caption-size: 16px;
         --label-size: 16px;
         --select-font-size: 16px;
-        --table-font-size: 14px;
+        --table-font-size: 16px;
         --variant-title-size: 18px;
     }
     .block-container { padding-top: 0rem; }
@@ -44,6 +44,7 @@ st.markdown("""
     .styled-table {
         width: 100%; border-collapse: collapse;
         font-size: 16px; line-height: 1.2; border: 2px solid black;
+        table-layout: fixed;
     }
     .styled-table th, .styled-table td {
         border: 1px solid black; padding: 8px 10px; text-align: center;
@@ -51,12 +52,12 @@ st.markdown("""
     .styled-table th {
         background-color: #004d40; color: white; font-weight: bold;
     }
-    .styled-table td:first-child {
+    .styled-table th:nth-child(1), .styled-table td:nth-child(1) {
         text-align: left; font-weight: 600; background-color: #f7f7f7;
         width: 34%;
     }
-    .styled-table td:nth-child(2), .styled-table td:nth-child(3),
-    .styled-table th:nth-child(2), .styled-table th:nth-child(3) {
+    .styled-table th:nth-child(2), .styled-table td:nth-child(2),
+    .styled-table th:nth-child(3), .styled-table td:nth-child(3) {
         width: 33%;
     }
     @media (prefers-color-scheme: dark) {
