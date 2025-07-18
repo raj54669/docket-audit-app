@@ -47,12 +47,12 @@ st.markdown("""
         padding-top: 2px !important;
         padding-bottom: 2px !important;
         line-height: 1 !important;
-        min-height: 28px !important;
+        min-height: 24px !important;
     }
 
     .stSelectbox div[data-baseweb="select"] {
         align-items: center !important;
-        height: 32px !important;
+        height: 28px !important;
     }
 
     /* Dropdown menu popup spacing */
