@@ -18,7 +18,7 @@ st.markdown("""
         --title-size: 40px;
         --subtitle-size: 20px;
         --caption-size: 16px;
-        --label-size: 16px;
+        --label-size: 14px;
         --select-font-size: 16px;
         --table-font-size: 14px;
         --variant-title-size: 18px;
