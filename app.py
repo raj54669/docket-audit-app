@@ -16,12 +16,12 @@ st.markdown("""
     <style>
     :root {
         --title-size: 40px;  /* 🚗 Mahindra Vehicle Pricing Viewer */
-        --subtitle-size: 20px; /* 📋 Vehicle Pricing Details */
+        --subtitle-size: 18px; /* 📋 Vehicle Pricing Details */
         --caption-size: 16px; /* 📅 Data last updated on: ... */
         --label-size: 14px; /* 🚘 Select Model,⛽ Select Fuel Type,🎯 Select Variant */
-        --select-font-size: 14px; /* value inside dropdown like 3XO, DIESEL, AX5 DS AS */
+        --select-font-size: 15px; /* value inside dropdown like 3XO, DIESEL, AX5 DS AS */
         --table-font-size: 14px; /* Ex-Showroom Price ₹12,99,000 */
-        --variant-title-size: 18px; /* 🚙 3XO - DIESEL - AX5 DS AS */
+        --variant-title-size: 20px; /* 🚙 3XO - DIESEL - AX5 DS AS */
     }
 
     .block-container {
