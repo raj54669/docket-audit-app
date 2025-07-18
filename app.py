@@ -11,63 +11,47 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
-# --- Global Styling ---
+# --- Global Styling: Padding + Font Sizes ---
 st.markdown("""
     <style>
     :root {
-        --title-size: 40px;
-        --subtitle-size: 20px;
-        --caption-size: 16px;
-        --label-size: 16px;
-        --select-font-size: 16px;
-        --table-font-size: 16px;
-        --variant-title-size: 18px;
+        --title-size: 40px;           /* st.title() */
+        --subtitle-size: 20px;        /* st.subheader() */
+        --caption-size: 16px;         /* st.caption() */
+        --label-size: 16px;           /* Label above selectboxes */
+        --select-font-size: 16px;     /* Dropdown option text */
+        --table-font-size: 14px;      /* Table text */
+        --variant-title-size: 18px;   /* 🚙 {model} - {fuel_type} - {variant} */
     }
-    .block-container { padding-top: 0rem; }
+
+    .block-container {
+        padding-top: 0rem;
+    }
     header {visibility: hidden;}
-    h1 { font-size: var(--title-size) !important; }
-    h2 { font-size: var(--subtitle-size) !important; }
-    h3 { font-size: var(--variant-title-size) !important; }
-    .stCaption { font-size: var(--caption-size) !important; }
+
+    h1 {
+        font-size: var(--title-size) !important;
+    }
+    h2 {
+        font-size: var(--subtitle-size) !important;
+    }
+    h3 {
+    font-size: var(--variant-title-size) !important;
+    }
+        
+    .stCaption {
+        font-size: var(--caption-size) !important;
+    }
     .stSelectbox label {
         font-size: var(--label-size) !important;
         font-weight: 600;
     }
-    .styled-table { font-size: var(--table-font-size) !important; }
+    .styled-table {
+        font-size: var(--table-font-size) !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# --- Table Styling ---
-st.markdown("""
-    <style>
-    .table-wrapper { margin-bottom: 15px; padding: 0; }
-    .styled-table {
-        width: 100%; border-collapse: collapse;
-        font-size: 16px; line-height: 1.2; border: 2px solid black;
-        table-layout: fixed;
-    }
-    .styled-table th, .styled-table td {
-        border: 1px solid black; padding: 8px 10px; text-align: center;
-    }
-    .styled-table th {
-        background-color: #004d40; color: white; font-weight: bold;
-    }
-    .styled-table th:nth-child(1), .styled-table td:nth-child(1) {
-        text-align: left; font-weight: 600; background-color: #f7f7f7;
-        width: 34%;
-    }
-    .styled-table th:nth-child(2), .styled-table td:nth-child(2),
-    .styled-table th:nth-child(3), .styled-table td:nth-child(3) {
-        width: 33%;
-    }
-    @media (prefers-color-scheme: dark) {
-        .styled-table { border: 2px solid white; }
-        .styled-table th, .styled-table td { border: 1px solid white; }
-        .styled-table td { background-color: #111; color: #eee; }
-        .styled-table td:first-child { background-color: #1e1e1e; color: white; }
-    }
-    </style>
-""", unsafe_allow_html=True)
 
 # --- Load Excel Data ---
 @st.cache_data(show_spinner=False)
@@ -84,7 +68,7 @@ def load_data(file_path):
 file_path = "PV Price List Master D. 08.07.2025.xlsx"
 price_data = load_data(file_path)
 
-# --- Currency Formatter ---
+# --- Currency Formatter (Indian style) ---
 def format_indian_currency(value):
     if pd.isnull(value):
         return "<i style='color:gray;'>N/A</i>"
@@ -105,28 +89,59 @@ def format_indian_currency(value):
     except Exception:
         return "<i style='color:red;'>Invalid</i>"
 
-# --- Unified Table Renderer ---
-def render_combined_table(row, shared_fields, grouped_fields, group_keys):
+# --- Table Generators ---
+def render_shared_table(row, fields):
     html = """
     <div class="table-wrapper">
     <table class="styled-table">
-        <tr><th>Description</th><th>Individual</th><th>Corporate</th></tr>
+        <tr><th>Description</th><th>Amount</th></tr>
     """
-    for field in shared_fields:
-        value = format_indian_currency(row.get(field))
-        html += f"<tr><td>{field}</td><td>{value}</td><td>{value}</td></tr>"
-    for group in grouped_fields:
-        ind_key, corp_key = group_keys[group]
-        ind_val = format_indian_currency(row.get(ind_key))
-        corp_val = format_indian_currency(row.get(corp_key))
-        html += f"<tr><td>{group}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
+    for field in fields:
+        value = row.get(field, None)
+        html += f"<tr><td>{field}</td><td>{format_indian_currency(value)}</td></tr>"
     html += "</table></div>"
     return html
+
+def render_registration_table(row, groups, keys):
+    html = """
+    <div class="table-wrapper">
+    <table class="styled-table">
+        <tr><th>Registration</th><th>Individual</th><th>Corporate</th></tr>
+    """
+    for field in groups:
+        ind_key, corp_key = keys.get(field, ("", ""))
+        html += f"<tr><td>{field}</td><td>{format_indian_currency(row.get(ind_key))}</td><td>{format_indian_currency(row.get(corp_key))}</td></tr>"
+    html += "</table></div>"
+    return html
+
+# --- Table Styling ---
+st.markdown("""
+    <style>
+    .table-wrapper { margin-bottom: 15px; padding: 0; }
+    .styled-table {
+        width: 100%; border-collapse: collapse;
+        font-size: 16px; line-height: 1.2; border: 2px solid black;
+    }
+    .styled-table th, .styled-table td {
+        border: 1px solid black; padding: 8px 10px; text-align: center;
+    }
+    .styled-table th { background-color: #004d40; color: white; font-weight: bold; }
+    .styled-table td:first-child {
+        text-align: left; font-weight: 600; background-color: #f7f7f7;
+    }
+    @media (prefers-color-scheme: dark) {
+        .styled-table { border: 2px solid white; }
+        .styled-table th, .styled-table td { border: 1px solid white; }
+        .styled-table td { background-color: #111; color: #eee; }
+        .styled-table td:first-child { background-color: #1e1e1e; color: white; }
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 # --- Title ---
 st.title("🚗 Mahindra Vehicle Pricing Viewer")
 
-# --- Timestamp ---
+# --- Timestamp Display ---
 try:
     ist_time = datetime.fromtimestamp(os.path.getmtime(file_path)) + timedelta(hours=5, minutes=30)
     st.caption(f"📅 Data last updated on: {ist_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
@@ -139,7 +154,9 @@ if not models:
     st.error("❌ No models found in data.")
     st.stop()
 
-col1, col2 = st.columns([2, 1])
+# First row: Model and Fuel Type (Model gets more width)
+col1, col2 = st.columns([2, 1])  # Adjust ratio as needed
+
 with col1:
     model = st.selectbox("🚘 Select Model", models)
 
@@ -152,6 +169,7 @@ if not fuel_types:
 with col2:
     fuel_type = st.selectbox("⛽ Select Fuel Type", fuel_types)
 
+# Second row: Variant dropdown full width
 variant_df = fuel_df[fuel_df["Fuel Type"] == fuel_type]
 variant_options = sorted(variant_df["Variant"].dropna().unique())
 if not variant_options:
@@ -167,7 +185,7 @@ if selected_row.empty:
 
 row = selected_row.iloc[0]
 
-# --- Fields Configuration ---
+# --- Field Configs ---
 shared_fields = [
     "Ex-Showroom Price", "TCS 1%", "Insurance 1 Yr OD + 3 Yr TP + Zero Dep.",
     "Accessories Kit", "SMC", "Extended Warranty", "Maxi Care", "RSA (1 Year)", "Fastag"
@@ -183,7 +201,8 @@ group_keys = {
     "On Road Price (With HYPO)": ("On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"),
 }
 
-# --- Render Final Table ---
+# --- Output Tables ---
 st.markdown(f"### 🚙 {model} - {fuel_type} - {variant}")
 st.subheader("📋 Vehicle Pricing Details")
-st.markdown(render_combined_table(row, shared_fields, grouped_fields, group_keys), unsafe_allow_html=True)
+st.markdown(render_shared_table(row, shared_fields), unsafe_allow_html=True)
+st.markdown(render_registration_table(row, grouped_fields, group_keys), unsafe_allow_html=True)
