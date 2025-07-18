@@ -15,23 +15,10 @@ st.set_page_config(
 if "theme" not in st.session_state:
     st.session_state.theme = "light"
 
-toggle_icon = "🌙" if st.session_state.theme == "light" else "☀️"
-new_theme = "dark" if st.session_state.theme == "light" else "light"
-
-# Display top-right icon
-toggle_html = f"""
-    <div style='position: fixed; top: 10px; right: 20px; z-index: 9999; font-size: 26px; cursor: pointer;'
-         onclick=\"window.location.href += '?toggle=1';\">
-        {toggle_icon}
-    </div>
-"""
-st.markdown(toggle_html, unsafe_allow_html=True)
-
-# Toggle theme via query param
-query_params = st.experimental_get_query_params()
-if "toggle" in query_params:
-    st.session_state.theme = new_theme
-    st.experimental_set_query_params()
+col_toggle, _ = st.columns([1, 6])
+with col_toggle:
+    if st.button("🌙" if st.session_state.theme == "light" else "☀️", help="Toggle Dark/Light Mode"):
+        st.session_state.theme = "dark" if st.session_state.theme == "light" else "light"
 
 # --- Global Styling ---
 theme = st.session_state.theme
