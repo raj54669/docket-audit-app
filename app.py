@@ -85,8 +85,9 @@ def render_combined_table(row, shared_fields, grouped_fields, group_keys):
         <tr><th>Description</th><th>Individual</th><th>Corporate</th></tr>
     """
     for field in shared_fields:
-        val = format_indian_currency(row.get(field))
-        html += f"<tr><td>{field}</td><td>{val}</td><td>{val}</td></tr>"
+        ind_val = format_indian_currency(row.get(field))
+        corp_val = format_indian_currency(row.get(field))
+        html += f"<tr><td>{field}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
     for field in grouped_fields:
         ind_key, corp_key = group_keys.get(field, ("", ""))
         ind_val = format_indian_currency(row.get(ind_key))
@@ -100,11 +101,18 @@ st.markdown("""
     <style>
     .table-wrapper { margin-bottom: 15px; padding: 0; }
     .styled-table {
-        width: 100%; border-collapse: collapse;
+        width: 100%; border-collapse: collapse; table-layout: fixed;
         font-size: 16px; line-height: 1.2; border: 2px solid black;
     }
     .styled-table th, .styled-table td {
         border: 1px solid black; padding: 8px 10px; text-align: center;
+    }
+    .styled-table th:nth-child(1), .styled-table td:nth-child(1) {
+        width: 60%;
+    }
+    .styled-table th:nth-child(2), .styled-table td:nth-child(2),
+    .styled-table th:nth-child(3), .styled-table td:nth-child(3) {
+        width: 20%;
     }
     .styled-table th { background-color: #004d40; color: white; font-weight: bold; }
     .styled-table td:first-child {
