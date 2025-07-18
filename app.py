@@ -37,6 +37,9 @@ st.markdown("""
         font-size: var(--label-size) !important;
         font-weight: 600;
     }
+    .stSelectbox div[data-baseweb="select"] > div {
+        font-size: var(--select-font-size) !important;
+    }
     .styled-table { font-size: var(--table-font-size) !important; }
     </style>
 """, unsafe_allow_html=True)
@@ -102,10 +105,10 @@ st.markdown("""
     .table-wrapper { margin-bottom: 15px; padding: 0; }
     .styled-table {
         width: 100%; border-collapse: collapse; table-layout: fixed;
-        font-size: 16px; line-height: 1.2; border: 2px solid black;
+        font-size: 14px; line-height: 1; border: 2px solid black;
     }
     .styled-table th, .styled-table td {
-        border: 1px solid black; padding: 6px 10px; text-align: center; line-height: 1.1;
+        border: 1px solid black; padding: 4px 10px; text-align: center; line-height: 1;
     }
     .styled-table th:nth-child(1), .styled-table td:nth-child(1) {
         width: 60%;
@@ -133,9 +136,9 @@ st.title("🚗 Mahindra Vehicle Pricing Viewer")
 # --- Timestamp Display ---
 try:
     ist_time = datetime.fromtimestamp(os.path.getmtime(file_path)) + timedelta(hours=5, minutes=30)
-    st.caption(f"📅 Data last updated on: {ist_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
+    st.caption(f"🗕️ Data last updated on: {ist_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
 except Exception:
-    st.caption("📅 Last update timestamp not available.")
+    st.caption("🗕️ Last update timestamp not available.")
 
 # --- Dropdowns ---
 models = sorted(price_data["Model"].dropna().unique())
