@@ -20,7 +20,7 @@ st.markdown("""
         --caption-size: 16px;
         --label-size: 16px;
         --select-font-size: 16px;
-        --table-font-size: 14px;
+        --table-font-size: 16px;
         --variant-title-size: 18px;
     }
     .block-container { padding-top: 0rem; }
@@ -95,7 +95,7 @@ def format_indian_currency(value):
         else:
             formatted = last_three
         result = f"₹{formatted}"
-        return f"{'-' if is_negative else ''}{result}"
+        return f"<b>{'-' if is_negative else ''}{result}</b>"
     except Exception:
         return "<i style='color:red;'>Invalid</i>"
 
