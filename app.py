@@ -15,13 +15,13 @@ st.set_page_config(
 st.markdown("""
     <style>
     :root {
-        --title-size: 40px;  /* 🚗 Mahindra Vehicle Pricing Viewer */
-        --subtitle-size: 18px; /* 📋 Vehicle Pricing Details */
-        --caption-size: 16px; /* 📅 Data last updated on: ... */
-        --label-size: 14px; /* 🚘 Select Model,⛽ Select Fuel Type,🎯 Select Variant */
-        --select-font-size: 15px; /* value inside dropdown like 3XO, DIESEL, AX5 DS AS */
-        --table-font-size: 14px; /* Ex-Showroom Price ₹12,99,000 */
-        --variant-title-size: 20px; /* 🚙 3XO - DIESEL - AX5 DS AS */
+        --title-size: 40px;
+        --subtitle-size: 18px;
+        --caption-size: 16px;
+        --label-size: 14px;
+        --select-font-size: 15px;
+        --table-font-size: 14px;
+        --variant-title-size: 20px;
     }
 
     .block-container {
@@ -33,13 +33,37 @@ st.markdown("""
     h2 { font-size: var(--subtitle-size) !important; }
     h3 { font-size: var(--variant-title-size) !important; }
     .stCaption { font-size: var(--caption-size) !important; }
+
+    /* Label above dropdown */
     .stSelectbox label {
         font-size: var(--label-size) !important;
-        font-weight: 600;
+        font-weight: 600 !important;
     }
+
+    /* Selected value in dropdown (closed state) */
     .stSelectbox div[data-baseweb="select"] > div {
         font-size: var(--select-font-size) !important;
+        font-weight: bold !important;
+        padding-top: 4px !important;
+        padding-bottom: 4px !important;
+        line-height: 1.2 !important;
+        min-height: 32px !important;
     }
+
+    /* Dropdown menu popup spacing */
+    .stSelectbox [data-baseweb="menu"] > div {
+        padding-top: 4px !important;
+        padding-bottom: 4px !important;
+    }
+
+    /* Each selectable option */
+    .stSelectbox [data-baseweb="option"] {
+        padding: 6px 10px !important;
+        font-size: var(--select-font-size) !important;
+        font-weight: 500 !important;
+        line-height: 1.2 !important;
+    }
+
     .styled-table { font-size: var(--table-font-size) !important; }
     </style>
 """, unsafe_allow_html=True)
@@ -95,7 +119,8 @@ def render_combined_table(row, shared_fields, grouped_fields, group_keys):
         ind_key, corp_key = group_keys.get(field, ("", ""))
         ind_val = format_indian_currency(row.get(ind_key))
         corp_val = format_indian_currency(row.get(corp_key))
-        html += f"<tr><td>{field}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
+        highlight = " style='background-color:#fff3cd;font-weight:bold;'" if field.startswith("On Road Price") else ""
+        html += f"<tr{highlight}><td>{field}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
     html += "</table></div>"
     return html
 
