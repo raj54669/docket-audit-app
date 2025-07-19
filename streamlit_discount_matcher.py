@@ -18,7 +18,7 @@ def normalize_model(text):
     text = re.sub(r"\s+", " ", text)
     return text.strip()
 
-# === Parse discount row ===
+# === Rule type logic extraction ===
 def parse_discount_model(entry: str):
     if not isinstance(entry, str):
         return None
@@ -32,7 +32,7 @@ def parse_discount_model(entry: str):
 
     fuel = None
     variants = []
-    variant_mode = "all"
+    rule_type = "all"  # default rule type
 
     fuel_candidates = {"PETROL", "DIESEL", "EV"}
     for p in parens:
@@ -42,25 +42,37 @@ def parse_discount_model(entry: str):
                 fuel = t.capitalize()
                 break
 
-    for p in parens:
-        if "all except" in p.lower():
-            variant_mode = "all_except"
-            variant_str = re.sub(r"(?i)all except", "", p)
-            variants = [normalize(v) for v in re.split(r"[&,]", variant_str) if v.strip()]
-            break
-    else:
+    text_upper = original.upper()
+
+    if "ALL EXCEPT" in text_upper:
+        rule_type = "all_except"
+        match = re.search(r"ALL EXCEPT ([^)]+)\)?", text_upper)
+        if match:
+            variants = [normalize(v) for v in re.split(r"[&,]", match.group(1)) if v.strip()]
+    elif any(w in text_upper for w in ["SERIES", "Z8", "AX7 SERIES"]):
+        rule_type = "prefix_include"
         for p in parens:
-            if any(c.isalnum() for c in p) and (not fuel or fuel.lower() not in p.lower()):
-                variants = [normalize(v) for v in re.split(r"[&,]", p) if v.strip()]
-                if variants:
-                    variant_mode = "include"
-                    break
+            variants += [normalize(v) for v in re.split(r"[&,]", p) if "SERIES" in p or "Z8" in p]
+    elif any(w in text_upper for w in ["MOCHA"]):
+        rule_type = "all_except"
+        variants = ["MOCHA INTERIORS"]
+    elif "TGDI" in text_upper and "AX5" in text_upper:
+        rule_type = "include_all"
+        variants = ["AX5", "TGDI"]
+    elif "BLACK EDITION" in text_upper:
+        rule_type = "exact_model_all"
+    elif "BE 6" in text_upper or "XEV 9E" in text_upper:
+        rule_type = "exact_model_all"
+    elif parens:
+        rule_type = "include_any"
+        for p in parens:
+            variants += [normalize(v) for v in re.split(r"[&,]", p)]
 
     return {
         "original": original,
         "model": model,
         "fuel": fuel,
-        "variant_mode": variant_mode,
+        "rule_type": rule_type,
         "variants": variants
     }
 
@@ -73,54 +85,41 @@ def load_and_clean_audit(file):
     df["Variant"] = df["Variant"].apply(normalize)
     return df
 
-# === Updated variant matching ===
-def is_variant_excluded(variant: str, exclusions: list[str]) -> bool:
-    variant = normalize(variant)
-    for exc in exclusions:
-        exc = normalize(exc)
-        if "SERIES" in exc:
-            base = exc.replace("SERIES", "").strip()
-            if variant.startswith(base):
-                return True
-        elif exc in variant or variant.startswith(exc):
-            return True
-    return False
-
-def is_variant_included(variant: str, includes: list[str]) -> bool:
-    variant = normalize(variant)
-    return all(
-        inc in variant or variant.startswith(inc)
-        for inc in map(normalize, includes)
-    )
-
-# === Flexible matching ===
+# === Rule engine for matching ===
 def is_match(row, parsed):
-    model = row["Model"]
-    fuel = row["Fuel Type"]
-    variant = row["Variant"]
+    model = normalize_model(row["Model"])
+    fuel = normalize(row["Fuel Type"])
+    variant = normalize(row["Variant"])
 
-    # Exact model match only
-    if normalize_model(parsed["model"]) != normalize_model(model):
-        return False
+    p_model = parsed["model"]
+    p_fuel = parsed["fuel"]
+    rule = parsed["rule_type"]
+    terms = parsed["variants"]
 
-    if parsed["fuel"] and parsed["fuel"].upper() != fuel:
-        return False
-
-    if "THAR ROXX" in parsed["model"]:
-        if "THAR ROXX" not in model:
+    # Model match
+    if rule == "exact_model_all":
+        if p_model != model:
             return False
-        if "MOCHA INTERIORS" in variant:
+    else:
+        if p_model not in model and model not in p_model:
             return False
 
-    if "BE 6" in parsed["model"] or "XEV 9E" in parsed["model"]:
+    # Fuel match if specified
+    if p_fuel and p_fuel.upper() != fuel:
         return False
 
-    if parsed["variant_mode"] == "include" and parsed["variants"]:
-        return is_variant_included(variant, parsed["variants"])
-    elif parsed["variant_mode"] == "all_except" and parsed["variants"]:
-        return not is_variant_excluded(variant, parsed["variants"])
+    if rule == "all":
+        return True
+    elif rule == "include_any":
+        return any(term in variant for term in terms)
+    elif rule == "include_all":
+        return all(term in variant for term in terms)
+    elif rule == "prefix_include":
+        return any(variant.startswith(term) for term in terms)
+    elif rule == "all_except":
+        return all(term not in variant for term in terms)
 
-    return True
+    return False
 
 # === Process all matches ===
 def generate_matched_audit(discount_file, audit_file):
@@ -141,8 +140,8 @@ def generate_matched_audit(discount_file, audit_file):
     return audit_df
 
 # === Streamlit UI ===
-st.set_page_config(page_title="Discount Matcher (Improved)", layout="wide")
-st.title("🗞 Discount Adherence Matcher (Improved Parsing, Top 13 Entries)")
+st.set_page_config(page_title="Discount Matcher (Rule-based)", layout="wide")
+st.title("🗞 Discount Adherence Matcher (Rule Engine for Top 13 Entries)")
 
 with st.sidebar:
     st.header("📂 Upload Required Files")
@@ -153,7 +152,7 @@ if discount_file and audit_file:
     st.success("✅ Files uploaded! Click below to start matching.")
 
     if st.button("🔍 Run Matching Logic"):
-        with st.spinner("Processing files..."):
+        with st.spinner("Processing files using rule engine..."):
             matched_df = generate_matched_audit(discount_file, audit_file)
 
         st.subheader("🔗 Matched Results Preview")
