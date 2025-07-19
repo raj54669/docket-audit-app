@@ -3,11 +3,18 @@ import pandas as pd
 import re
 import io
 
-# === Normalize helper ===
+# === Normalize helpers ===
 def normalize(text):
     if not isinstance(text, str):
         return ""
-    text = text.upper().replace("-", " ").replace("SCOPRIO", "SCORPIO")
+    text = text.upper().replace("SCOPRIO", "SCORPIO")
+    text = re.sub(r"\s+", " ", text)
+    return text.strip()
+
+def normalize_model(text):
+    if not isinstance(text, str):
+        return ""
+    text = text.upper().replace("SCOPRIO", "SCORPIO")
     text = re.sub(r"\s+", " ", text)
     return text.strip()
 
@@ -17,11 +24,11 @@ def parse_discount_model(entry: str):
         return None
 
     original = entry.strip()
-    cleaned = re.sub(r"\s*[-\u2013\u2014]\s*20\d{2}", "", original)  # Remove year suffix like '- 2025'
+    cleaned = re.sub(r"\s*[-\u2013\u2014]\s*20\d{2}", "", original)
     parens = re.findall(r"\(([^()]*)\)", cleaned)
 
     model = re.split(r"\(", cleaned)[0].strip()
-    model = normalize(model)
+    model = normalize_model(model)
 
     fuel = None
     variants = []
@@ -61,7 +68,7 @@ def parse_discount_model(entry: str):
 def load_and_clean_audit(file):
     df = pd.read_excel(file)
     df = df[["Model", "Fuel Type", "Variant"]].dropna()
-    df["Model"] = df["Model"].apply(normalize)
+    df["Model"] = df["Model"].apply(normalize_model)
     df["Fuel Type"] = df["Fuel Type"].apply(normalize)
     df["Variant"] = df["Variant"].apply(normalize)
     return df
@@ -81,11 +88,10 @@ def is_variant_excluded(variant: str, exclusions: list[str]) -> bool:
 
 def is_variant_included(variant: str, includes: list[str]) -> bool:
     variant = normalize(variant)
-    for inc in includes:
-        inc = normalize(inc)
-        if inc in variant or variant.startswith(inc):
-            return True
-    return False
+    return all(
+        inc in variant or variant.startswith(inc)
+        for inc in map(normalize, includes)
+    )
 
 # === Flexible matching ===
 def is_match(row, parsed):
@@ -93,7 +99,8 @@ def is_match(row, parsed):
     fuel = row["Fuel Type"]
     variant = row["Variant"]
 
-    if parsed["model"] not in model and model not in parsed["model"]:
+    # Exact model match only
+    if normalize_model(parsed["model"]) != normalize_model(model):
         return False
 
     if parsed["fuel"] and parsed["fuel"].upper() != fuel:
