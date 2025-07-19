@@ -3,6 +3,10 @@ import pandas as pd
 import re
 import io
 
+# === Utility: normalize text ===
+def normalize(text):
+    return str(text).upper().replace("-", " ").strip()
+
 # === Parse discount sheet row ===
 def parse_discount_model(raw_model):
     if not isinstance(raw_model, str):
@@ -10,7 +14,7 @@ def parse_discount_model(raw_model):
 
     original = raw_model.strip()
     cleaned = re.sub(r'20\d{2}', '', original)
-    cleaned = cleaned.replace("-", "").strip()
+    cleaned = cleaned.replace("-", " ").strip()
 
     fuel_match = re.search(r'\((Petrol|Diesel|EV)\)', cleaned, re.IGNORECASE)
     fuel = fuel_match.group(1).capitalize() if fuel_match else None
@@ -20,7 +24,7 @@ def parse_discount_model(raw_model):
     all_except_match = re.search(r'All Except (.*)\)', original, re.IGNORECASE)
     if all_except_match:
         variant_str = all_except_match.group(1)
-        exclusions = [v.strip().upper() for v in re.split(r'[&,]', variant_str)]
+        exclusions = [normalize(v) for v in re.split(r'[&,]', variant_str)]
         model_type = 'all_except'
         variants = exclusions
         model = re.split(r'\(|-', cleaned)[0].strip().upper()
@@ -28,7 +32,7 @@ def parse_discount_model(raw_model):
         variant_match = re.search(r'\(([^)]+)\)', cleaned)
         if variant_match:
             variant_str = variant_match.group(1)
-            variants = [v.strip().upper() for v in re.split(r'[&,]', variant_str)]
+            variants = [normalize(v) for v in re.split(r'[&,]', variant_str)]
             model_type = 'include'
             model = cleaned.replace(variant_match.group(0), '').strip().upper()
         else:
@@ -38,7 +42,7 @@ def parse_discount_model(raw_model):
 
     return {
         'original': original,
-        'model': model,
+        'model': normalize(model),
         'fuel': fuel,
         'variant_mode': model_type,
         'variants': variants
@@ -49,14 +53,18 @@ def load_and_clean_audit(file):
     df = pd.read_excel(file)
     df.columns = df.columns.str.strip()
     df = df[['Model', 'Fuel Type', 'Variant']].dropna()
-    df['Model'] = df['Model'].astype(str).str.upper().str.strip()
-    df['Fuel Type'] = df['Fuel Type'].astype(str).str.upper().str.strip()
-    df['Variant'] = df['Variant'].astype(str).str.upper().str.strip()
+    df['Model'] = df['Model'].apply(normalize)
+    df['Fuel Type'] = df['Fuel Type'].apply(normalize)
+    df['Variant'] = df['Variant'].apply(normalize)
     return df
 
-# === Determine if audit row matches discount rule ===
+# === Improved matching function ===
 def is_match(audit_row, parsed):
-    model, fuel, variant = audit_row['Model'], audit_row['Fuel Type'], audit_row['Variant']
+    model = normalize(audit_row['Model'])
+    fuel = normalize(audit_row['Fuel Type'])
+    variant = normalize(audit_row['Variant'])
+
+    # Special cases
     if "BLACK EDITION" in parsed['original'].upper():
         if model != parsed['model']:
             return False
@@ -68,16 +76,18 @@ def is_match(audit_row, parsed):
     elif "BE 6" in parsed['model'] or "XEV 9E" in parsed['model']:
         return False
     else:
-        if parsed['model'] not in model:
+        if parsed['model'] not in model and model not in parsed['model']:
             return False
 
     if parsed['fuel'] and parsed['fuel'].upper() != fuel:
         return False
 
     if parsed['variant_mode'] == 'include' and parsed['variants']:
-        return variant in parsed['variants']
+        return any(variant.startswith(v) or v in variant for v in parsed['variants'])
+
     elif parsed['variant_mode'] == 'all_except' and parsed['variants']:
-        return variant not in parsed['variants']
+        return all(not (variant.startswith(v) or v in variant) for v in parsed['variants'])
+
     return True
 
 # === Matching Logic ===
@@ -127,4 +137,3 @@ if discount_file and audit_file:
         )
 else:
     st.info("Upload both Discount and Audit Excel files to begin.")
-
