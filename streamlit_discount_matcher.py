@@ -42,6 +42,15 @@ def parse_discount_model(entry: str):
                 fuel = t.capitalize()
                 break
 
+    # Fallback fuel detection if no parens found
+    if not parens:
+        if "DIESEL" in original.upper():
+            fuel = "Diesel"
+        elif "PETROL" in original.upper():
+            fuel = "Petrol"
+        elif "EV" in original.upper():
+            fuel = "EV"
+
     text_upper = original.upper()
 
     if "ALL EXCEPT" in text_upper:
@@ -108,6 +117,7 @@ def is_match(row, parsed):
     if p_fuel and p_fuel.upper() != fuel:
         return False
 
+    # Rule application
     if rule == "all":
         return True
     elif rule == "include_any":
@@ -126,6 +136,7 @@ def generate_matched_audit(discount_file, audit_file):
     audit_df = load_and_clean_audit(audit_file)
     discount_df = pd.read_excel(discount_file, sheet_name=0).head(14).iloc[1:]
     audit_df["Matched Discount Entry"] = "Not Matched"
+    audit_df["Match Reason"] = ""
 
     for _, row in discount_df.iterrows():
         parsed = parse_discount_model(row["Model"])
@@ -136,6 +147,7 @@ def generate_matched_audit(discount_file, audit_file):
             if audit_df.at[idx, "Matched Discount Entry"] == "Not Matched":
                 if is_match(audit_df.loc[idx], parsed):
                     audit_df.at[idx, "Matched Discount Entry"] = parsed["original"]
+                    audit_df.at[idx, "Match Reason"] = f"Matched by rule: {parsed['rule_type']}"
 
     return audit_df
 
