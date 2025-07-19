@@ -173,9 +173,9 @@ st.title("🚗 Mahindra Vehicle Pricing Viewer")
 # --- Timestamp Display ---
 try:
     ist_time = datetime.fromtimestamp(os.path.getmtime(file_path)) + timedelta(hours=5, minutes=30)
-    st.caption(f"🗕️ Data last updated on: {ist_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
+    st.caption(f"📅 Data last updated on: {ist_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
 except Exception:
-    st.caption("🗕️ Last update timestamp not available.")
+    st.caption("📅 Last update timestamp not available.")
 
 # --- Dropdowns ---
 models = sorted(price_data["Model"].dropna().unique())
