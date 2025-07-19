@@ -42,8 +42,8 @@ def parse_discount_model(entry: str):
                 fuel = t.capitalize()
                 break
 
-    # Fallback fuel detection if no parens found
-    if not parens:
+    # Fuel fallback detection from the entire entry string
+    if not fuel:
         if "DIESEL" in original.upper():
             fuel = "Diesel"
         elif "PETROL" in original.upper():
