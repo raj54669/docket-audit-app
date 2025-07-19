@@ -12,19 +12,15 @@ def normalize(text):
     return text.strip()
 
 def normalize_model(text):
-    if not isinstance(text, str):
-        return ""
-    text = text.upper().replace("SCOPRIO", "SCORPIO")
-    text = re.sub(r"\s+", " ", text)
-    return text.strip()
+    return normalize(text)
 
-# === Rule type logic extraction ===
+# === Discount rule parser ===
 def parse_discount_model(entry: str):
     if not isinstance(entry, str):
         return None
 
     original = entry.strip()
-    cleaned = re.sub(r"\s*[-\u2013\u2014]\s*20\d{2}", "", original)
+    cleaned = re.sub(r"\s*[-–—]\s*20\d{2}", "", original)
     parens = re.findall(r"\(([^()]*)\)", cleaned)
 
     model = re.split(r"\(", cleaned)[0].strip()
@@ -32,7 +28,7 @@ def parse_discount_model(entry: str):
 
     fuel = None
     variants = []
-    rule_type = "all"  # default rule type
+    rule_type = "all"
 
     fuel_candidates = {"PETROL", "DIESEL", "EV"}
     for p in parens:
@@ -42,7 +38,7 @@ def parse_discount_model(entry: str):
                 fuel = t.capitalize()
                 break
 
-    # Fuel fallback detection from the entire entry string
+    # Fuel fallback from full string
     if not fuel:
         if "DIESEL" in original.upper():
             fuel = "Diesel"
@@ -62,7 +58,7 @@ def parse_discount_model(entry: str):
         rule_type = "prefix_include"
         for p in parens:
             variants += [normalize(v) for v in re.split(r"[&,]", p) if "SERIES" in p or "Z8" in p]
-    elif any(w in text_upper for w in ["MOCHA"]):
+    elif "MOCHA" in text_upper:
         rule_type = "all_except"
         variants = ["MOCHA INTERIORS"]
     elif "TGDI" in text_upper and "AX5" in text_upper:
@@ -105,19 +101,24 @@ def is_match(row, parsed):
     rule = parsed["rule_type"]
     terms = parsed["variants"]
 
-    # Model match
+    # Model match (allow loose match)
     if rule == "exact_model_all":
         if p_model != model:
             return False
     else:
-        if p_model not in model and model not in p_model:
+        if not (
+            p_model in model or
+            model in p_model or
+            model.endswith(p_model) or
+            p_model.endswith(model)
+        ):
             return False
 
-    # Fuel match if specified
+    # Fuel match
     if p_fuel and p_fuel.upper() != fuel:
         return False
 
-    # Rule application
+    # Rule logic
     if rule == "all":
         return True
     elif rule == "include_any":
@@ -152,19 +153,19 @@ def generate_matched_audit(discount_file, audit_file):
     return audit_df
 
 # === Streamlit UI ===
-st.set_page_config(page_title="Discount Matcher (Rule-based)", layout="wide")
-st.title("🗞 Discount Adherence Matcher (Rule Engine for Top 13 Entries)")
+st.set_page_config(page_title="Discount Matcher", layout="wide")
+st.title("🧾 Discount Adherence Matcher (Top 13 Rows)")
 
 with st.sidebar:
-    st.header("📂 Upload Required Files")
+    st.header("📂 Upload Files")
     discount_file = st.file_uploader("Discount Sheet (Excel)", type=["xlsx"])
     audit_file = st.file_uploader("Audit Sheet (Excel)", type=["xlsx"])
 
 if discount_file and audit_file:
-    st.success("✅ Files uploaded! Click below to start matching.")
+    st.success("✅ Files uploaded successfully.")
 
     if st.button("🔍 Run Matching Logic"):
-        with st.spinner("Processing files using rule engine..."):
+        with st.spinner("Matching in progress..."):
             matched_df = generate_matched_audit(discount_file, audit_file)
 
         st.subheader("🔗 Matched Results Preview")
@@ -175,10 +176,10 @@ if discount_file and audit_file:
             matched_df.to_excel(writer, index=False)
 
         st.download_button(
-            label="📅 Download Full Matched File",
+            label="📥 Download Full Matched File",
             data=output.getvalue(),
             file_name="matched_audit_discount.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 else:
-    st.info("📄 Upload both Discount and Audit Excel files to begin.")
+    st.info("📄 Please upload both Discount and Audit Excel files to start.")
