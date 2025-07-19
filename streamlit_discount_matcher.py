@@ -50,9 +50,9 @@ def parse_discount_model(entry: str):
             variants = [normalize(v) for v in re.split(r"[&,]", variant_str) if v.strip()]
             break
     else:
-        # Step 3: Included variants
+        # Step 3: Included variants (with fuel safety check)
         for p in parens:
-            if any(c.isalnum() for c in p) and fuel not in p:
+            if any(c.isalnum() for c in p) and (not fuel or fuel.lower() not in p.lower()):
                 variants = [normalize(v) for v in re.split(r"[&,]", p) if v.strip()]
                 if variants:
                     variant_mode = "include"
