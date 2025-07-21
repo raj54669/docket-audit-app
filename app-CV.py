@@ -6,8 +6,7 @@ import re
 
 st.set_page_config(
     page_title="🚛 Mahindra Docket Audit Tool - CV",
-    layout="centered",
-    initial_sidebar_state="auto"
+    layout="centered"
 )
 
 @st.cache_data(show_spinner=False)
@@ -41,6 +40,35 @@ def format_indian_currency(value):
     except Exception:
         return "<i style='color:red;'>Invalid</i>"
 
+st.markdown("""
+    <style>
+    .table-wrapper { max-width: 700px; }
+    .styled-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        border: 2px solid black;
+    }
+    .styled-table th, .styled-table td {
+        border: 1px solid black;
+        padding: 6px 12px;
+    }
+    .styled-table th {
+        background-color: #004d40;
+        color: white;
+    }
+    .styled-table td:first-child {
+        background-color: #f7f7f7;
+        font-weight: 600;
+        text-align: left;
+    }
+    .styled-table td {
+        white-space: nowrap;
+        text-align: right;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 st.title("🚛 Mahindra Docket Audit Tool - CV")
 
 variant_col = 'Variant'
@@ -58,20 +86,21 @@ if filtered_row.empty:
 
 row = filtered_row.iloc[0]
 
-# --- Split Tables ---
+# --- Define Split ---
 pricing_columns = []
-cartel_columns = []
+cartel_columns = [
+    "M&M Scheme with GST",
+    "Dealer Offer ( Without Exchange Case )",
+    "Dealer Offer ( If Exchange Case )"
+]
 
-found_gst = False
 for col in data.columns:
     if col in [variant_col, 'Model Name']:
         continue
-    if not found_gst:
+    if col == "ON ROAD PRICE Without SMC Road Tax":
         pricing_columns.append(col)
-        if col == "M&M Scheme with GST":
-            found_gst = True
-    else:
-        cartel_columns.append(col)
+        break
+    pricing_columns.append(col)
 
 # --- Pricing Table ---
 st.subheader("📋 Vehicle Pricing Details")
