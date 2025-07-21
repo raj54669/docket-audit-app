@@ -4,6 +4,7 @@ import requests
 import base64
 from datetime import datetime
 from io import BytesIO
+import re
 
 # --- Config ---
 OWNER = "raj54669"
@@ -85,31 +86,23 @@ if file_list:
         res = requests.get(api_url, headers=HEADERS)
         if res.status_code == 200:
             file_content = base64.b64decode(res.json()['content'])
-            df = pd.read_excel(BytesIO(file_content))
+            df = pd.read_excel(BytesIO(file_content), header=2)
             st.write(f"### Showing data from: {selected_file}")
 
-            # --- Extract variants ---
             variant_col = df.columns[1]
             variants = df[variant_col].dropna().unique().tolist()
             selected_variant = st.selectbox("Select Variant", variants)
 
-            # --- Extract vertical data for selected variant ---
             variant_df = df[df[variant_col] == selected_variant]
             if not variant_df.empty:
-                details = df.iloc[:, 0].fillna("").tolist()[2:]
+                details = df.columns[2:].tolist()
                 amounts = variant_df.iloc[0, 2:].tolist()
-
-                # Ensure both lists are equal in length
-                min_len = min(len(details), len(amounts))
-                details = details[:min_len]
-                amounts = amounts[:min_len]
 
                 result_df = pd.DataFrame({
                     "Description": details,
                     "Amount": amounts
                 })
 
-                # Format as Indian currency
                 def format_currency(x):
                     try:
                         x = float(x)
@@ -129,11 +122,15 @@ if file_list:
 
                 result_df["Amount"] = result_df["Amount"].apply(format_currency)
 
-                # Styled Table Output
                 st.markdown("""
                 <style>
+                .table-container {
+                    max-width: 800px;
+                    margin-left: auto;
+                    margin-right: auto;
+                }
                 .styled-table {
-                    width: 80%;
+                    width: 100%;
                     border-collapse: collapse;
                     font-size: 15px;
                 }
@@ -146,6 +143,8 @@ if file_list:
                 .styled-table td {
                     padding: 8px 12px;
                     border-bottom: 1px solid #ccc;
+                    word-wrap: break-word;
+                    max-width: 300px;
                 }
                 .styled-table td:first-child {
                     font-weight: 600;
@@ -164,6 +163,7 @@ if file_list:
                     }
                 }
                 </style>
+                <div class="table-container">
                 <table class="styled-table">
                     <thead><tr><th>Description</th><th>Amount</th></tr></thead>
                     <tbody>
@@ -173,7 +173,7 @@ if file_list:
                     highlight = " style='background-color:#fff3cd;font-weight:bold;'" if "On Road Price" in row["Description"] else ""
                     st.markdown(f"<tr{highlight}><td>{row['Description']}</td><td>{row['Amount']}</td></tr>", unsafe_allow_html=True)
 
-                st.markdown("""</tbody></table>""", unsafe_allow_html=True)
+                st.markdown("""</tbody></table></div>""", unsafe_allow_html=True)
         else:
             st.error("Failed to download the selected file from GitHub")
 
