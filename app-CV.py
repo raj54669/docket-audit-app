@@ -66,14 +66,21 @@ st.markdown("""
         background-color: #004d40;
         color: white;
     }
+    .styled-table th:first-child {
+        text-align: left;
+    }
+    .styled-table th:last-child {
+        width: 20%;
+        text-align: right;
+    }
     .styled-table td:first-child {
-        width: 70%;
+        width: 80%;
         font-weight: 600;
         background-color: #f7f7f7;
         text-align: left;
     }
     .styled-table td:last-child {
-        width: 30%;
+        width: 20%;
         text-align: right;
         white-space: nowrap;
     }
