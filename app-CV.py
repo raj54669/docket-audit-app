@@ -6,7 +6,7 @@ import re
 
 # --- Page Configuration ---
 st.set_page_config(
-    page_title="CV Discount Viewer",
+    page_title="🚛 Mahindra Docket Audit Tool - CV",
     layout="centered",
     initial_sidebar_state="auto"
 )
@@ -52,19 +52,22 @@ st.markdown("""
         font-size: 14px; line-height: 1; border: 2px solid black;
     }
     .styled-table th, .styled-table td {
-        border: 1px solid black; padding: 6px 10px; text-align: left;
+        border: 1px solid black; padding: 6px 10px;
     }
     .styled-table th {
         background-color: #004d40; color: white;
     }
     .styled-table td:first-child {
-        font-weight: 600; background-color: #f7f7f7;
+        font-weight: 600; background-color: #f7f7f7; text-align: left;
+    }
+    .styled-table td:last-child {
+        width: 120px; text-align: right;
     }
     </style>
 """, unsafe_allow_html=True)
 
 # --- Title ---
-st.title("🚛 CV Discount Pricing Viewer")
+st.title("🚛 Mahindra Docket Audit Tool - CV")
 
 # --- Dropdown for Variant (from column B: 'Variant') ---
 variant_col = 'Variant'
@@ -72,8 +75,9 @@ if variant_col not in data.columns:
     st.error("❌ 'Variant' column not found in the Excel file.")
     st.stop()
 
-variants = sorted(data[variant_col].dropna().unique())
-selected_variant = st.selectbox("🕽️ Select Vehicle Variant", variants)
+# preserve file order
+variants = data[variant_col].dropna().drop_duplicates().tolist()
+selected_variant = st.selectbox("📘 Select Vehicle Variant", variants)
 
 filtered_row = data[data[variant_col] == selected_variant]
 if filtered_row.empty:
@@ -92,7 +96,7 @@ html = """
 """
 
 for col in data.columns:
-    if col != variant_col:
+    if col not in [variant_col, 'Model Name']:
         val = format_indian_currency(row.get(col))
         html += f"<tr><td>{col}</td><td>{val}</td></tr>"
 
