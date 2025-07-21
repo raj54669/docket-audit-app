@@ -86,8 +86,17 @@ if file_list:
         if res.status_code == 200:
             file_content = base64.b64decode(res.json()['content'])
             df = pd.read_excel(BytesIO(file_content))
+
             st.write(f"### Showing data from: {selected_file}")
-            st.dataframe(df, use_container_width=True)
+
+            variant_column = df.columns[1] if df.shape[1] > 1 else None
+            if variant_column and variant_column in df.columns:
+                variants = df[variant_column].dropna().unique().tolist()
+                selected_variant = st.selectbox("Select Variant", variants)
+                filtered_df = df[df[variant_column] == selected_variant]
+                st.dataframe(filtered_df.T, use_container_width=True)
+            else:
+                st.warning("No variant column found to filter data.")
         else:
             st.error("Failed to download the selected file from GitHub")
 
