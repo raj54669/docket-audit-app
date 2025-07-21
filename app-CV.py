@@ -15,7 +15,7 @@ st.set_page_config(
 @st.cache_data(show_spinner=False)
 def load_data(file_path):
     try:
-        return pd.read_excel(file_path)
+        return pd.read_excel(file_path, header=1)  # skip top row
     except Exception as e:
         st.error(f"❌ Failed to load Excel file: {e}")
         st.stop()
@@ -66,8 +66,8 @@ st.markdown("""
 # --- Title ---
 st.title("🚛 CV Discount Pricing Viewer")
 
-# --- Dropdown for Variant (from column B: 'Unnamed: 1') ---
-variant_col = 'Unnamed: 1'
+# --- Dropdown for Variant (from column B: 'Variant') ---
+variant_col = 'Variant'
 if variant_col not in data.columns:
     st.error("❌ 'Variant' column not found in the Excel file.")
     st.stop()
