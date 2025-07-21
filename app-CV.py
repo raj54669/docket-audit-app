@@ -1,5 +1,3 @@
-# file: app.py
-
 import streamlit as st
 import pandas as pd
 import re
@@ -19,6 +17,10 @@ def load_data(file_path):
 
 file_path = "Data/Discount_Cheker/CV Discount Check Master File 12.07.2025.xlsx"
 data = load_data(file_path)
+
+# Normalize column names
+normalized_columns = {col.strip().lower(): col for col in data.columns}
+
 
 def format_indian_currency(value):
     try:
@@ -88,19 +90,18 @@ row = filtered_row.iloc[0]
 
 # --- Define Split ---
 pricing_columns = []
-cartel_columns = [
-    "M&M Scheme with GST",
-    "Dealer Offer ( Without Exchange Case )",
-    "Dealer Offer ( If Exchange Case )"
-]
-
 for col in data.columns:
     if col in [variant_col, 'Model Name']:
         continue
-    if col == "ON ROAD PRICE Without SMC Road Tax":
-        pricing_columns.append(col)
-        break
     pricing_columns.append(col)
+    if col.strip().lower() == 'on road price without smc road tax':
+        break
+
+cartel_lookup = [
+    'm&m scheme with gst',
+    'dealer offer ( without exchange case )',
+    'dealer offer ( if exchange case )'
+]
 
 # --- Pricing Table ---
 st.subheader("📋 Vehicle Pricing Details")
@@ -122,9 +123,11 @@ html_cartel = """
 <table class="styled-table">
     <tr><th>Description</th><th>Offer</th></tr>
 """
-for col in cartel_columns:
-    val = row.get(col)
+for lookup in cartel_lookup:
+    actual_col = normalized_columns.get(lookup)
+    val = row.get(actual_col) if actual_col else None
     val_display = val if pd.notnull(val) else "<i style='color:red;'>Invalid</i>"
-    html_cartel += f"<tr><td>{col}</td><td>{val_display}</td></tr>"
+    html_cartel += f"<tr><td>{actual_col if actual_col else lookup}</td><td>{val_display}</td></tr>"
+
 html_cartel += "</table></div>"
 st.markdown(html_cartel, unsafe_allow_html=True)
