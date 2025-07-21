@@ -89,89 +89,100 @@ if file_list:
             df = pd.read_excel(BytesIO(file_content), header=2)
             st.write(f"### Showing data from: {selected_file}")
 
-            variant_col = df.columns[1]
-            variants = df[variant_col].dropna().unique().tolist()
-            selected_variant = st.selectbox("Select Variant", variants)
+            # Try to identify the variant column
+            possible_variant_cols = [col for col in df.columns if df[col].dtype == object and df[col].notna().sum() > 0]
+            if not possible_variant_cols:
+                st.error("Could not detect variant column.")
+            else:
+                variant_col = possible_variant_cols[0]
+                variants = df[variant_col].dropna().unique().tolist()
+                selected_variant = st.selectbox("Select Variant", variants)
 
-            variant_df = df[df[variant_col] == selected_variant]
-            if not variant_df.empty:
-                details = df.columns[2:].tolist()
-                amounts = variant_df.iloc[0, 2:].tolist()
+                variant_df = df[df[variant_col] == selected_variant]
+                if not variant_df.empty:
+                    row = variant_df.iloc[0]
+                    details = df.columns[2:].tolist()
+                    amounts = row[2:].tolist()
 
-                result_df = pd.DataFrame({
-                    "Description": details,
-                    "Amount": amounts
-                })
+                    result_df = pd.DataFrame({
+                        "Description": details,
+                        "Amount": amounts
+                    })
 
-                def format_currency(x):
-                    try:
-                        x = float(x)
-                        is_negative = x < 0
-                        x = abs(int(x))
-                        s = f"{x}"
-                        last3 = s[-3:]
-                        other = s[:-3]
-                        if other:
-                            other = re.sub(r'(\d)(?=(\d{2})+$)', r'\1,', other)
-                            formatted = f"{other},{last3}"
-                        else:
-                            formatted = last3
-                        return f"₹{'-' if is_negative else ''}{formatted}"
-                    except:
-                        return x
+                    def format_currency(x):
+                        try:
+                            x = float(x)
+                            is_negative = x < 0
+                            x = abs(int(x))
+                            s = f"{x}"
+                            last3 = s[-3:]
+                            other = s[:-3]
+                            if other:
+                                other = re.sub(r'(\d)(?=(\d{2})+$)', r'\1,', other)
+                                formatted = f"{other},{last3}"
+                            else:
+                                formatted = last3
+                            return f"₹{'-' if is_negative else ''}{formatted}"
+                        except:
+                            return x
 
-                result_df["Amount"] = result_df["Amount"].apply(format_currency)
+                    result_df["Amount"] = result_df["Amount"].apply(format_currency)
 
-                st.markdown("""
-                <style>
-                .table-container {
-                    width: 100%;
-                    padding: 0 10%;
-                }
-                .styled-table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    font-size: 15px;
-                }
-                .styled-table th {
-                    background-color: #004d40;
-                    color: white;
-                    padding: 10px;
-                    text-align: left;
-                }
-                .styled-table td {
-                    padding: 8px 12px;
-                    border-bottom: 1px solid #ccc;
-                    word-wrap: break-word;
-                }
-                .styled-table td:first-child {
-                    font-weight: 600;
-                    background-color: #f7f7f7;
-                }
-                @media (prefers-color-scheme: dark) {
-                    .styled-table td {
-                        background-color: #111;
-                        color: #eee;
+                    st.markdown("""
+                    <style>
+                    .table-container {
+                        max-width: 100%;
+                        margin-left: auto;
+                        margin-right: auto;
+                        padding-left: 5%;
+                        padding-right: 5%;
                     }
-                    .styled-table td:first-child {
-                        background-color: #1e1e1e;
+                    .styled-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        font-size: 15px;
                     }
                     .styled-table th {
-                        background-color: #0e7c7b;
+                        background-color: #004d40;
+                        color: white;
+                        padding: 10px;
+                        text-align: left;
                     }
-                }
-                </style>
-                <div class="table-container">
-                <table class="styled-table">
-                    <thead><tr><th>Description</th><th>Amount</th></tr></thead>
-                    <tbody>
-                """, unsafe_allow_html=True)
+                    .styled-table td {
+                        padding: 8px 12px;
+                        border-bottom: 1px solid #ccc;
+                        word-wrap: break-word;
+                        max-width: 400px;
+                    }
+                    .styled-table td:first-child {
+                        font-weight: 600;
+                        background-color: #f7f7f7;
+                    }
+                    @media (prefers-color-scheme: dark) {
+                        .styled-table td {
+                            background-color: #111;
+                            color: #eee;
+                        }
+                        .styled-table td:first-child {
+                            background-color: #1e1e1e;
+                        }
+                        .styled-table th {
+                            background-color: #0e7c7b;
+                        }
+                    }
+                    </style>
+                    <div class="table-container">
+                    <table class="styled-table">
+                        <thead><tr><th>Description</th><th>Amount</th></tr></thead>
+                        <tbody>
+                    """, unsafe_allow_html=True)
 
-                for _, row in result_df.iterrows():
-                    highlight = " style='background-color:#fff3cd;font-weight:bold;'" if "On Road Price" in str(row["Description"]) else ""
-                    st.markdown(f"<tr{highlight}><td>{row['Description']}</td><td>{row['Amount']}</td></tr>", unsafe_allow_html=True)
+                    for _, row in result_df.iterrows():
+                        highlight = " style='background-color:#fff3cd;font-weight:bold;'" if "On Road Price" in row["Description"] else ""
+                        st.markdown(f"<tr{highlight}><td>{row['Description']}</td><td>{row['Amount']}</td></tr>", unsafe_allow_html=True)
 
-                st.markdown("""</tbody></table></div>""", unsafe_allow_html=True)
+                    st.markdown("""</tbody></table></div>""", unsafe_allow_html=True)
+
         else:
             st.error("Failed to download the selected file from GitHub")
 
