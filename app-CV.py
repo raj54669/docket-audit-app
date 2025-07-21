@@ -58,10 +58,10 @@ st.markdown("""
         background-color: #004d40; color: white;
     }
     .styled-table td:first-child {
-        font-weight: 600; background-color: #f7f7f7; text-align: left;
+        font-weight: 600; background-color: #f7f7f7; text-align: left; width: 75%;
     }
     .styled-table td:last-child {
-        width: 120px; text-align: right;
+        text-align: right; width: 25%;
     }
     </style>
 """, unsafe_allow_html=True)
