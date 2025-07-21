@@ -1,16 +1,21 @@
 import streamlit as st
 import pandas as pd
+from datetime import datetime, timedelta
+import os
 import re
 
+# --- Page Configuration ---
 st.set_page_config(
     page_title="🚛 Mahindra Docket Audit Tool - CV",
-    layout="centered"
+    layout="centered",
+    initial_sidebar_state="auto"
 )
 
+# --- Load Excel Data ---
 @st.cache_data(show_spinner=False)
 def load_data(file_path):
     try:
-        return pd.read_excel(file_path, header=1)
+        return pd.read_excel(file_path, header=1)  # skip top row
     except Exception as e:
         st.error(f"❌ Failed to load Excel file: {e}")
         st.stop()
@@ -18,10 +23,7 @@ def load_data(file_path):
 file_path = "Data/Discount_Cheker/CV Discount Check Master File 12.07.2025.xlsx"
 data = load_data(file_path)
 
-# Normalize column names
-normalized_columns = {col.strip().lower(): col for col in data.columns}
-
-
+# --- Currency Formatter (Indian style) ---
 def format_indian_currency(value):
     try:
         if pd.isnull(value):
@@ -42,13 +44,18 @@ def format_indian_currency(value):
     except Exception:
         return "<i style='color:red;'>Invalid</i>"
 
+# --- Styling ---
 st.markdown("""
     <style>
-    .table-wrapper { max-width: 700px; }
+    .table-wrapper {
+        max-width: 700px;
+    }
     .styled-table {
         width: 100%;
         border-collapse: collapse;
+        table-layout: auto;
         font-size: 14px;
+        line-height: 1;
         border: 2px solid black;
     }
     .styled-table th, .styled-table td {
@@ -59,25 +66,37 @@ st.markdown("""
         background-color: #004d40;
         color: white;
     }
-    .styled-table td:first-child {
-        background-color: #f7f7f7;
-        font-weight: 600;
+    .styled-table th:first-child {
         text-align: left;
     }
-    .styled-table td {
-        white-space: nowrap;
+    .styled-table th:last-child {
+        width: 20%;
         text-align: right;
+    }
+    .styled-table td:first-child {
+        width: 80%;
+        font-weight: 600;
+        background-color: #f7f7f7;
+        text-align: left;
+    }
+    .styled-table td:last-child {
+        width: 20%;
+        text-align: right;
+        white-space: nowrap;
     }
     </style>
 """, unsafe_allow_html=True)
 
+# --- Title ---
 st.title("🚛 Mahindra Docket Audit Tool - CV")
 
+# --- Dropdown for Variant (from column B: 'Variant') ---
 variant_col = 'Variant'
 if variant_col not in data.columns:
     st.error("❌ 'Variant' column not found in the Excel file.")
     st.stop()
 
+# preserve file order
 variants = data[variant_col].dropna().drop_duplicates().tolist()
 selected_variant = st.selectbox("📘 Select Vehicle Variant", variants)
 
@@ -88,46 +107,19 @@ if filtered_row.empty:
 
 row = filtered_row.iloc[0]
 
-# --- Define Split ---
-pricing_columns = []
-for col in data.columns:
-    if col in [variant_col, 'Model Name']:
-        continue
-    pricing_columns.append(col)
-    if col.strip().lower() == 'on road price without smc road tax':
-        break
-
-cartel_lookup = [
-    'm&m scheme with gst',
-    'dealer offer ( without exchange case )',
-    'dealer offer ( if exchange case )'
-]
-
-# --- Pricing Table ---
+# --- Render Table ---
 st.subheader("📋 Vehicle Pricing Details")
-html_pricing = """
+
+html = """
 <div class="table-wrapper">
 <table class="styled-table">
     <tr><th>Description</th><th>Amount</th></tr>
 """
-for col in pricing_columns:
-    val = format_indian_currency(row.get(col))
-    html_pricing += f"<tr><td>{col}</td><td>{val}</td></tr>"
-html_pricing += "</table></div>"
-st.markdown(html_pricing, unsafe_allow_html=True)
 
-# --- Cartel Offer Table ---
-st.subheader("🛒 Cartel Offer")
-html_cartel = """
-<div class="table-wrapper">
-<table class="styled-table">
-    <tr><th>Description</th><th>Offer</th></tr>
-"""
-for lookup in cartel_lookup:
-    actual_col = normalized_columns.get(lookup)
-    val = row.get(actual_col) if actual_col else None
-    val_display = val if pd.notnull(val) else "<i style='color:red;'>Invalid</i>"
-    html_cartel += f"<tr><td>{actual_col if actual_col else lookup}</td><td>{val_display}</td></tr>"
+for col in data.columns:
+    if col not in [variant_col, 'Model Name']:
+        val = format_indian_currency(row.get(col))
+        html += f"<tr><td>{col}</td><td>{val}</td></tr>"
 
-html_cartel += "</table></div>"
-st.markdown(html_cartel, unsafe_allow_html=True)
+html += "</table></div>"
+st.markdown(html, unsafe_allow_html=True)
