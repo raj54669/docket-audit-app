@@ -86,17 +86,68 @@ if file_list:
         if res.status_code == 200:
             file_content = base64.b64decode(res.json()['content'])
             df = pd.read_excel(BytesIO(file_content))
-
             st.write(f"### Showing data from: {selected_file}")
 
-            variant_column = df.columns[1] if df.shape[1] > 1 else None
-            if variant_column and variant_column in df.columns:
-                variants = df[variant_column].dropna().unique().tolist()
-                selected_variant = st.selectbox("Select Variant", variants)
-                filtered_df = df[df[variant_column] == selected_variant]
-                st.dataframe(filtered_df.T, use_container_width=True)
-            else:
-                st.warning("No variant column found to filter data.")
+            # --- Extract variants ---
+            variant_col = df.columns[1]
+            variants = df[variant_col].dropna().unique().tolist()
+            selected_variant = st.selectbox("Select Variant", variants)
+
+            # --- Extract vertical data for selected variant ---
+            variant_df = df[df[variant_col] == selected_variant]
+            if not variant_df.empty:
+                details = df.iloc[:, 0].fillna("").tolist()
+                amounts = variant_df.iloc[0, 2:].tolist()
+
+                result_df = pd.DataFrame({
+                    "Description": details[2:],
+                    "Amount": amounts
+                })
+
+                # --- Format amounts ---
+                def format_currency(x):
+                    try:
+                        return f"₹{int(x):,}"
+                    except:
+                        return x
+
+                result_df["Amount"] = result_df["Amount"].apply(format_currency)
+
+                # --- Styled Table ---
+                st.markdown("""
+                <h4>📑 Vehicle Pricing Details</h4>
+                <style>
+                .pricing-table {
+                    width: 60%;
+                    border-collapse: collapse;
+                    margin: 10px 0;
+                }
+                .pricing-table th {
+                    background-color: #0c4a6e;
+                    color: white;
+                    padding: 10px;
+                    text-align: left;
+                }
+                .pricing-table td {
+                    padding: 8px 12px;
+                    border-bottom: 1px solid #ccc;
+                }
+                .highlight {
+                    background-color: #fef3c7;
+                }
+                </style>
+                <table class="pricing-table">
+                    <thead>
+                        <tr><th>Description</th><th>Amount</th></tr>
+                    </thead>
+                    <tbody>
+                """, unsafe_allow_html=True)
+
+                for i, row in result_df.iterrows():
+                    highlight_class = "highlight" if "On Road Price" in row["Description"] else ""
+                    st.markdown(f"<tr class='{highlight_class}'><td>{row['Description']}</td><td>{row['Amount']}</td></tr>", unsafe_allow_html=True)
+
+                st.markdown("""</tbody></table>""", unsafe_allow_html=True)
         else:
             st.error("Failed to download the selected file from GitHub")
 
