@@ -1,3 +1,5 @@
+# file: app.py
+
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
@@ -15,7 +17,7 @@ st.set_page_config(
 @st.cache_data(show_spinner=False)
 def load_data(file_path):
     try:
-        return pd.read_excel(file_path, header=1)  # skip top row
+        return pd.read_excel(file_path, header=1)
     except Exception as e:
         st.error(f"❌ Failed to load Excel file: {e}")
         st.stop()
@@ -23,7 +25,7 @@ def load_data(file_path):
 file_path = "Data/Discount_Cheker/CV Discount Check Master File 12.07.2025.xlsx"
 data = load_data(file_path)
 
-# --- Currency Formatter (Indian style) ---
+# --- Currency Formatter (Indian Style) ---
 def format_indian_currency(value):
     try:
         if pd.isnull(value):
@@ -90,13 +92,12 @@ st.markdown("""
 # --- Title ---
 st.title("🚛 Mahindra Docket Audit Tool - CV")
 
-# --- Dropdown for Variant (from column B: 'Variant') ---
+# --- Dropdown for Variant ---
 variant_col = 'Variant'
 if variant_col not in data.columns:
     st.error("❌ 'Variant' column not found in the Excel file.")
     st.stop()
 
-# preserve file order
 variants = data[variant_col].dropna().drop_duplicates().tolist()
 selected_variant = st.selectbox("📘 Select Vehicle Variant", variants)
 
