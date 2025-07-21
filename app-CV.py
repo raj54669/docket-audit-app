@@ -1,91 +1,104 @@
-import streamlit as st
+""import streamlit as st
 import pandas as pd
-import os
 import requests
-from urllib.parse import quote
+import base64
 from datetime import datetime
 
-# --- Page config ---
-st.set_page_config(page_title="Mahindra Docket Audit Tool - CV", layout="wide")
-
-# --- Constants ---
-REPO_OWNER = "raj54669"
-REPO_NAME = "docket-audit-app"
-REPO_DIR = "Data/Discount_Cheker"
-RAW_BASE = f"https://raw.githubusercontent.com/{REPO_OWNER}/{REPO_NAME}/main/{REPO_DIR}"
+# --- Config ---
+OWNER = "raj54669"
+REPO = "docket-audit-app"
+PATH = "Data/Discount_Cheker"
+RAW_BASE = f"https://raw.githubusercontent.com/{OWNER}/{REPO}/main/{PATH}"
 
 # --- GitHub Token (from Secrets) ---
-GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
+GITHUB_TOKEN = st.secrets["github_token"]
 HEADERS = {"Authorization": f"token {GITHUB_TOKEN}"}
 
 # --- Title ---
-st.markdown("""
-<h1 style='font-size: 32px;'>📁 Select Discount Sheet</h1>
-""", unsafe_allow_html=True)
+st.set_page_config(page_title="Mahindra Docket Audit Tool - CV", layout="wide")
+st.title("Mahindra Docket Audit Tool - CV")
 
-# --- Fetch file list from GitHub ---
-def list_repo_files():
-    url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{REPO_DIR}"
+# --- Helper: List files from repo ---
+def list_files():
+    url = f"https://api.github.com/repos/{OWNER}/{REPO}/contents/{PATH}"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200:
-        files = [f["name"] for f in res.json() if f["name"].endswith(".xlsx")]
+        files = [f['name'] for f in res.json() if f['name'].endswith('.xlsx')]
         return sorted(files, reverse=True)
     else:
+        st.error("Failed to fetch files from GitHub")
         return []
 
-# --- Read Excel file from GitHub ---
-def download_excel(filename):
-    try:
-        encoded_filename = quote(filename)
-        raw_url = f"{RAW_BASE}/{encoded_filename}"
-        df = pd.read_excel(raw_url, engine="openpyxl")
-        return df
-    except Exception as e:
-        st.error("Failed to load Excel file. Check URL or format.")
-        st.exception(e)
-        return None
-
-# --- Format Indian Currency ---
-def format_inr(value):
-    try:
-        return f"₹{int(value):,}".replace(",", ",").replace(",", ",")
-    except:
-        return value
-
-# --- App Logic ---
-file_list = list_repo_files()
-selected_file = st.selectbox("", file_list, index=0, key="file_select")
-df_raw = download_excel(selected_file)
-
-if df_raw is not None:
-    # --- Extract variant list ---
-    variant_col = "Variant"
-    variant_options = df_raw[variant_col].dropna().unique().tolist()
-    selected_variant = st.selectbox("Select Variant", variant_options, index=0)
-
-    # --- Filtered Data ---
-    filtered_df = df_raw[df_raw[variant_col] == selected_variant]
-
-    if not filtered_df.empty:
-        # --- Split data ---
-        pricing_cols = filtered_df.columns[:filtered_df.columns.get_loc("On Road Price") + 1]
-        cartel_cols = filtered_df.columns[-3:]
-
-        pricing_df = filtered_df[pricing_cols].drop(columns=["Model Name"], errors="ignore")
-        cartel_df = filtered_df[cartel_cols]
-
-        # --- Format currency columns ---
-        for col in pricing_df.columns:
-            if pd.api.types.is_numeric_dtype(pricing_df[col]):
-                pricing_df[col] = pricing_df[col].apply(format_inr)
-
-        # --- Display Tables ---
-        st.subheader("Vehicle Pricing Data")
-        st.dataframe(pricing_df, use_container_width=True, hide_index=True)
-
-        st.subheader("Cartel Offer")
-        st.dataframe(cartel_df.astype(str), use_container_width=True, hide_index=True)
+# --- Helper: Upload new file ---
+def upload_file_to_github(file, filename):
+    url = f"https://api.github.com/repos/{OWNER}/{REPO}/contents/{PATH}/{filename}"
+    content = base64.b64encode(file.read()).decode('utf-8')
+    data = {
+        "message": f"Upload {filename}",
+        "content": content
+    }
+    res = requests.put(url, headers=HEADERS, json=data)
+    if res.status_code == 201:
+        st.success(f"Uploaded: {filename}")
+    elif res.status_code == 422 and "already exists" in res.text:
+        st.warning(f"Duplicate: {filename} already exists")
     else:
-        st.warning("No data found for the selected variant.")
-else:
-    st.error("Unable to load file. Please check your internet or file source.")
+        st.error(f"Upload failed: {res.status_code}")
+
+# --- Helper: Delete a file from GitHub ---
+def delete_file_from_github(filename):
+    get_url = f"https://api.github.com/repos/{OWNER}/{REPO}/contents/{PATH}/{filename}"
+    res = requests.get(get_url, headers=HEADERS)
+    if res.status_code == 200:
+        sha = res.json()['sha']
+        delete_url = f"https://api.github.com/repos/{OWNER}/{REPO}/contents/{PATH}/{filename}"
+        data = {
+            "message": f"Delete {filename}",
+            "sha": sha
+        }
+        res = requests.delete(delete_url, headers=HEADERS, json=data)
+        if res.status_code == 200:
+            st.success(f"Deleted old file: {filename}")
+        else:
+            st.error(f"Failed to delete {filename}")
+
+# --- Upload File Section ---
+uploaded_file = st.file_uploader("Upload new Excel file", type="xlsx")
+if uploaded_file:
+    filename = uploaded_file.name
+    file_list = list_files()
+    if filename not in file_list:
+        upload_file_to_github(uploaded_file, filename)
+        file_list = list_files()
+        if len(file_list) > 5:
+            for old_file in sorted(file_list)[0:len(file_list)-5]:
+                delete_file_from_github(old_file)
+    else:
+        st.warning("This file already exists in the repository.")
+
+# --- Dropdown to select file ---
+file_list = list_files()
+if file_list:
+    selected_file = st.selectbox("Select a file to view", file_list, index=0)
+    if selected_file:
+        file_url = f"{RAW_BASE}/{selected_file}"
+        df = pd.read_excel(file_url)
+        st.write(f"### Showing data from: {selected_file}")
+        st.dataframe(df, use_container_width=True)
+
+# --- Auto Light/Dark Mode Styling ---
+st.markdown("""
+    <style>
+        body {
+            transition: background-color 0.5s ease;
+        }
+        [data-theme="light"] body {
+            background-color: #ffffff;
+            color: #000000;
+        }
+        [data-theme="dark"] body {
+            background-color: #0e1117;
+            color: #ffffff;
+        }
+    </style>
+""", unsafe_allow_html=True)
