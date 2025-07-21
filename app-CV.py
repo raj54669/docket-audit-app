@@ -47,21 +47,35 @@ def format_indian_currency(value):
 # --- Styling ---
 st.markdown("""
     <style>
+    .table-wrapper {
+        max-width: 700px;
+    }
     .styled-table {
-        width: 100%; border-collapse: collapse; table-layout: fixed;
-        font-size: 14px; line-height: 1; border: 2px solid black;
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: auto;
+        font-size: 14px;
+        line-height: 1;
+        border: 2px solid black;
     }
     .styled-table th, .styled-table td {
-        border: 1px solid black; padding: 6px 10px;
+        border: 1px solid black;
+        padding: 6px 12px;
     }
     .styled-table th {
-        background-color: #004d40; color: white;
+        background-color: #004d40;
+        color: white;
     }
     .styled-table td:first-child {
-        font-weight: 600; background-color: #f7f7f7; text-align: left;
+        width: 70%;
+        font-weight: 600;
+        background-color: #f7f7f7;
+        text-align: left;
     }
     .styled-table td:last-child {
-        text-align: right; width: 140px; white-space: nowrap;
+        width: 30%;
+        text-align: right;
+        white-space: nowrap;
     }
     </style>
 """, unsafe_allow_html=True)
