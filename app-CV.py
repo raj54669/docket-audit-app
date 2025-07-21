@@ -14,7 +14,7 @@ PATH = "Data/Discount_Cheker"
 GITHUB_TOKEN = st.secrets["github_token"]
 HEADERS = {"Authorization": f"token {GITHUB_TOKEN}"}
 
-# --- Title ---
+# --- Page Configuration ---
 st.set_page_config(page_title="Mahindra Docket Audit Tool - CV", layout="wide")
 st.title("Mahindra Docket Audit Tool - CV")
 
@@ -96,56 +96,82 @@ if file_list:
             # --- Extract vertical data for selected variant ---
             variant_df = df[df[variant_col] == selected_variant]
             if not variant_df.empty:
-                details = df.iloc[:, 0].fillna("").tolist()
+                details = df.iloc[:, 0].fillna("").tolist()[2:]
                 amounts = variant_df.iloc[0, 2:].tolist()
 
+                # Ensure both lists are equal in length
+                min_len = min(len(details), len(amounts))
+                details = details[:min_len]
+                amounts = amounts[:min_len]
+
                 result_df = pd.DataFrame({
-                    "Description": details[2:],
+                    "Description": details,
                     "Amount": amounts
                 })
 
-                # --- Format amounts ---
+                # Format as Indian currency
                 def format_currency(x):
                     try:
-                        return f"₹{int(x):,}"
+                        x = float(x)
+                        is_negative = x < 0
+                        x = abs(int(x))
+                        s = f"{x}"
+                        last3 = s[-3:]
+                        other = s[:-3]
+                        if other:
+                            other = re.sub(r'(\d)(?=(\d{2})+$)', r'\1,', other)
+                            formatted = f"{other},{last3}"
+                        else:
+                            formatted = last3
+                        return f"₹{'-' if is_negative else ''}{formatted}"
                     except:
                         return x
 
                 result_df["Amount"] = result_df["Amount"].apply(format_currency)
 
-                # --- Styled Table ---
+                # Styled Table Output
                 st.markdown("""
-                <h4>📑 Vehicle Pricing Details</h4>
                 <style>
-                .pricing-table {
-                    width: 60%;
+                .styled-table {
+                    width: 80%;
                     border-collapse: collapse;
-                    margin: 10px 0;
+                    font-size: 15px;
                 }
-                .pricing-table th {
-                    background-color: #0c4a6e;
+                .styled-table th {
+                    background-color: #004d40;
                     color: white;
                     padding: 10px;
                     text-align: left;
                 }
-                .pricing-table td {
+                .styled-table td {
                     padding: 8px 12px;
                     border-bottom: 1px solid #ccc;
                 }
-                .highlight {
-                    background-color: #fef3c7;
+                .styled-table td:first-child {
+                    font-weight: 600;
+                    background-color: #f7f7f7;
+                }
+                @media (prefers-color-scheme: dark) {
+                    .styled-table td {
+                        background-color: #111;
+                        color: #eee;
+                    }
+                    .styled-table td:first-child {
+                        background-color: #1e1e1e;
+                    }
+                    .styled-table th {
+                        background-color: #0e7c7b;
+                    }
                 }
                 </style>
-                <table class="pricing-table">
-                    <thead>
-                        <tr><th>Description</th><th>Amount</th></tr>
-                    </thead>
+                <table class="styled-table">
+                    <thead><tr><th>Description</th><th>Amount</th></tr></thead>
                     <tbody>
                 """, unsafe_allow_html=True)
 
-                for i, row in result_df.iterrows():
-                    highlight_class = "highlight" if "On Road Price" in row["Description"] else ""
-                    st.markdown(f"<tr class='{highlight_class}'><td>{row['Description']}</td><td>{row['Amount']}</td></tr>", unsafe_allow_html=True)
+                for _, row in result_df.iterrows():
+                    highlight = " style='background-color:#fff3cd;font-weight:bold;'" if "On Road Price" in row["Description"] else ""
+                    st.markdown(f"<tr{highlight}><td>{row['Description']}</td><td>{row['Amount']}</td></tr>", unsafe_allow_html=True)
 
                 st.markdown("""</tbody></table>""", unsafe_allow_html=True)
         else:
