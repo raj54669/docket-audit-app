@@ -125,9 +125,8 @@ if file_list:
                 st.markdown("""
                 <style>
                 .table-container {
-                    max-width: 800px;
-                    margin-left: auto;
-                    margin-right: auto;
+                    width: 100%;
+                    padding: 0 10%;
                 }
                 .styled-table {
                     width: 100%;
@@ -144,7 +143,6 @@ if file_list:
                     padding: 8px 12px;
                     border-bottom: 1px solid #ccc;
                     word-wrap: break-word;
-                    max-width: 300px;
                 }
                 .styled-table td:first-child {
                     font-weight: 600;
@@ -170,7 +168,7 @@ if file_list:
                 """, unsafe_allow_html=True)
 
                 for _, row in result_df.iterrows():
-                    highlight = " style='background-color:#fff3cd;font-weight:bold;'" if "On Road Price" in row["Description"] else ""
+                    highlight = " style='background-color:#fff3cd;font-weight:bold;'" if "On Road Price" in str(row["Description"]) else ""
                     st.markdown(f"<tr{highlight}><td>{row['Description']}</td><td>{row['Amount']}</td></tr>", unsafe_allow_html=True)
 
                 st.markdown("""</tbody></table></div>""", unsafe_allow_html=True)
