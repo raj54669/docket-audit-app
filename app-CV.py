@@ -66,8 +66,8 @@ st.markdown("""
 # --- Title ---
 st.title("🚛 CV Discount Pricing Viewer")
 
-# --- Dropdown for Variant (from column B: 'Variant') ---
-variant_col = 'Variant'
+# --- Dropdown for Variant (from column B: 'Unnamed: 1') ---
+variant_col = 'Unnamed: 1'
 if variant_col not in data.columns:
     st.error("❌ 'Variant' column not found in the Excel file.")
     st.stop()
