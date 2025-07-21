@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 import os
+import re
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -65,11 +66,16 @@ st.markdown("""
 # --- Title ---
 st.title("🚛 CV Discount Pricing Viewer")
 
-# --- Dropdown for Variant ---
-variants = sorted(data['Variant'].dropna().unique())
-selected_variant = st.selectbox("🔽 Select Vehicle Variant", variants)
+# --- Dropdown for Variant (from column B: 'Variant') ---
+variant_col = 'Variant'
+if variant_col not in data.columns:
+    st.error("❌ 'Variant' column not found in the Excel file.")
+    st.stop()
 
-filtered_row = data[data['Variant'] == selected_variant]
+variants = sorted(data[variant_col].dropna().unique())
+selected_variant = st.selectbox("🕽️ Select Vehicle Variant", variants)
+
+filtered_row = data[data[variant_col] == selected_variant]
 if filtered_row.empty:
     st.warning("⚠️ No data found for selected variant.")
     st.stop()
@@ -86,7 +92,7 @@ html = """
 """
 
 for col in data.columns:
-    if col != 'Variant':
+    if col != variant_col:
         val = format_indian_currency(row.get(col))
         html += f"<tr><td>{col}</td><td>{val}</td></tr>"
 
