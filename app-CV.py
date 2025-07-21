@@ -3,12 +3,12 @@ import pandas as pd
 import requests
 import base64
 from datetime import datetime
+from io import BytesIO
 
 # --- Config ---
 OWNER = "raj54669"
 REPO = "docket-audit-app"
 PATH = "Data/Discount_Cheker"
-RAW_BASE = f"https://raw.githubusercontent.com/{OWNER}/{REPO}/main/{PATH}"
 
 # --- GitHub Token (from Secrets) ---
 GITHUB_TOKEN = st.secrets["github_token"]
@@ -81,10 +81,15 @@ file_list = list_files()
 if file_list:
     selected_file = st.selectbox("Select a file to view", file_list, index=0)
     if selected_file:
-        file_url = f"{RAW_BASE}/{selected_file}"
-        df = pd.read_excel(file_url)
-        st.write(f"### Showing data from: {selected_file}")
-        st.dataframe(df, use_container_width=True)
+        api_url = f"https://api.github.com/repos/{OWNER}/{REPO}/contents/{PATH}/{selected_file}"
+        res = requests.get(api_url, headers=HEADERS)
+        if res.status_code == 200:
+            file_content = base64.b64decode(res.json()['content'])
+            df = pd.read_excel(BytesIO(file_content))
+            st.write(f"### Showing data from: {selected_file}")
+            st.dataframe(df, use_container_width=True)
+        else:
+            st.error("Failed to download the selected file from GitHub")
 
 # --- Auto Light/Dark Mode Styling ---
 st.markdown("""
