@@ -233,8 +233,19 @@ if filtered.empty:
 
 row = filtered.iloc[0]
 
-# --- Title ---
+# --- PAGE TITLE ---
 st.title("🚛 Mahindra Docket Audit Tool - CV")
+
+# --- Variant Selection (moved from sidebar) ---
+variants = data[variant_col].dropna().drop_duplicates().tolist()
+selected_variant = st.selectbox("🎯 Select Vehicle Variant", variants)
+
+filtered = data[data[variant_col] == selected_variant]
+if filtered.empty:
+    st.warning("⚠️ No data found for selected variant.")
+    st.stop()
+
+row = filtered.iloc[0]
 
 # --- Vehicle Pricing Table ---
 vehicle_columns = [
