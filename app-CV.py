@@ -93,7 +93,14 @@ ul[role='listbox'] li:hover {
 
 # 🔽 Your dropdown select box
 
-selected_variant = st.selectbox("🎯 Select Vehicle Variant", variants)
+selected_variant = st.selectbox(
+    "🎯 Select Vehicle Variant",
+    options=[{"label": v, "value": v} for v in variants],
+    format_func=lambda x: x["label"],
+    index=0,
+    key="vehicle_variant"
+)["value"]
+
 filtered = data[data[variant_col] == selected_variant]
 
 if filtered.empty:
