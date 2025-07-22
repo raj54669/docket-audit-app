@@ -20,7 +20,7 @@ st.markdown("""
 <style>
 :root {
     --title-size: 40px;
-    --subtitle-size: 18px;
+    --subtitle-size: 24px;
     --caption-size: 16px;
     --label-size: 14px;
     --select-font-size: 15px;
