@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
+import os
 import re
+from datetime import datetime
 
 st.set_page_config(page_title="🚛 Mahindra Docket Audit Tool - CV", layout="centered")
 
@@ -66,15 +68,60 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Load Excel
+# --- Constants ---
+DATA_DIR = "Data/Discount_Cheker"
+FILE_PATTERN = r"CV Discount Check Master File (\d{2})\.(\d{2})\.(\d{4})\.xlsx"
+
+# --- Sidebar: Upload File ---
+st.sidebar.header("📂 File Selection")
+
+uploaded_file = st.sidebar.file_uploader("Upload New Excel File", type=["xlsx"])
+if uploaded_file:
+    save_path = os.path.join(DATA_DIR, uploaded_file.name)
+    with open(save_path, "wb") as f:
+        f.write(uploaded_file.getbuffer())
+    st.sidebar.success(f"✅ Uploaded: {uploaded_file.name}")
+    st.experimental_rerun()  # Refresh to include newly uploaded file
+
+# --- File Scanner ---
+def extract_date_from_filename(filename):
+    match = re.search(FILE_PATTERN, filename)
+    if match:
+        day, month, year = match.groups()
+        try:
+            return datetime.strptime(f"{day}.{month}.{year}", "%d.%m.%Y")
+        except:
+            return None
+    return None
+
+files = []
+for fname in os.listdir(DATA_DIR):
+    if re.match(FILE_PATTERN, fname):
+        date_obj = extract_date_from_filename(fname)
+        if date_obj:
+            files.append((fname, date_obj))
+
+# Sort and keep last 5
+files = sorted(files, key=lambda x: x[1], reverse=True)[:5]
+if not files:
+    st.error("❌ No valid Excel files found.")
+    st.stop()
+
+file_labels = [f"{fname} ({dt.strftime('%d-%b-%Y')})" for fname, dt in files]
+file_map = {label: fname for label, (fname, _) in zip(file_labels, files)}
+
+selected_file_label = st.sidebar.selectbox("📅 Select Excel File", file_labels)
+selected_filename = file_map[selected_file_label]
+selected_filepath = os.path.join(DATA_DIR, selected_filename)
+
+# --- Load Data ---
 @st.cache_data(show_spinner=False)
 def load_data(path):
     return pd.read_excel(path, header=1)
 
-file_path = "Data/Discount_Cheker/CV Discount Check Master File 12.07.2025.xlsx"
-data = load_data(file_path)
+data = load_data(selected_filepath)
 
-# Currency formatting
+# --- Currency Formatter ---
 def format_indian_currency(value):
     try:
         if pd.isnull(value) or value == 0:
@@ -95,17 +142,14 @@ def format_indian_currency(value):
     except:
         return "Invalid"
 
-# Main UI
-st.title("🚛 Mahindra Docket Audit Tool - CV")
-
+# --- Variant Filter ---
 variant_col = "Variant"
 if variant_col not in data.columns:
-    st.error("❌ 'Variant' column not found.")
+    st.error("❌ 'Variant' column not found in selected file.")
     st.stop()
 
 variants = data[variant_col].dropna().drop_duplicates().tolist()
-
-selected_variant = st.selectbox("🎯 Select Vehicle Variant", variants, label_visibility="visible")
+selected_variant = st.sidebar.selectbox("🚙 Select Vehicle Variant", variants)
 
 filtered = data[data[variant_col] == selected_variant]
 if filtered.empty:
@@ -114,6 +158,10 @@ if filtered.empty:
 
 row = filtered.iloc[0]
 
+# --- PAGE TITLE ---
+st.title("🚛 Mahindra Docket Audit Tool - CV")
+
+# --- VEHICLE PRICING TABLE ---
 vehicle_columns = [
     'Ex-Showroom Price', 'TCS', 'Comprehensive + Zero\nDep. Insurance',
     'R.T.O. Charges With\nHypo.', 'RSA (Road Side\nAssistance) For 1\nYear',
@@ -121,13 +169,6 @@ vehicle_columns = [
     'ON ROAD PRICE\nWith SMC Road Tax', 'ON ROAD PRICE\nWithout SMC Road\nTax',
 ]
 
-cartel_columns = [
-    'M&M\nScheme with\nGST',
-    'Dealer Offer ( Without Exchange Case)',
-    'Dealer Offer ( If Exchange Case)'
-]
-
-# --- VEHICLE PRICING TABLE ---
 st.markdown("<h3>📝 Vehicle Pricing Details</h3>", unsafe_allow_html=True)
 pricing_html = """
 <style>
@@ -169,6 +210,12 @@ pricing_html += "</table>"
 st.markdown(pricing_html, unsafe_allow_html=True)
 
 # --- CARTEL OFFER TABLE ---
+cartel_columns = [
+    'M&M\nScheme with\nGST',
+    'Dealer Offer ( Without Exchange Case)',
+    'Dealer Offer ( If Exchange Case)'
+]
+
 st.markdown("<h3>🎁 Cartel Offer</h3>", unsafe_allow_html=True)
 cartel_html = """
 <style>
