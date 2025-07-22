@@ -80,19 +80,21 @@ vehicle_html = """
 .vtable {
     border-collapse: collapse;
     width: 100%;
-    margin-bottom: 30px;
+    margin-bottom: 25px;
     font-weight: bold;
+    font-size: 14px;
 }
 .vtable th {
     background-color: #01579b;
     color: white;
-    padding: 6px 8px;
+    padding: 4px 6px;
     text-align: right;
 }
 .vtable td {
     background-color: #e3f2fd;
-    padding: 6px 8px;
+    padding: 4px 6px;
     font-weight: bold;
+    text-align: right;
 }
 .vtable td:first-child, .vtable th:first-child {
     text-align: left;
@@ -121,17 +123,19 @@ cartel_html = """
     border-collapse: collapse;
     width: 100%;
     font-weight: bold;
+    font-size: 14px;
 }
 .ctable th {
     background-color: #2e7d32;
     color: white;
-    padding: 6px 8px;
+    padding: 4px 6px;
     text-align: right;
 }
 .ctable td {
     background-color: #e8f5e9;
-    padding: 6px 8px;
+    padding: 4px 6px;
     font-weight: bold;
+    text-align: right;
 }
 .ctable td:first-child, .ctable th:first-child {
     text-align: left;
