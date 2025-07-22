@@ -2,11 +2,14 @@ import streamlit as st
 import pandas as pd
 import os
 import re
+import base64
+import requests
 from datetime import datetime
 
+# --- Streamlit Page Setup ---
 st.set_page_config(page_title="🚛 Mahindra Docket Audit Tool - CV", layout="centered")
 
-# ✨ Global Styling (Dropdown style updated)
+# --- Global Styling ---
 st.markdown("""
     <style>
     :root {
@@ -19,9 +22,7 @@ st.markdown("""
         --variant-title-size: 24px;
     }
 
-    .block-container {
-        padding-top: 0rem;
-    }
+    .block-container { padding-top: 0rem; }
     header {visibility: hidden;}
 
     h1 { font-size: var(--title-size) !important; }
@@ -72,19 +73,93 @@ st.markdown("""
 DATA_DIR = "Data/Discount_Cheker"
 FILE_PATTERN = r"CV Discount Check Master File (\d{2})\.(\d{2})\.(\d{4})\.xlsx"
 
+# --- GitHub Upload + Auto-Cleanup ---
+def upload_to_github(file_path, filename):
+    try:
+        token = st.secrets["github"]["token"]
+        username = st.secrets["github"]["username"]
+        repo = st.secrets["github"]["repo"]
+        branch = st.secrets["github"].get("branch", "main")
+        github_dir = "Data/Discount_Cheker"
+
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json"
+        }
+
+        github_file_path = f"{github_dir}/{filename}"
+        with open(file_path, "rb") as f:
+            content = base64.b64encode(f.read()).decode()
+
+        # Check for existing file to update
+        url = f"https://api.github.com/repos/{username}/{repo}/contents/{github_file_path}"
+        check = requests.get(url, headers=headers)
+        sha = check.json().get("sha") if check.status_code == 200 else None
+
+        payload = {
+            "message": f"Upload Excel file {filename}",
+            "content": content,
+            "branch": branch
+        }
+        if sha:
+            payload["sha"] = sha
+
+        put = requests.put(url, headers=headers, json=payload)
+        if put.status_code not in [200, 201]:
+            st.sidebar.error(f"❌ GitHub upload failed: {put.json().get('message')}")
+            return
+
+        st.sidebar.success(f"✅ Uploaded to GitHub: {filename}")
+
+        # --- Clean up old files (keep only last 5) ---
+        list_url = f"https://api.github.com/repos/{username}/{repo}/contents/{github_dir}"
+        files_resp = requests.get(list_url, headers=headers)
+        if files_resp.status_code != 200:
+            st.sidebar.warning("⚠️ Could not fetch file list from GitHub.")
+            return
+
+        files_data = files_resp.json()
+        excel_files = []
+
+        for item in files_data:
+            fname = item["name"]
+            match = re.match(FILE_PATTERN, fname)
+            if match:
+                day, month, year = match.groups()
+                try:
+                    fdate = datetime.strptime(f"{day}.{month}.{year}", "%d.%m.%Y")
+                    excel_files.append((fname, fdate, item["sha"]))
+                except:
+                    continue
+
+        excel_files.sort(key=lambda x: x[1], reverse=True)
+        files_to_delete = excel_files[5:]
+
+        for fname, _, sha_to_delete in files_to_delete:
+            del_url = f"https://api.github.com/repos/{username}/{repo}/contents/{github_dir}/{fname}"
+            del_payload = {
+                "message": f"Auto-delete old Excel file: {fname}",
+                "sha": sha_to_delete,
+                "branch": branch
+            }
+            requests.delete(del_url, headers=headers, json=del_payload)
+
+    except Exception as e:
+        st.sidebar.error(f"❌ GitHub Error: {str(e)}")
+
 # --- Sidebar: Upload File ---
 st.sidebar.header("📂 File Selection")
 
 uploaded_file = st.sidebar.file_uploader("Upload New Excel File", type=["xlsx"])
 if uploaded_file:
+    os.makedirs(DATA_DIR, exist_ok=True)
     save_path = os.path.join(DATA_DIR, uploaded_file.name)
     with open(save_path, "wb") as f:
         f.write(uploaded_file.getbuffer())
-    st.sidebar.success(f"✅ Uploaded: {uploaded_file.name}")
+    upload_to_github(save_path, uploaded_file.name)
     st.rerun()
 
-
-# --- File Scanner ---
+# --- Load File List from Local ---
 def extract_date_from_filename(filename):
     match = re.search(FILE_PATTERN, filename)
     if match:
@@ -98,11 +173,10 @@ def extract_date_from_filename(filename):
 files = []
 for fname in os.listdir(DATA_DIR):
     if re.match(FILE_PATTERN, fname):
-        date_obj = extract_date_from_filename(fname)
-        if date_obj:
-            files.append((fname, date_obj))
+        dt = extract_date_from_filename(fname)
+        if dt:
+            files.append((fname, dt))
 
-# Sort and keep last 5
 files = sorted(files, key=lambda x: x[1], reverse=True)[:5]
 if not files:
     st.error("❌ No valid Excel files found.")
@@ -115,14 +189,14 @@ selected_file_label = st.sidebar.selectbox("📅 Select Excel File", file_labels
 selected_filename = file_map[selected_file_label]
 selected_filepath = os.path.join(DATA_DIR, selected_filename)
 
-# --- Load Data ---
+# --- Load Excel Data ---
 @st.cache_data(show_spinner=False)
 def load_data(path):
     return pd.read_excel(path, header=1)
 
 data = load_data(selected_filepath)
 
-# --- Currency Formatter ---
+# --- Format Currency ---
 def format_indian_currency(value):
     try:
         if pd.isnull(value) or value == 0:
@@ -143,14 +217,14 @@ def format_indian_currency(value):
     except:
         return "Invalid"
 
-# --- Variant Filter ---
+# --- Variant Selector ---
 variant_col = "Variant"
 if variant_col not in data.columns:
-    st.error("❌ 'Variant' column not found in selected file.")
+    st.error("❌ 'Variant' column not found.")
     st.stop()
 
 variants = data[variant_col].dropna().drop_duplicates().tolist()
-selected_variant = st.sidebar.selectbox("🚙 Select Vehicle Variant", variants)
+selected_variant = st.selectbox("🎯 Select Vehicle Variant", variants)
 
 filtered = data[data[variant_col] == selected_variant]
 if filtered.empty:
@@ -159,10 +233,10 @@ if filtered.empty:
 
 row = filtered.iloc[0]
 
-# --- PAGE TITLE ---
+# --- Title ---
 st.title("🚛 Mahindra Docket Audit Tool - CV")
 
-# --- VEHICLE PRICING TABLE ---
+# --- Vehicle Pricing Table ---
 vehicle_columns = [
     'Ex-Showroom Price', 'TCS', 'Comprehensive + Zero\nDep. Insurance',
     'R.T.O. Charges With\nHypo.', 'RSA (Road Side\nAssistance) For 1\nYear',
@@ -210,7 +284,7 @@ for col in vehicle_columns:
 pricing_html += "</table>"
 st.markdown(pricing_html, unsafe_allow_html=True)
 
-# --- CARTEL OFFER TABLE ---
+# --- Cartel Offer Table ---
 cartel_columns = [
     'M&M\nScheme with\nGST',
     'Dealer Offer ( Without Exchange Case)',
