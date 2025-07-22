@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime, timedelta
-import os
+from datetime import datetime
 import re
 
 # --- Page Configuration ---
@@ -15,7 +14,7 @@ st.set_page_config(
 @st.cache_data(show_spinner=False)
 def load_data(file_path):
     try:
-        return pd.read_excel(file_path, header=1)  # skip top row
+        return pd.read_excel(file_path, header=1)
     except Exception as e:
         st.error(f"❌ Failed to load Excel file: {e}")
         st.stop()
@@ -23,7 +22,7 @@ def load_data(file_path):
 file_path = "Data/Discount_Cheker/CV Discount Check Master File 12.07.2025.xlsx"
 data = load_data(file_path)
 
-# --- Currency Formatter (Indian style) ---
+# --- Format Currency (Indian Style) ---
 def format_indian_currency(value):
     try:
         if pd.isnull(value):
@@ -39,64 +38,20 @@ def format_indian_currency(value):
             formatted = f"{other},{last_three}"
         else:
             formatted = last_three
-        result = f"₹{formatted}"
+        result = f"₹{formatted}.00"
         return f"<b>{'-' if is_negative else ''}{result}</b>"
     except Exception:
         return "<i style='color:red;'>Invalid</i>"
 
-# --- Styling ---
-st.markdown("""
-    <style>
-    .table-wrapper {
-        max-width: 700px;
-    }
-    .styled-table {
-        width: 100%;
-        border-collapse: collapse;
-        table-layout: auto;
-        font-size: 14px;
-        line-height: 1;
-        border: 2px solid black;
-    }
-    .styled-table th, .styled-table td {
-        border: 1px solid black;
-        padding: 6px 12px;
-    }
-    .styled-table th {
-        background-color: #004d40;
-        color: white;
-    }
-    .styled-table th:first-child {
-        text-align: left;
-    }
-    .styled-table th:last-child {
-        width: 20%;
-        text-align: right;
-    }
-    .styled-table td:first-child {
-        width: 80%;
-        font-weight: 600;
-        background-color: #f7f7f7;
-        text-align: left;
-    }
-    .styled-table td:last-child {
-        width: 20%;
-        text-align: right;
-        white-space: nowrap;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
-# --- Title ---
+# --- UI Title ---
 st.title("🚛 Mahindra Docket Audit Tool - CV")
 
-# --- Dropdown for Variant (from column B: 'Variant') ---
+# --- Variant Dropdown ---
 variant_col = 'Variant'
 if variant_col not in data.columns:
     st.error("❌ 'Variant' column not found in the Excel file.")
     st.stop()
 
-# preserve file order
 variants = data[variant_col].dropna().drop_duplicates().tolist()
 selected_variant = st.selectbox("📘 Select Vehicle Variant", variants)
 
@@ -107,19 +62,71 @@ if filtered_row.empty:
 
 row = filtered_row.iloc[0]
 
-# --- Render Table ---
-st.subheader("📋 Vehicle Pricing Details")
+# --- Render Styled Output ---
+html = f"""
+<div style='max-width: 750px;'>
 
-html = """
-<div class="table-wrapper">
-<table class="styled-table">
-    <tr><th>Description</th><th>Amount</th></tr>
+<h3 style='color: #E65100;'>📋 Vehicle Pricing Details</h3>
+<table style='width: 100%; border-collapse: collapse; font-size: 14px;'>
+    <tr style='background-color: #BBDEFB; font-weight: bold;'>
+        <td style='border: 1px solid #000; padding: 8px;'>Ex-Showroom Price</td>
+        <td style='border: 1px solid #000; padding: 8px;'>{format_indian_currency(row['Ex-Showroom Price'])}</td>
+    </tr>
+    <tr style='background-color: #E3F2FD;'>
+        <td style='border: 1px solid #000; padding: 8px;'>TCS</td>
+        <td style='border: 1px solid #000; padding: 8px;'>{format_indian_currency(row['TCS'])}</td>
+    </tr>
+    <tr style='background-color: #E3F2FD;'>
+        <td style='border: 1px solid #000; padding: 8px;'>Comprehensive + ZeroDep. Insurance</td>
+        <td style='border: 1px solid #000; padding: 8px;'>{format_indian_currency(row['Comprehensive + ZeroDep. Insurance'])}</td>
+    </tr>
+    <tr style='background-color: #E3F2FD;'>
+        <td style='border: 1px solid #000; padding: 8px;'>R.T.O. Charges With Hypo.</td>
+        <td style='border: 1px solid #000; padding: 8px;'>{format_indian_currency(row['R.T.O. Charges WithHypo.'])}</td>
+    </tr>
+    <tr style='background-color: #E3F2FD;'>
+        <td style='border: 1px solid #000; padding: 8px;'>RSA (Road Side Assistance) For 1 Year</td>
+        <td style='border: 1px solid #000; padding: 8px;'>{format_indian_currency(row['RSA (Road SideAssistance) For 1Year'])}</td>
+    </tr>
+    <tr style='background-color: #E3F2FD;'>
+        <td style='border: 1px solid #000; padding: 8px;'>SMC Road - Tax (If Applicable)</td>
+        <td style='border: 1px solid #000; padding: 8px;'>{format_indian_currency(row['SMC Road - Tax (IfApplicable)'])}</td>
+    </tr>
+    <tr style='background-color: #E3F2FD;'>
+        <td style='border: 1px solid #000; padding: 8px;'>MAXI CARE</td>
+        <td style='border: 1px solid #000; padding: 8px;'>{format_indian_currency(row['MAXI CARE'])}</td>
+    </tr>
+    <tr style='background-color: #E3F2FD;'>
+        <td style='border: 1px solid #000; padding: 8px;'>Accessories</td>
+        <td style='border: 1px solid #000; padding: 8px;'>{format_indian_currency(row['Accessories'])}</td>
+    </tr>
+    <tr style='background-color: #90CAF9; font-weight: bold;'>
+        <td style='border: 1px solid #000; padding: 8px;'>ON ROAD PRICE With SMC Road Tax</td>
+        <td style='border: 1px solid #000; padding: 8px;'>{format_indian_currency(row['ON ROAD PRICEWith SMC Road Tax'])}</td>
+    </tr>
+    <tr style='background-color: #90CAF9; font-weight: bold;'>
+        <td style='border: 1px solid #000; padding: 8px;'>ON ROAD PRICE Without SMC Road Tax</td>
+        <td style='border: 1px solid #000; padding: 8px;'>{format_indian_currency(row['ON ROAD PRICEWithout SMC RoadTax'])}</td>
+    </tr>
+</table>
+
+<h3 style='margin-top: 40px; color: #2E7D32;'>📦 Cartel Offer</h3>
+<table style='width: 100%; border-collapse: collapse; font-size: 14px;'>
+    <tr style='background-color: #C8E6C9; font-weight: bold;'>
+        <td style='border: 1px solid #000; padding: 8px;'>M&M Scheme with GST</td>
+        <td style='border: 1px solid #000; padding: 8px;'>₹25,000.00</td>
+    </tr>
+    <tr style='background-color: #E8F5E9;'>
+        <td style='border: 1px solid #000; padding: 8px;'>Dealer Offer (Without Exchange Case)</td>
+        <td style='border: 1px solid #000; padding: 8px;'>50% INSURANCE FREE + 12K ACCESSORIES PACK FREE</td>
+    </tr>
+    <tr style='background-color: #E8F5E9;'>
+        <td style='border: 1px solid #000; padding: 8px;'>Dealer Offer (If Exchange Case)</td>
+        <td style='border: 1px solid #000; padding: 8px;'>50% INSURANCE FREE</td>
+    </tr>
+</table>
+
+</div>
 """
 
-for col in data.columns:
-    if col not in [variant_col, 'Model Name']:
-        val = format_indian_currency(row.get(col))
-        html += f"<tr><td>{col}</td><td>{val}</td></tr>"
-
-html += "</table></div>"
 st.markdown(html, unsafe_allow_html=True)
