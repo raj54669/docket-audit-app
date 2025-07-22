@@ -27,10 +27,14 @@ st.markdown("""
     h3 { font-size: var(--variant-title-size) !important; }
     .stCaption { font-size: var(--caption-size) !important; }
 
-    .stSelectbox label {
+    label[data-testid="stWidgetLabel"] {
         font-size: var(--label-size) !important;
         font-weight: 600 !important;
+        display: flex;
+        align-items: center;
+        gap: 4px;
     }
+
     .stSelectbox div[data-baseweb="select"] > div {
         font-size: var(--select-font-size) !important;
         font-weight: bold !important;
@@ -105,7 +109,7 @@ if variant_col not in data.columns:
 
 variants = data[variant_col].dropna().drop_duplicates().tolist()
 
-selected_variant = st.selectbox("🎯 Select Vehicle Variant", variants)
+selected_variant = st.selectbox("🎯 Select Vehicle Variant", variants, label_visibility="visible")
 
 filtered = data[data[variant_col] == selected_variant]
 if filtered.empty:
@@ -128,48 +132,7 @@ cartel_columns = [
 ]
 
 # --- VEHICLE PRICING TABLE ---
-st.subheader("📝 Vehicle Pricing Details")
-vehicle_html = """
-<style>
-.vtable {
-    border-collapse: collapse;
-    width: 100%;
-    margin-bottom: 25px;
-    font-weight: bold;
-    font-size: 14px;
-}
-.vtable th {
-    background-color: #01579b;
-    color: white !important;
-    padding: 4px 6px;
-    text-align: right;
-}
-.vtable td {
-    background-color: #e3f2fd;
-    padding: 4px 6px;
-    font-weight: bold;
-    text-align: right;
-    color: black !important;
-}
-.vtable td:first-child, .vtable th:first-child {
-    text-align: left;
-}
-.vtable, .vtable th, .vtable td {
-    border: 1px solid #000;
-}
-</style>
-<table class='vtable'>
-<tr><th>Description</th><th>Amount</th></tr>
-"""
-for col in vehicle_columns:
-    if col in row:
-        value = format_indian_currency(row[col])
-        vehicle_html += f"<tr><td>{col}</td><td>{value}</td></tr>"
-vehicle_html += "</table>"
-st.markdown(vehicle_html, unsafe_allow_html=True)
-
-# --- CARTEL OFFER TABLE ---
-st.subheader("🎁 Cartel Offer")
+st.markdown("<h3>🎁 Cartel Offer</h3>", unsafe_allow_html=True)
 cartel_html = """
 <style>
 .ctable {
