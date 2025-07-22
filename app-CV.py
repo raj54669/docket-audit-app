@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
 import re
 
 # --- Page Configuration ---
@@ -14,7 +13,9 @@ st.set_page_config(
 @st.cache_data(show_spinner=False)
 def load_data(file_path):
     try:
-        return pd.read_excel(file_path, header=1)
+        df = pd.read_excel(file_path, header=1)
+        df.columns = df.columns.str.strip()  # Clean column names
+        return df
     except Exception as e:
         st.error(f"❌ Failed to load Excel file: {e}")
         st.stop()
@@ -43,6 +44,13 @@ def format_indian_currency(value):
     except Exception:
         return "<i style='color:red;'>Invalid</i>"
 
+# --- Safe Column Access ---
+def get_value_safe(row, column_name):
+    try:
+        return format_indian_currency(row[column_name])
+    except KeyError:
+        return "<i style='color:red;'>Missing</i>"
+
 # --- UI Title ---
 st.title("🚛 Mahindra Docket Audit Tool - CV")
 
@@ -62,6 +70,10 @@ if filtered_row.empty:
 
 row = filtered_row.iloc[0]
 
+# --- Debug: Display available columns for current row ---
+with st.expander("🧪 Debug: Show Available Columns", expanded=False):
+    st.json(list(row.index))
+
 # --- Render Styled Output ---
 html = f"""
 <div style='max-width: 750px;'>
@@ -70,43 +82,43 @@ html = f"""
 <table style='width: 100%; border-collapse: collapse; font-size: 14px;'>
     <tr style='background-color: #BBDEFB; font-weight: bold;'>
         <td style='border: 1px solid #000; padding: 8px;'>Ex-Showroom Price</td>
-        <td style='border: 1px solid #000; padding: 8px;'>{format_indian_currency(row['Ex-Showroom Price'])}</td>
+        <td style='border: 1px solid #000; padding: 8px;'>{get_value_safe(row, 'Ex-Showroom Price')}</td>
     </tr>
     <tr style='background-color: #E3F2FD;'>
         <td style='border: 1px solid #000; padding: 8px;'>TCS</td>
-        <td style='border: 1px solid #000; padding: 8px;'>{format_indian_currency(row['TCS'])}</td>
+        <td style='border: 1px solid #000; padding: 8px;'>{get_value_safe(row, 'TCS')}</td>
     </tr>
     <tr style='background-color: #E3F2FD;'>
         <td style='border: 1px solid #000; padding: 8px;'>Comprehensive + ZeroDep. Insurance</td>
-        <td style='border: 1px solid #000; padding: 8px;'>{format_indian_currency(row['Comprehensive + ZeroDep. Insurance'])}</td>
+        <td style='border: 1px solid #000; padding: 8px;'>{get_value_safe(row, 'Comprehensive + ZeroDep. Insurance')}</td>
     </tr>
     <tr style='background-color: #E3F2FD;'>
         <td style='border: 1px solid #000; padding: 8px;'>R.T.O. Charges With Hypo.</td>
-        <td style='border: 1px solid #000; padding: 8px;'>{format_indian_currency(row['R.T.O. Charges WithHypo.'])}</td>
+        <td style='border: 1px solid #000; padding: 8px;'>{get_value_safe(row, 'R.T.O. Charges WithHypo.')}</td>
     </tr>
     <tr style='background-color: #E3F2FD;'>
         <td style='border: 1px solid #000; padding: 8px;'>RSA (Road Side Assistance) For 1 Year</td>
-        <td style='border: 1px solid #000; padding: 8px;'>{format_indian_currency(row['RSA (Road SideAssistance) For 1Year'])}</td>
+        <td style='border: 1px solid #000; padding: 8px;'>{get_value_safe(row, 'RSA (Road SideAssistance) For 1Year')}</td>
     </tr>
     <tr style='background-color: #E3F2FD;'>
         <td style='border: 1px solid #000; padding: 8px;'>SMC Road - Tax (If Applicable)</td>
-        <td style='border: 1px solid #000; padding: 8px;'>{format_indian_currency(row['SMC Road - Tax (IfApplicable)'])}</td>
+        <td style='border: 1px solid #000; padding: 8px;'>{get_value_safe(row, 'SMC Road - Tax (IfApplicable)')}</td>
     </tr>
     <tr style='background-color: #E3F2FD;'>
         <td style='border: 1px solid #000; padding: 8px;'>MAXI CARE</td>
-        <td style='border: 1px solid #000; padding: 8px;'>{format_indian_currency(row['MAXI CARE'])}</td>
+        <td style='border: 1px solid #000; padding: 8px;'>{get_value_safe(row, 'MAXI CARE')}</td>
     </tr>
     <tr style='background-color: #E3F2FD;'>
         <td style='border: 1px solid #000; padding: 8px;'>Accessories</td>
-        <td style='border: 1px solid #000; padding: 8px;'>{format_indian_currency(row['Accessories'])}</td>
+        <td style='border: 1px solid #000; padding: 8px;'>{get_value_safe(row, 'Accessories')}</td>
     </tr>
     <tr style='background-color: #90CAF9; font-weight: bold;'>
         <td style='border: 1px solid #000; padding: 8px;'>ON ROAD PRICE With SMC Road Tax</td>
-        <td style='border: 1px solid #000; padding: 8px;'>{format_indian_currency(row['ON ROAD PRICEWith SMC Road Tax'])}</td>
+        <td style='border: 1px solid #000; padding: 8px;'>{get_value_safe(row, 'ON ROAD PRICEWith SMC Road Tax')}</td>
     </tr>
     <tr style='background-color: #90CAF9; font-weight: bold;'>
         <td style='border: 1px solid #000; padding: 8px;'>ON ROAD PRICE Without SMC Road Tax</td>
-        <td style='border: 1px solid #000; padding: 8px;'>{format_indian_currency(row['ON ROAD PRICEWithout SMC RoadTax'])}</td>
+        <td style='border: 1px solid #000; padding: 8px;'>{get_value_safe(row, 'ON ROAD PRICEWithout SMC RoadTax')}</td>
     </tr>
 </table>
 
@@ -129,4 +141,5 @@ html = f"""
 </div>
 """
 
+# --- Render HTML ---
 st.markdown(html, unsafe_allow_html=True)
