@@ -6,7 +6,7 @@ import base64
 import requests
 from datetime import datetime
 
-# --- Page Configuration ---
+# --- Page Config ---
 st.set_page_config(page_title="🚛 Mahindra Docket Audit Tool - CV", layout="centered")
 
 # --- Constants ---
@@ -33,26 +33,6 @@ h1 { font-size: var(--title-size) !important; }
 h2 { font-size: var(--subtitle-size) !important; }
 h3 { font-size: var(--variant-title-size) !important; }
 .stCaption { font-size: var(--caption-size) !important; }
-.stSelectbox label {
-    font-size: var(--label-size) !important;
-    font-weight: 600 !important;
-}
-.stSelectbox div[data-baseweb="select"] > div {
-    font-size: var(--select-font-size) !important;
-    font-weight: bold !important;
-    padding-top: 2px !important;
-    padding-bottom: 2px !important;
-    line-height: 1 !important;
-    min-height: 24px !important;
-}
-.stSelectbox div[data-baseweb="select"] {
-    align-items: center !important;
-    height: 28px !important;
-}
-.stSelectbox [data-baseweb="option"]:hover {
-    background-color: #f0f0f0 !important;
-    font-weight: 600 !important;
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -150,7 +130,7 @@ def upload_to_github(file_path, filename):
     except Exception as e:
         st.sidebar.error(f"❌ GitHub Error: {str(e)}")
 
-# --- Upload File (Admin Only) ---
+# --- Upload Section (Admin Only) ---
 if check_admin_password():
     st.sidebar.header("📂 File Upload (Admin Only)")
     uploaded_file = st.sidebar.file_uploader("Upload New Excel File", type=["xlsx"])
@@ -163,7 +143,7 @@ if check_admin_password():
         st.rerun()
 logout_admin()
 
-# --- Extract File Dates ---
+# --- File Selection ---
 def extract_date_from_filename(filename):
     match = re.search(FILE_PATTERN, filename)
     if match:
@@ -183,12 +163,12 @@ if not files:
 file_labels = [f"{fname} ({dt.strftime('%d-%b-%Y')})" for fname, dt in files]
 file_map = {label: fname for label, (fname, _) in zip(file_labels, files)}
 
-# --- Title & File Selection ---
+# --- Title & File Dropdown ---
 st.title("🚛 Mahindra Docket Audit Tool - CV")
 selected_file_label = st.selectbox("📅 Select Excel File", file_labels, key="main_excel_select")
 selected_filepath = os.path.join(DATA_DIR, file_map[selected_file_label])
 
-# --- Load Excel File ---
+# --- Load Excel ---
 @st.cache_data(show_spinner=False)
 def load_data(path):
     df = pd.read_excel(path, sheet_name=SHEET_NAME, header=HEADER_ROW)
@@ -198,7 +178,7 @@ def load_data(path):
 
 data = load_data(selected_filepath)
 
-# --- Format Currency ---
+# --- Currency Format ---
 def format_indian_currency(value):
     try:
         if pd.isnull(value) or value == 0:
@@ -219,16 +199,36 @@ def format_indian_currency(value):
     except:
         return "Invalid"
 
-# --- Select Variant ---
-variants = data["Variant"].dropna().drop_duplicates().tolist()
-selected_variant = st.selectbox("🎯 Select Vehicle Variant", variants)
+# --- Anchor for Scrolling ---
+st.markdown("<a name='variant'></a>", unsafe_allow_html=True)
+
+# --- Variant Selection with Silent Reset + Auto Scroll ---
+current_variants = data["Variant"].dropna().drop_duplicates().tolist()
+
+if "selected_variant" not in st.session_state:
+    st.session_state.selected_variant = None
+
+if st.session_state.selected_variant not in current_variants:
+    st.session_state.selected_variant = current_variants[0] if current_variants else None
+    st.markdown("""
+        <script>document.location.href = "#variant";</script>
+    """, unsafe_allow_html=True)
+
+selected_variant = st.selectbox(
+    "🎯 Select Vehicle Variant",
+    current_variants,
+    index=current_variants.index(st.session_state.selected_variant),
+    key="variant_selectbox"
+)
+st.session_state.selected_variant = selected_variant
+
+# --- Display Pricing Table ---
 filtered = data[data["Variant"] == selected_variant]
 if filtered.empty:
     st.warning("⚠️ No data found for selected variant.")
     st.stop()
 row = filtered.iloc[0]
 
-# --- Display Pricing Table ---
 st.markdown("<h3>📝 Vehicle Pricing Details</h3>", unsafe_allow_html=True)
 vehicle_cols = [
     "Ex-Showroom Price", "TCS", "Comprehensive + Zero Dep. Insurance",
@@ -251,7 +251,7 @@ for col in vehicle_cols:
 pricing_html += "</table>"
 st.markdown(pricing_html, unsafe_allow_html=True)
 
-# --- Display Cartel Offer Table ---
+# --- Cartel Offer Table ---
 st.markdown("<h3>🎁 Cartel Offer</h3>", unsafe_allow_html=True)
 cartel_cols = [
     "M&M Scheme with GST",
