@@ -47,33 +47,39 @@ variants = data[variant_col].dropna().drop_duplicates().tolist()
 # 🔽 Custom styles for dropdown
 st.markdown("""
 <style>
-/* Dropdown input box */
-div[data-baseweb="select"] > div {
-    background-color: #fff8e1 !important;  /* Light cream */
-    border-radius: 6px !important;
+/* Select box outer wrapper */
+div[data-baseweb="select"] {
+    background-color: #fff8e1 !important;  /* light cream */
     border: 1px solid #e0c07f !important;
+    border-radius: 6px !important;
 }
 
-/* Dropdown options container */
-ul[role='listbox'] {
-    padding: 0px !important;
-}
-
-/* Dropdown list item */
-ul[role='listbox'] li {
-    padding: 2px 8px !important;  /* Smaller padding */
-    font-size: 14px !important;
+/* Selected item inside the box */
+div[data-baseweb="select"] div[role="combobox"] {
     font-weight: bold !important;
     color: black !important;
 }
 
-/* Hover effect on dropdown list item */
+/* Dropdown menu items */
+ul[role='listbox'] {
+    padding: 0 !important;
+}
+
+/* Each dropdown option */
+ul[role='listbox'] li {
+    font-size: 14px !important;
+    font-weight: bold !important;
+    color: black !important;
+    padding: 2px 6px !important; /* tighter spacing */
+    margin: 0 !important;
+}
+
+/* Hover effect for dropdown options */
 ul[role='listbox'] li:hover {
-    background-color: #ffe0b2 !important;  /* Lighter cream on hover */
+    background-color: #ffe0b2 !important; /* hover cream */
     color: black !important;
 }
 </style>
-
 """, unsafe_allow_html=True)
 
 # 🔽 Your dropdown select box
