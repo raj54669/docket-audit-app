@@ -6,8 +6,14 @@ import base64
 import requests
 from datetime import datetime
 
-# --- Page Config ---
+# --- Page Configuration ---
 st.set_page_config(page_title="🚛 Mahindra Docket Audit Tool - CV", layout="centered")
+
+# --- Constants ---
+DATA_DIR = "Data/Discount_Cheker"
+FILE_PATTERN = r"CV Discount Check Master File (\d{2})\.(\d{2})\.(\d{4})\.xlsx"
+SHEET_NAME = "Sheet1"
+HEADER_ROW = 1
 
 # --- Global Styling ---
 st.markdown("""
@@ -50,12 +56,6 @@ h3 { font-size: var(--variant-title-size) !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- Constants ---
-DATA_DIR = "Data/Discount_Cheker"
-FILE_PATTERN = r"CV Discount Check Master File (\d{2})\.(\d{2})\.(\d{4})\.xlsx"
-SHEET_NAME = "Sheet1"
-HEADER_ROW = 1
-
 # --- Admin Authentication ---
 def check_admin_password():
     correct_password = st.secrets["auth"]["admin_password"]
@@ -68,7 +68,7 @@ def check_admin_password():
             if st.button("Login", key="admin_login_btn"):
                 if pwd == correct_password:
                     st.session_state["admin_authenticated"] = True
-                    st.experimental_rerun()
+                    st.rerun()
                 else:
                     st.error("❌ Incorrect password.")
         return False
@@ -78,7 +78,7 @@ def logout_admin():
     if st.session_state.get("admin_authenticated", False):
         if st.sidebar.button("🔓 Logout Admin"):
             st.session_state["admin_authenticated"] = False
-            st.experimental_rerun()
+            st.rerun()
 
 # --- GitHub Upload + Cleanup ---
 def upload_to_github(file_path, filename):
@@ -150,7 +150,7 @@ def upload_to_github(file_path, filename):
     except Exception as e:
         st.sidebar.error(f"❌ GitHub Error: {str(e)}")
 
-# --- Sidebar Upload with Admin Access ---
+# --- Upload File (Admin Only) ---
 if check_admin_password():
     st.sidebar.header("📂 File Upload (Admin Only)")
     uploaded_file = st.sidebar.file_uploader("Upload New Excel File", type=["xlsx"])
@@ -163,7 +163,7 @@ if check_admin_password():
         st.rerun()
 logout_admin()
 
-# --- File Selection ---
+# --- Extract File Dates ---
 def extract_date_from_filename(filename):
     match = re.search(FILE_PATTERN, filename)
     if match:
@@ -183,7 +183,7 @@ if not files:
 file_labels = [f"{fname} ({dt.strftime('%d-%b-%Y')})" for fname, dt in files]
 file_map = {label: fname for label, (fname, _) in zip(file_labels, files)}
 
-# --- Main Interface ---
+# --- Title & File Selection ---
 st.title("🚛 Mahindra Docket Audit Tool - CV")
 selected_file_label = st.selectbox("📅 Select Excel File", file_labels, key="main_excel_select")
 selected_filepath = os.path.join(DATA_DIR, file_map[selected_file_label])
@@ -198,7 +198,7 @@ def load_data(path):
 
 data = load_data(selected_filepath)
 
-# --- Currency Formatter ---
+# --- Format Currency ---
 def format_indian_currency(value):
     try:
         if pd.isnull(value) or value == 0:
@@ -219,7 +219,7 @@ def format_indian_currency(value):
     except:
         return "Invalid"
 
-# --- Variant Selection ---
+# --- Select Variant ---
 variants = data["Variant"].dropna().drop_duplicates().tolist()
 selected_variant = st.selectbox("🎯 Select Vehicle Variant", variants)
 filtered = data[data["Variant"] == selected_variant]
@@ -228,7 +228,7 @@ if filtered.empty:
     st.stop()
 row = filtered.iloc[0]
 
-# --- Vehicle Pricing Table ---
+# --- Display Pricing Table ---
 st.markdown("<h3>📝 Vehicle Pricing Details</h3>", unsafe_allow_html=True)
 vehicle_cols = [
     "Ex-Showroom Price", "TCS", "Comprehensive + Zero Dep. Insurance",
@@ -251,7 +251,7 @@ for col in vehicle_cols:
 pricing_html += "</table>"
 st.markdown(pricing_html, unsafe_allow_html=True)
 
-# --- Cartel Offer Table ---
+# --- Display Cartel Offer Table ---
 st.markdown("<h3>🎁 Cartel Offer</h3>", unsafe_allow_html=True)
 cartel_cols = [
     "M&M Scheme with GST",
