@@ -4,7 +4,7 @@ import re
 
 st.set_page_config(page_title="🚛 Mahindra Docket Audit Tool - CV", layout="centered")
 
-# ✨ Global Styling (Updated Dropdown Fix)
+# ✨ Global Styling (Dropdown style updated)
 st.markdown("""
     <style>
     :root {
@@ -27,42 +27,40 @@ st.markdown("""
     h3 { font-size: var(--variant-title-size) !important; }
     .stCaption { font-size: var(--caption-size) !important; }
 
-    label[data-testid="stWidgetLabel"] {
+    .stSelectbox label {
         font-size: var(--label-size) !important;
         font-weight: 600 !important;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .stSelectbox div[data-baseweb="select"] {
-        background-color: #ffffff !important;
-        border: 1px solid #e0c07f !important;
-        border-radius: 6px !important;
     }
 
     .stSelectbox div[data-baseweb="select"] > div {
         font-size: var(--select-font-size) !important;
         font-weight: bold !important;
-        padding: 6px 10px !important;
-        line-height: 1.3 !important;
-        background-color: transparent !important;
-        color: black !important;
+        padding-top: 2px !important;
+        padding-bottom: 2px !important;
+        line-height: 1 !important;
+        min-height: 24px !important;
+    }
+
+    .stSelectbox div[data-baseweb="select"] {
+        align-items: center !important;
+        height: 28px !important;
     }
 
     .stSelectbox [data-baseweb="menu"] > div {
         padding-top: 2px !important;
         padding-bottom: 2px !important;
     }
+
     .stSelectbox [data-baseweb="option"] {
-        padding: 6px 12px !important;
+        padding: 4px 10px !important;
         font-size: var(--select-font-size) !important;
         font-weight: 500 !important;
-        background-color: #fff8e1 !important;
-        color: black !important;
+        line-height: 1.2 !important;
+        min-height: 28px !important;
     }
+
     .stSelectbox [data-baseweb="option"]:hover {
-        background-color: #ffe0b2 !important;
+        background-color: #f0f0f0 !important;
         font-weight: 600 !important;
     }
     </style>
