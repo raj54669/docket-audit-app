@@ -177,10 +177,16 @@ selected_filepath = os.path.join(DATA_DIR, file_map[selected_file_label])
 # --- Load Excel ---
 @st.cache_data(show_spinner=False)
 def load_data(path):
+    # Skip first row (use 2nd row as header), and read full sheet
     df = pd.read_excel(path, sheet_name="Sheet1", header=1)
-    df.columns = list(COLUMN_MAP.keys())
-    return df
 
+    # Drop the first column (assumed to be index or serial)
+    df.drop(df.columns[0], axis=1, inplace=True)
+
+    # Strip all headers to handle spacing inconsistencies
+    df.columns = [str(col).strip() for col in df.columns]
+
+    return df
 data = load_data(selected_filepath)
 
 # --- Currency Formatter ---
