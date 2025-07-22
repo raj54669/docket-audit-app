@@ -4,7 +4,7 @@ import re
 
 st.set_page_config(page_title="🚛 Mahindra Docket Audit Tool - CV", layout="centered")
 
-# ✨ Global Styling (from Mahindra Pricing Viewer)
+# ✨ Global Styling (Updated Dropdown Fix)
 st.markdown("""
     <style>
     :root {
@@ -35,33 +35,31 @@ st.markdown("""
         gap: 4px;
     }
 
-    .stSelectbox div[data-baseweb="select"] > div {
-        font-size: var(--select-font-size) !important;
-        font-weight: bold !important;
-        padding-top: 2px !important;
-        padding-bottom: 2px !important;
-        line-height: 1 !important;
-        min-height: 24px !important;
-    }
     .stSelectbox div[data-baseweb="select"] {
-        align-items: center !important;
-        height: 28px !important;
-        background-color: #fff8e1 !important;
+        background-color: #ffffff !important;
         border: 1px solid #e0c07f !important;
         border-radius: 6px !important;
     }
+
+    .stSelectbox div[data-baseweb="select"] > div {
+        font-size: var(--select-font-size) !important;
+        font-weight: bold !important;
+        padding: 6px 10px !important;
+        line-height: 1.3 !important;
+        background-color: transparent !important;
+        color: black !important;
+    }
+
     .stSelectbox [data-baseweb="menu"] > div {
         padding-top: 2px !important;
         padding-bottom: 2px !important;
     }
     .stSelectbox [data-baseweb="option"] {
-        padding: 4px 10px !important;
+        padding: 6px 12px !important;
         font-size: var(--select-font-size) !important;
         font-weight: 500 !important;
-        line-height: 1.2 !important;
-        min-height: 28px !important;
-        color: black !important;
         background-color: #fff8e1 !important;
+        color: black !important;
     }
     .stSelectbox [data-baseweb="option"]:hover {
         background-color: #ffe0b2 !important;
