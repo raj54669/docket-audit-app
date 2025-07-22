@@ -104,7 +104,7 @@ if variant_col not in data.columns:
 
 variants = data[variant_col].dropna().drop_duplicates().tolist()
 
-selected_variant = st.selectbox("🌟 Select Vehicle Variant", variants)
+selected_variant = st.selectbox("🎯 Select Vehicle Variant", variants)
 
 filtered = data[data[variant_col] == selected_variant]
 if filtered.empty:
@@ -168,7 +168,7 @@ vehicle_html += "</table>"
 st.markdown(vehicle_html, unsafe_allow_html=True)
 
 # --- CARTEL OFFER TABLE ---
-st.subheader("🏱 Cartel Offer")
+st.subheader("🎁 Cartel Offer")
 cartel_html = """
 <style>
 .ctable {
