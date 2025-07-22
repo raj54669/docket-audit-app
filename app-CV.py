@@ -5,27 +5,22 @@ import re
 # --- Page Configuration ---
 st.set_page_config(
     page_title="🚛 Mahindra Docket Audit Tool - CV",
-    layout="centered",
-    initial_sidebar_state="auto"
+    layout="centered"
 )
 
 # --- Load Excel Data ---
 @st.cache_data(show_spinner=False)
-def load_data(file_path):
-    try:
-        return pd.read_excel(file_path, header=1)  # skip first row
-    except Exception as e:
-        st.error(f"❌ Failed to load Excel file: {e}")
-        st.stop()
+def load_data(path):
+    return pd.read_excel(path, header=1)
 
 file_path = "Data/Discount_Cheker/CV Discount Check Master File 12.07.2025.xlsx"
 data = load_data(file_path)
 
-# --- Currency Formatter (Indian style) ---
+# --- Currency Formatter ---
 def format_indian_currency(value):
     try:
-        if pd.isnull(value):
-            return "<i style='color:gray;'>N/A</i>"
+        if pd.isnull(value) or value == 0:
+            return "₹0"
         value = float(value)
         is_negative = value < 0
         value = abs(value)
@@ -38,133 +33,112 @@ def format_indian_currency(value):
         else:
             formatted = last_three
         result = f"₹{formatted}"
-        return f"<b>{'-' if is_negative else ''}{result}</b>"
-    except Exception:
-        return "<i style='color:red;'>Invalid</i>"
-
-# --- CSS Styling ---
-st.markdown("""
-    <style>
-    .table-wrapper {
-        max-width: 700px;
-        margin-top: 1rem;
-    }
-    .styled-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 14px;
-        line-height: 1.2;
-        border: 2px solid black;
-    }
-    .styled-table th, .styled-table td {
-        border: 1px solid black;
-        padding: 8px 12px;
-    }
-    .styled-table th {
-        text-align: left;
-    }
-    .pricing-table td:first-child {
-        background-color: #e3f2fd;
-        font-weight: 600;
-    }
-    .pricing-table td:last-child {
-        background-color: #bbdefb;
-        text-align: right;
-        white-space: nowrap;
-    }
-    .pricing-table th {
-        background-color: #1976d2;
-        color: white;
-    }
-
-    .offer-table td:first-child {
-        background-color: #e8f5e9;
-        font-weight: 600;
-    }
-    .offer-table td:last-child {
-        background-color: #c8e6c9;
-        text-align: right;
-        white-space: nowrap;
-    }
-    .offer-table th {
-        background-color: #388e3c;
-        color: white;
-    }
-    </style>
-""", unsafe_allow_html=True)
+        return f"-{result}" if is_negative else result
+    except:
+        return "Invalid"
 
 # --- Title ---
 st.title("🚛 Mahindra Docket Audit Tool - CV")
 
-# --- Dropdown for Variant ---
-variant_col = 'Variant'
+# --- Select Variant ---
+variant_col = "Variant"
 if variant_col not in data.columns:
-    st.error("❌ 'Variant' column not found in the Excel file.")
+    st.error("❌ 'Variant' column not found.")
     st.stop()
 
 variants = data[variant_col].dropna().drop_duplicates().tolist()
-selected_variant = st.selectbox("📘 Select Vehicle Variant", variants)
+selected_variant = st.selectbox("🔷 Select Vehicle Variant", variants)
 
-filtered_row = data[data[variant_col] == selected_variant]
-if filtered_row.empty:
+filtered = data[data[variant_col] == selected_variant]
+if filtered.empty:
     st.warning("⚠️ No data found for selected variant.")
     st.stop()
 
-row = filtered_row.iloc[0]
+row = filtered.iloc[0]
 
-# --- Vehicle Pricing Details Table ---
-st.subheader("📋 Vehicle Pricing Details")
-
-pricing_keys = [
-    "Ex-Showroom Price",
-    "TCS",
-    "Comprehensive + ZeroDep. Insurance",
-    "R.T.O. Charges WithHypo.",
-    "RSA (Road SideAssistance) For 1Year",
-    "SMC Road - Tax (IfApplicable)",
-    "MAXI CARE",
-    "Accessories",
-    "ON ROAD PRICEWith SMC Road Tax",
-    "ON ROAD PRICEWithout SMC RoadTax"
+# --- Column Grouping ---
+vehicle_columns = [
+    'Ex-Showroom Price',
+    'TCS',
+    'Comprehensive + Zero\nDep. Insurance',
+    'R.T.O. Charges With\nHypo.',
+    'RSA (Road Side\nAssistance) For 1\nYear',
+    'SMC Road - Tax (If\nApplicable)',
+    'MAXI CARE',
+    'Accessories',
+    'ON ROAD PRICE\nWith SMC Road Tax',
+    'ON ROAD PRICE\nWithout SMC Road\nTax',
 ]
 
-pricing_html = """
-<div class="table-wrapper">
-<table class="styled-table pricing-table">
-    <tr><th>Description</th><th>Amount</th></tr>
+cartel_columns = [
+    'M&M\nScheme with\nGST',
+    'Dealer Offer ( Without Exchange Case)',
+    'Dealer Offer ( If Exchange Case)'
+]
+
+# --- Section: Vehicle Pricing Details ---
+st.subheader("📝 Vehicle Pricing Details")
+vehicle_html = """
+<style>
+.vtable th {
+    background-color: #01579b;
+    color: white;
+    padding: 8px;
+}
+.vtable td {
+    background-color: #e3f2fd;
+    padding: 8px;
+}
+.vtable {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 30px;
+}
+.vtable, .vtable th, .vtable td {
+    border: 1px solid #000;
+}
+</style>
+<table class='vtable'>
+<tr><th>Description</th><th>Amount</th></tr>
 """
 
-for key in pricing_keys:
-    if key in row:
-        val = format_indian_currency(row.get(key))
-        pricing_html += f"<tr><td>{key}</td><td>{val}</td></tr>"
+for col in vehicle_columns:
+    if col in row:
+        value = format_indian_currency(row[col])
+        vehicle_html += f"<tr><td>{col}</td><td>{value}</td></tr>"
 
-pricing_html += "</table></div>"
-st.markdown(pricing_html, unsafe_allow_html=True)
+vehicle_html += "</table>"
+st.markdown(vehicle_html, unsafe_allow_html=True)
 
-# --- Cartel Offer Table ---
+# --- Section: Cartel Offer ---
 st.subheader("🎁 Cartel Offer")
-
-cartel_keys = [
-    "M&M Scheme with GST",
-    "Dealer Offer ( Without Exchange Case)",
-    "Dealer Offer ( If Exchange Case)"
-]
-
 cartel_html = """
-<div class="table-wrapper">
-<table class="styled-table offer-table">
-    <tr><th>Description</th><th>Offer</th></tr>
+<style>
+.ctable th {
+    background-color: #2e7d32;
+    color: white;
+    padding: 8px;
+}
+.ctable td {
+    background-color: #e8f5e9;
+    padding: 8px;
+}
+.ctable {
+    border-collapse: collapse;
+    width: 100%;
+}
+.ctable, .ctable th, .ctable td {
+    border: 1px solid #000;
+}
+</style>
+<table class='ctable'>
+<tr><th>Description</th><th>Offer</th></tr>
 """
 
-for key in cartel_keys:
-    if key in row:
-        val = row.get(key)
-        if pd.isnull(val):
-            val = "<i style='color:gray;'>N/A</i>"
-        else:
-            val = str(val)
-        cartel_html += f"<tr><td>{key}</td><td>{val}</td></tr>"
+for col in cartel_columns:
+    if col in row:
+        value = row[col] if pd.notnull(row[col]) else "—"
+        cartel_html += f"<tr><td>{col}</td><td>{value}</td></tr>"
 
-cartel_html += "</table></div>"
+cartel_html += "</table>"
 st.markdown(cartel_html, unsafe_allow_html=True)
