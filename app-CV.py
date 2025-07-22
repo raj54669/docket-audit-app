@@ -253,19 +253,44 @@ cartel_columns = [
     'Dealer Offer ( Without Exchange Case)',
     'Dealer Offer ( If Exchange Case)'
 ]
+
+st.markdown("<h3>🎁 Cartel Offer</h3>", unsafe_allow_html=True)
 cartel_html = """
 <style>
-.ctable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: 14px; }
-.ctable th { background-color: #2e7d32; color: white !important; padding: 4px 6px; text-align: right; }
-.ctable td { background-color: #e8f5e9; padding: 4px 6px; font-weight: bold; text-align: right; color: black !important; }
-.ctable td:first-child, .ctable th:first-child { text-align: left; }
-.ctable, .ctable th, .ctable td { border: 1px solid #000; }
+.ctable {
+    border-collapse: collapse;
+    width: 100%;
+    font-weight: bold;
+    font-size: 14px;
+}
+.ctable th {
+    background-color: #2e7d32;
+    color: white !important;
+    padding: 4px 6px;
+    text-align: right;
+}
+.ctable td {
+    background-color: #e8f5e9;
+    padding: 4px 6px;
+    font-weight: bold;
+    text-align: right;
+    color: black !important;
+}
+.ctable td:first-child, .ctable th:first-child {
+    text-align: left;
+}
+.ctable, .ctable th, .ctable td {
+    border: 1px solid #000;
+}
 </style>
-<table class='ctable'><tr><th>Description</th><th>Offer</th></tr>
+<table class='ctable'>
+<tr><th>Description</th><th>Offer</th></tr>
 """
 for col in cartel_columns:
     if col in row:
-        val = format_indian_currency(row[col]) if "GST" in col else row[col]
+        val = row[col]
+        if "scheme" in col.lower():
+            val = format_indian_currency(val)
         cartel_html += f"<tr><td>{col}</td><td>{val}</td></tr>"
 cartel_html += "</table>"
 st.markdown(cartel_html, unsafe_allow_html=True)
