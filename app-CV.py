@@ -173,7 +173,12 @@ selected_filepath = os.path.join(DATA_DIR, file_map[selected_file_label])
 # --- Load Excel ---
 @st.cache_data(show_spinner=False)
 def load_data(path):
-    return pd.read_excel(path, header=1)
+    try:
+        return pd.read_excel(path, sheet_name="Sheet1", header=1)
+    except Exception as e:
+        st.error(f"❌ Failed to read 'Sheet1': {e}")
+        st.stop()
+
 
 data = load_data(selected_filepath)
 
