@@ -81,7 +81,8 @@ if uploaded_file:
     with open(save_path, "wb") as f:
         f.write(uploaded_file.getbuffer())
     st.sidebar.success(f"✅ Uploaded: {uploaded_file.name}")
-    st.experimental_rerun()  # Refresh to include newly uploaded file
+    st.rerun()
+
 
 # --- File Scanner ---
 def extract_date_from_filename(filename):
