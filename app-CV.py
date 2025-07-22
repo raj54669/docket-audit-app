@@ -224,7 +224,7 @@ def format_indian_currency(value):
         return "Invalid"
 
 # --- Pricing Table ---
-st.markdown("<h3>📝 Vehicle Pricing Details</h3>", unsafe_allow_html=True)
+st.markdown("<h3 style='color:#e65100;'>📝 Vehicle Pricing Details</h3>", unsafe_allow_html=True)
 vehicle_cols = [
     "Ex-Showroom Price", "TCS", "Comprehensive + Zero Dep. Insurance",
     "R.T.O. Charges With Hypo.", "RSA (Road Side Assistance) For 1 Year",
@@ -247,7 +247,8 @@ pricing_html += "</table>"
 st.markdown(pricing_html, unsafe_allow_html=True)
 
 # --- Cartel Table ---
-st.markdown("<h3>🎁 Cartel Offer</h3>", unsafe_allow_html=True)
+st.markdown("<h3 style='color:#e65100;'>🎁 Cartel Offer</h3>", unsafe_allow_html=True)
+
 cartel_cols = [
     "M&M Scheme with GST",
     "Dealer Offer ( Without Exchange Case)",
