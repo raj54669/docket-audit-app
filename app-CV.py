@@ -24,7 +24,6 @@ st.markdown("""
 
     .block-container { padding-top: 0rem; }
     header {visibility: hidden;}
-
     h1 { font-size: var(--title-size) !important; }
     h2 { font-size: var(--subtitle-size) !important; }
     h3 { font-size: var(--variant-title-size) !important; }
@@ -47,19 +46,6 @@ st.markdown("""
     .stSelectbox div[data-baseweb="select"] {
         align-items: center !important;
         height: 28px !important;
-    }
-
-    .stSelectbox [data-baseweb="menu"] > div {
-        padding-top: 2px !important;
-        padding-bottom: 2px !important;
-    }
-
-    .stSelectbox [data-baseweb="option"] {
-        padding: 4px 10px !important;
-        font-size: var(--select-font-size) !important;
-        font-weight: 500 !important;
-        line-height: 1.2 !important;
-        min-height: 28px !important;
     }
 
     .stSelectbox [data-baseweb="option"]:hover {
@@ -120,22 +106,19 @@ def upload_to_github(file_path, filename):
 
         files_data = files_resp.json()
         excel_files = []
-
         for item in files_data:
             fname = item["name"]
             match = re.match(FILE_PATTERN, fname)
             if match:
-                day, month, year = match.groups()
                 try:
+                    day, month, year = match.groups()
                     fdate = datetime.strptime(f"{day}.{month}.{year}", "%d.%m.%Y")
                     excel_files.append((fname, fdate, item["sha"]))
                 except:
                     continue
 
         excel_files.sort(key=lambda x: x[1], reverse=True)
-        files_to_delete = excel_files[5:]
-
-        for fname, _, sha_to_delete in files_to_delete:
+        for fname, _, sha_to_delete in excel_files[5:]:
             del_url = f"https://api.github.com/repos/{username}/{repo}/contents/{github_dir}/{fname}"
             del_payload = {
                 "message": f"Auto-delete old Excel file: {fname}",
@@ -159,12 +142,12 @@ if uploaded_file:
     upload_to_github(save_path, uploaded_file.name)
     st.rerun()
 
-# --- Load File List from Local ---
+# --- File Selection ---
 def extract_date_from_filename(filename):
     match = re.search(FILE_PATTERN, filename)
     if match:
-        day, month, year = match.groups()
         try:
+            day, month, year = match.groups()
             return datetime.strptime(f"{day}.{month}.{year}", "%d.%m.%Y")
         except:
             return None
@@ -184,19 +167,17 @@ if not files:
 
 file_labels = [f"{fname} ({dt.strftime('%d-%b-%Y')})" for fname, dt in files]
 file_map = {label: fname for label, (fname, _) in zip(file_labels, files)}
-
 selected_file_label = st.sidebar.selectbox("📅 Select Excel File", file_labels)
-selected_filename = file_map[selected_file_label]
-selected_filepath = os.path.join(DATA_DIR, selected_filename)
+selected_filepath = os.path.join(DATA_DIR, file_map[selected_file_label])
 
-# --- Load Excel Data ---
+# --- Load Excel ---
 @st.cache_data(show_spinner=False)
 def load_data(path):
     return pd.read_excel(path, header=1)
 
 data = load_data(selected_filepath)
 
-# --- Format Currency ---
+# --- Currency Formatter ---
 def format_indian_currency(value):
     try:
         if pd.isnull(value) or value == 0:
@@ -217,7 +198,10 @@ def format_indian_currency(value):
     except:
         return "Invalid"
 
-# --- Variant Selector (now correctly positioned) ---
+# --- PAGE TITLE ---
+st.title("🚛 Mahindra Docket Audit Tool - CV")
+
+# --- Variant Selection ---
 variant_col = "Variant"
 if variant_col not in data.columns:
     st.error("❌ 'Variant' column not found.")
@@ -233,112 +217,50 @@ if filtered.empty:
 
 row = filtered.iloc[0]
 
-# --- PAGE TITLE ---
-st.title("🚛 Mahindra Docket Audit Tool - CV")
-
-# --- Variant Selection (moved from sidebar) ---
-variants = data[variant_col].dropna().drop_duplicates().tolist()
-selected_variant = st.selectbox("🎯 Select Vehicle Variant", variants)
-
-filtered = data[data[variant_col] == selected_variant]
-if filtered.empty:
-    st.warning("⚠️ No data found for selected variant.")
-    st.stop()
-
-row = filtered.iloc[0]
-
-# --- Vehicle Pricing Table ---
+# --- VEHICLE PRICING TABLE ---
+st.markdown("<h3>📝 Vehicle Pricing Details</h3>", unsafe_allow_html=True)
 vehicle_columns = [
     'Ex-Showroom Price', 'TCS', 'Comprehensive + Zero\nDep. Insurance',
     'R.T.O. Charges With\nHypo.', 'RSA (Road Side\nAssistance) For 1\nYear',
     'SMC Road - Tax (If\nApplicable)', 'MAXI CARE', 'Accessories',
     'ON ROAD PRICE\nWith SMC Road Tax', 'ON ROAD PRICE\nWithout SMC Road\nTax',
 ]
-
-st.markdown("<h3>📝 Vehicle Pricing Details</h3>", unsafe_allow_html=True)
 pricing_html = """
 <style>
-.vtable {
-    border-collapse: collapse;
-    width: 100%;
-    font-weight: bold;
-    font-size: 14px;
-}
-.vtable th {
-    background-color: #004080;
-    color: white !important;
-    padding: 4px 6px;
-    text-align: right;
-}
-.vtable td {
-    background-color: #f0f4f8;
-    padding: 4px 6px;
-    font-weight: bold;
-    text-align: right;
-    color: black !important;
-}
-.vtable td:first-child, .vtable th:first-child {
-    text-align: left;
-}
-.vtable, .vtable th, .vtable td {
-    border: 1px solid #000;
-}
+.vtable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: 14px; }
+.vtable th { background-color: #004080; color: white !important; padding: 4px 6px; text-align: right; }
+.vtable td { background-color: #f0f4f8; padding: 4px 6px; font-weight: bold; text-align: right; color: black !important; }
+.vtable td:first-child, .vtable th:first-child { text-align: left; }
+.vtable, .vtable th, .vtable td { border: 1px solid #000; }
 </style>
-<table class='vtable'>
-<tr><th>Description</th><th>Amount</th></tr>
+<table class='vtable'><tr><th>Description</th><th>Amount</th></tr>
 """
 for col in vehicle_columns:
     if col in row:
-        val = row[col]
-        val_fmt = format_indian_currency(val)
-        pricing_html += f"<tr><td>{col}</td><td>{val_fmt}</td></tr>"
+        pricing_html += f"<tr><td>{col}</td><td>{format_indian_currency(row[col])}</td></tr>"
 pricing_html += "</table>"
 st.markdown(pricing_html, unsafe_allow_html=True)
 
-# --- Cartel Offer Table ---
+# --- CARTEL OFFER TABLE ---
+st.markdown("<h3>🎁 Cartel Offer</h3>", unsafe_allow_html=True)
 cartel_columns = [
     'M&M\nScheme with\nGST',
     'Dealer Offer ( Without Exchange Case)',
     'Dealer Offer ( If Exchange Case)'
 ]
-
-st.markdown("<h3>🎁 Cartel Offer</h3>", unsafe_allow_html=True)
 cartel_html = """
 <style>
-.ctable {
-    border-collapse: collapse;
-    width: 100%;
-    font-weight: bold;
-    font-size: 14px;
-}
-.ctable th {
-    background-color: #2e7d32;
-    color: white !important;
-    padding: 4px 6px;
-    text-align: right;
-}
-.ctable td {
-    background-color: #e8f5e9;
-    padding: 4px 6px;
-    font-weight: bold;
-    text-align: right;
-    color: black !important;
-}
-.ctable td:first-child, .ctable th:first-child {
-    text-align: left;
-}
-.ctable, .ctable th, .ctable td {
-    border: 1px solid #000;
-}
+.ctable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: 14px; }
+.ctable th { background-color: #2e7d32; color: white !important; padding: 4px 6px; text-align: right; }
+.ctable td { background-color: #e8f5e9; padding: 4px 6px; font-weight: bold; text-align: right; color: black !important; }
+.ctable td:first-child, .ctable th:first-child { text-align: left; }
+.ctable, .ctable th, .ctable td { border: 1px solid #000; }
 </style>
-<table class='ctable'>
-<tr><th>Description</th><th>Offer</th></tr>
+<table class='ctable'><tr><th>Description</th><th>Offer</th></tr>
 """
 for col in cartel_columns:
     if col in row:
-        val = row[col]
-        if col.strip() == "M&M\nScheme with\nGST":
-            val = format_indian_currency(val)
+        val = format_indian_currency(row[col]) if "GST" in col else row[col]
         cartel_html += f"<tr><td>{col}</td><td>{val}</td></tr>"
 cartel_html += "</table>"
 st.markdown(cartel_html, unsafe_allow_html=True)
