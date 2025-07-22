@@ -45,6 +45,7 @@ variants = data[variant_col].dropna().drop_duplicates().tolist()
 
 
 # 🔽 Custom styles for dropdown
+# 🔽 Custom styles for dropdown
 st.markdown("""
 <style>
 /* Select box outer wrapper */
@@ -78,6 +79,12 @@ ul[role='listbox'] li {
 ul[role='listbox'] li:hover {
     background-color: #ffe0b2 !important; /* hover cream */
     color: black !important;
+}
+
+/* ✅ Final touch: ensure selected text is always black and bold */
+div[data-baseweb="select"] div[role="combobox"] > div {
+    color: black !important;
+    font-weight: bold !important;
 }
 </style>
 """, unsafe_allow_html=True)
