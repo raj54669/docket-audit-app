@@ -27,9 +27,16 @@ st.markdown("""
     --table-font-size: 14px;
     --variant-title-size: 24px;
 }
-.block-container { padding-top: 0.5rem !important; padding-bottom: 0 !important; }
+
+.block-container {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0 !important;
+}
 header {visibility: hidden;}
-h1 { font-size: var(--title-size) !important; margin-bottom: 0.2rem !important; }
+h1 {
+    font-size: var(--title-size) !important;
+    margin-bottom: 0.2rem !important;
+}
 .stSelectbox label {
     font-size: var(--label-size) !important;
     font-weight: 600 !important;
@@ -37,8 +44,20 @@ h1 { font-size: var(--title-size) !important; margin-bottom: 0.2rem !important; 
 .stSelectbox {
     margin-bottom: 0.3rem !important;
 }
+
+/* 👉 Remove space between the two select boxes */
+div[data-testid="stSelectbox"] + div[data-testid="stSelectbox"] {
+    margin-top: -8px !important;
+}
+
+/* 👉 Make selected value bold and black */
+span.css-1dimb5e, .stSelectbox div[role="button"] {
+    font-weight: 700 !important;
+    color: black !important;
+}
 </style>
 """, unsafe_allow_html=True)
+
 
 # --- Admin Authentication ---
 def check_admin_password():
