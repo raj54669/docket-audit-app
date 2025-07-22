@@ -4,6 +4,67 @@ import re
 
 st.set_page_config(page_title="🚛 Mahindra Docket Audit Tool - CV", layout="centered")
 
+# ✨ Global Styling (from Mahindra Pricing Viewer)
+st.markdown("""
+    <style>
+    :root {
+        --title-size: 40px;
+        --subtitle-size: 18px;
+        --caption-size: 16px;
+        --label-size: 14px;
+        --select-font-size: 15px;
+        --table-font-size: 14px;
+        --variant-title-size: 20px;
+    }
+
+    .block-container {
+        padding-top: 0rem;
+    }
+    header {visibility: hidden;}
+
+    h1 { font-size: var(--title-size) !important; }
+    h2 { font-size: var(--subtitle-size) !important; }
+    h3 { font-size: var(--variant-title-size) !important; }
+    .stCaption { font-size: var(--caption-size) !important; }
+
+    .stSelectbox label {
+        font-size: var(--label-size) !important;
+        font-weight: 600 !important;
+    }
+    .stSelectbox div[data-baseweb="select"] > div {
+        font-size: var(--select-font-size) !important;
+        font-weight: bold !important;
+        padding-top: 2px !important;
+        padding-bottom: 2px !important;
+        line-height: 1 !important;
+        min-height: 24px !important;
+    }
+    .stSelectbox div[data-baseweb="select"] {
+        align-items: center !important;
+        height: 28px !important;
+        background-color: #fff8e1 !important;
+        border: 1px solid #e0c07f !important;
+        border-radius: 6px !important;
+    }
+    .stSelectbox [data-baseweb="menu"] > div {
+        padding-top: 2px !important;
+        padding-bottom: 2px !important;
+    }
+    .stSelectbox [data-baseweb="option"] {
+        padding: 4px 10px !important;
+        font-size: var(--select-font-size) !important;
+        font-weight: 500 !important;
+        line-height: 1.2 !important;
+        min-height: 28px !important;
+        color: black !important;
+    }
+    .stSelectbox [data-baseweb="option"]:hover {
+        background-color: #ffe0b2 !important;
+        font-weight: 600 !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 # Load Excel
 @st.cache_data(show_spinner=False)
 def load_data(path):
@@ -33,7 +94,7 @@ def format_indian_currency(value):
     except:
         return "Invalid"
 
-# Title
+# Main UI
 st.title("🚛 Mahindra Docket Audit Tool - CV")
 
 variant_col = "Variant"
@@ -43,64 +104,20 @@ if variant_col not in data.columns:
 
 variants = data[variant_col].dropna().drop_duplicates().tolist()
 
-# ✅ Cream background and bold select dropdown (Classic st.selectbox)
-st.markdown("""
-<style>
-/* Apply to the classic select box */
-select {
-    background-color: #fff8e1 !important;  /* light cream */
-    color: black !important;
-    font-weight: bold !important;
-    padding: 4px !important;
-    border-radius: 6px;
-    border: 1px solid #e0c07f !important;
-    height: 36px !important;
-}
-
-/* Options in dropdown */
-option {
-    background-color: white;
-    color: black;
-    font-weight: bold;
-    padding: 2px 6px !important;
-}
-
-/* Label */
-label[for="vehicle_variant"] {
-    color: #333;
-    font-weight: bold;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# 🔽 Your dropdown select box
-selected_variant = st.selectbox(
-    "🎯 Select Vehicle Variant",
-    variants,
-    index=0,
-    key="vehicle_variant"
-)
+selected_variant = st.selectbox("🌟 Select Vehicle Variant", variants)
 
 filtered = data[data[variant_col] == selected_variant]
-
 if filtered.empty:
     st.warning("⚠️ No data found for selected variant.")
     st.stop()
 
 row = filtered.iloc[0]
 
-# Columns to show
 vehicle_columns = [
-    'Ex-Showroom Price',
-    'TCS',
-    'Comprehensive + Zero\nDep. Insurance',
-    'R.T.O. Charges With\nHypo.',
-    'RSA (Road Side\nAssistance) For 1\nYear',
-    'SMC Road - Tax (If\nApplicable)',
-    'MAXI CARE',
-    'Accessories',
-    'ON ROAD PRICE\nWith SMC Road Tax',
-    'ON ROAD PRICE\nWithout SMC Road\nTax',
+    'Ex-Showroom Price', 'TCS', 'Comprehensive + Zero\nDep. Insurance',
+    'R.T.O. Charges With\nHypo.', 'RSA (Road Side\nAssistance) For 1\nYear',
+    'SMC Road - Tax (If\nApplicable)', 'MAXI CARE', 'Accessories',
+    'ON ROAD PRICE\nWith SMC Road Tax', 'ON ROAD PRICE\nWithout SMC Road\nTax',
 ]
 
 cartel_columns = [
@@ -143,17 +160,15 @@ vehicle_html = """
 <table class='vtable'>
 <tr><th>Description</th><th>Amount</th></tr>
 """
-
 for col in vehicle_columns:
     if col in row:
         value = format_indian_currency(row[col])
         vehicle_html += f"<tr><td>{col}</td><td>{value}</td></tr>"
-
 vehicle_html += "</table>"
 st.markdown(vehicle_html, unsafe_allow_html=True)
 
 # --- CARTEL OFFER TABLE ---
-st.subheader("🎁 Cartel Offer")
+st.subheader("🏱 Cartel Offer")
 cartel_html = """
 <style>
 .ctable {
@@ -185,13 +200,11 @@ cartel_html = """
 <table class='ctable'>
 <tr><th>Description</th><th>Offer</th></tr>
 """
-
 for col in cartel_columns:
     if col in row:
         val = row[col]
         if col.strip() == "M&M\nScheme with\nGST":
             val = format_indian_currency(val)
         cartel_html += f"<tr><td>{col}</td><td>{val}</td></tr>"
-
 cartel_html += "</table>"
 st.markdown(cartel_html, unsafe_allow_html=True)
