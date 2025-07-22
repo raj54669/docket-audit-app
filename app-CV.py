@@ -12,7 +12,7 @@ def load_data(path):
 file_path = "Data/Discount_Cheker/CV Discount Check Master File 12.07.2025.xlsx"
 data = load_data(file_path)
 
-# Format currency
+# Currency formatting
 def format_indian_currency(value):
     try:
         if pd.isnull(value) or value == 0:
@@ -33,7 +33,7 @@ def format_indian_currency(value):
     except:
         return "Invalid"
 
-# Variant selection
+# Dropdown
 st.title("🚛 Mahindra Docket Audit Tool - CV")
 
 variant_col = "Variant"
@@ -51,7 +51,7 @@ if filtered.empty:
 
 row = filtered.iloc[0]
 
-# Columns
+# Columns to show
 vehicle_columns = [
     'Ex-Showroom Price',
     'TCS',
