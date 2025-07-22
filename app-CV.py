@@ -2,10 +2,9 @@ import streamlit as st
 import pandas as pd
 import re
 
-# --- Page Config ---
 st.set_page_config(page_title="🚛 Mahindra Docket Audit Tool - CV", layout="centered")
 
-# --- Load Excel ---
+# Load Excel
 @st.cache_data(show_spinner=False)
 def load_data(path):
     return pd.read_excel(path, header=1)
@@ -13,7 +12,7 @@ def load_data(path):
 file_path = "Data/Discount_Cheker/CV Discount Check Master File 12.07.2025.xlsx"
 data = load_data(file_path)
 
-# --- Currency Formatter ---
+# Format currency
 def format_indian_currency(value):
     try:
         if pd.isnull(value) or value == 0:
@@ -34,10 +33,9 @@ def format_indian_currency(value):
     except:
         return "Invalid"
 
-# --- UI Title ---
+# Variant selection
 st.title("🚛 Mahindra Docket Audit Tool - CV")
 
-# --- Variant Select ---
 variant_col = "Variant"
 if variant_col not in data.columns:
     st.error("❌ 'Variant' column not found.")
@@ -53,7 +51,7 @@ if filtered.empty:
 
 row = filtered.iloc[0]
 
-# --- Column Groups ---
+# Columns
 vehicle_columns = [
     'Ex-Showroom Price',
     'TCS',
@@ -73,7 +71,7 @@ cartel_columns = [
     'Dealer Offer ( If Exchange Case)'
 ]
 
-# --- Vehicle Pricing Table ---
+# --- VEHICLE PRICING TABLE ---
 st.subheader("📝 Vehicle Pricing Details")
 vehicle_html = """
 <style>
@@ -86,7 +84,7 @@ vehicle_html = """
 }
 .vtable th {
     background-color: #01579b;
-    color: white;
+    color: black !important;
     padding: 4px 6px;
     text-align: right;
 }
@@ -95,6 +93,7 @@ vehicle_html = """
     padding: 4px 6px;
     font-weight: bold;
     text-align: right;
+    color: black !important;
 }
 .vtable td:first-child, .vtable th:first-child {
     text-align: left;
@@ -115,7 +114,7 @@ for col in vehicle_columns:
 vehicle_html += "</table>"
 st.markdown(vehicle_html, unsafe_allow_html=True)
 
-# --- Cartel Offer Table ---
+# --- CARTEL OFFER TABLE ---
 st.subheader("🎁 Cartel Offer")
 cartel_html = """
 <style>
@@ -127,7 +126,7 @@ cartel_html = """
 }
 .ctable th {
     background-color: #2e7d32;
-    color: white;
+    color: black !important;
     padding: 4px 6px;
     text-align: right;
 }
@@ -136,6 +135,7 @@ cartel_html = """
     padding: 4px 6px;
     font-weight: bold;
     text-align: right;
+    color: black !important;
 }
 .ctable td:first-child, .ctable th:first-child {
     text-align: left;
@@ -150,8 +150,10 @@ cartel_html = """
 
 for col in cartel_columns:
     if col in row:
-        value = row[col] if pd.notnull(row[col]) else "—"
-        cartel_html += f"<tr><td>{col}</td><td>{value}</td></tr>"
+        val = row[col]
+        if col.strip() == "M&M\nScheme with\nGST":
+            val = format_indian_currency(val)
+        cartel_html += f"<tr><td>{col}</td><td>{val}</td></tr>"
 
 cartel_html += "</table>"
 st.markdown(cartel_html, unsafe_allow_html=True)
