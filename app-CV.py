@@ -6,7 +6,7 @@ import base64
 import requests
 from datetime import datetime
 
-# --- Streamlit Page Setup ---
+# --- Page Config ---
 st.set_page_config(page_title="🚛 Mahindra Docket Audit Tool - CV", layout="centered")
 
 # --- Global Styling ---
@@ -53,8 +53,34 @@ h3 { font-size: var(--variant-title-size) !important; }
 # --- Constants ---
 DATA_DIR = "Data/Discount_Cheker"
 FILE_PATTERN = r"CV Discount Check Master File (\d{2})\.(\d{2})\.(\d{4})\.xlsx"
+SHEET_NAME = "Sheet1"
+HEADER_ROW = 1
 
-# --- GitHub Upload + Auto-Cleanup ---
+# --- Admin Authentication ---
+def check_admin_password():
+    correct_password = st.secrets["auth"]["admin_password"]
+    if "admin_authenticated" not in st.session_state:
+        st.session_state["admin_authenticated"] = False
+
+    if not st.session_state["admin_authenticated"]:
+        with st.sidebar.expander("🔐 Admin Login", expanded=True):
+            pwd = st.text_input("Enter admin password:", type="password", key="admin_pwd")
+            if st.button("Login", key="admin_login_btn"):
+                if pwd == correct_password:
+                    st.session_state["admin_authenticated"] = True
+                    st.experimental_rerun()
+                else:
+                    st.error("❌ Incorrect password.")
+        return False
+    return True
+
+def logout_admin():
+    if st.session_state.get("admin_authenticated", False):
+        if st.sidebar.button("🔓 Logout Admin"):
+            st.session_state["admin_authenticated"] = False
+            st.experimental_rerun()
+
+# --- GitHub Upload + Cleanup ---
 def upload_to_github(file_path, filename):
     try:
         token = st.secrets["github"]["token"]
@@ -91,7 +117,7 @@ def upload_to_github(file_path, filename):
 
         st.sidebar.success(f"✅ Uploaded to GitHub: {filename}")
 
-        # Clean up old files
+        # Cleanup old files
         list_url = f"https://api.github.com/repos/{username}/{repo}/contents/{github_dir}"
         files_resp = requests.get(list_url, headers=headers)
         if files_resp.status_code != 200:
@@ -124,18 +150,20 @@ def upload_to_github(file_path, filename):
     except Exception as e:
         st.sidebar.error(f"❌ GitHub Error: {str(e)}")
 
-# --- Sidebar Upload ---
-st.sidebar.header("📂 File Selection")
-uploaded_file = st.sidebar.file_uploader("Upload New Excel File", type=["xlsx"])
-if uploaded_file:
-    os.makedirs(DATA_DIR, exist_ok=True)
-    save_path = os.path.join(DATA_DIR, uploaded_file.name)
-    with open(save_path, "wb") as f:
-        f.write(uploaded_file.getbuffer())
-    upload_to_github(save_path, uploaded_file.name)
-    st.rerun()
+# --- Sidebar Upload with Admin Access ---
+if check_admin_password():
+    st.sidebar.header("📂 File Upload (Admin Only)")
+    uploaded_file = st.sidebar.file_uploader("Upload New Excel File", type=["xlsx"])
+    if uploaded_file:
+        os.makedirs(DATA_DIR, exist_ok=True)
+        save_path = os.path.join(DATA_DIR, uploaded_file.name)
+        with open(save_path, "wb") as f:
+            f.write(uploaded_file.getbuffer())
+        upload_to_github(save_path, uploaded_file.name)
+        st.rerun()
+logout_admin()
 
-# --- File Listing ---
+# --- File Selection ---
 def extract_date_from_filename(filename):
     match = re.search(FILE_PATTERN, filename)
     if match:
@@ -155,16 +183,16 @@ if not files:
 file_labels = [f"{fname} ({dt.strftime('%d-%b-%Y')})" for fname, dt in files]
 file_map = {label: fname for label, (fname, _) in zip(file_labels, files)}
 
-# --- Title and Excel File Selection ---
+# --- Main Interface ---
 st.title("🚛 Mahindra Docket Audit Tool - CV")
 selected_file_label = st.selectbox("📅 Select Excel File", file_labels, key="main_excel_select")
 selected_filepath = os.path.join(DATA_DIR, file_map[selected_file_label])
 
-# --- Load Excel ---
+# --- Load Excel File ---
 @st.cache_data(show_spinner=False)
 def load_data(path):
-    df = pd.read_excel(path, sheet_name="Sheet1", header=1)
-    df.drop(df.columns[0], axis=1, inplace=True)  # Drop index/serial column
+    df = pd.read_excel(path, sheet_name=SHEET_NAME, header=HEADER_ROW)
+    df.drop(df.columns[0], axis=1, inplace=True)
     df.columns = [str(col).strip().replace("\n", " ").replace("  ", " ") for col in df.columns]
     return df
 
