@@ -2,13 +2,10 @@ import streamlit as st
 import pandas as pd
 import re
 
-# --- Page Configuration ---
-st.set_page_config(
-    page_title="🚛 Mahindra Docket Audit Tool - CV",
-    layout="centered"
-)
+# --- Page Config ---
+st.set_page_config(page_title="🚛 Mahindra Docket Audit Tool - CV", layout="centered")
 
-# --- Load Excel Data ---
+# --- Load Excel ---
 @st.cache_data(show_spinner=False)
 def load_data(path):
     return pd.read_excel(path, header=1)
@@ -37,10 +34,10 @@ def format_indian_currency(value):
     except:
         return "Invalid"
 
-# --- Title ---
+# --- UI Title ---
 st.title("🚛 Mahindra Docket Audit Tool - CV")
 
-# --- Select Variant ---
+# --- Variant Select ---
 variant_col = "Variant"
 if variant_col not in data.columns:
     st.error("❌ 'Variant' column not found.")
@@ -48,15 +45,15 @@ if variant_col not in data.columns:
 
 variants = data[variant_col].dropna().drop_duplicates().tolist()
 selected_variant = st.selectbox("🔷 Select Vehicle Variant", variants)
-
 filtered = data[data[variant_col] == selected_variant]
+
 if filtered.empty:
     st.warning("⚠️ No data found for selected variant.")
     st.stop()
 
 row = filtered.iloc[0]
 
-# --- Column Grouping ---
+# --- Column Groups ---
 vehicle_columns = [
     'Ex-Showroom Price',
     'TCS',
@@ -76,23 +73,29 @@ cartel_columns = [
     'Dealer Offer ( If Exchange Case)'
 ]
 
-# --- Section: Vehicle Pricing Details ---
+# --- Vehicle Pricing Table ---
 st.subheader("📝 Vehicle Pricing Details")
 vehicle_html = """
 <style>
-.vtable th {
-    background-color: #01579b;
-    color: white;
-    padding: 8px;
-}
-.vtable td {
-    background-color: #e3f2fd;
-    padding: 8px;
-}
 .vtable {
     border-collapse: collapse;
     width: 100%;
     margin-bottom: 30px;
+    font-weight: bold;
+}
+.vtable th {
+    background-color: #01579b;
+    color: white;
+    padding: 6px 8px;
+    text-align: right;
+}
+.vtable td {
+    background-color: #e3f2fd;
+    padding: 6px 8px;
+    font-weight: bold;
+}
+.vtable td:first-child, .vtable th:first-child {
+    text-align: left;
 }
 .vtable, .vtable th, .vtable td {
     border: 1px solid #000;
@@ -110,22 +113,28 @@ for col in vehicle_columns:
 vehicle_html += "</table>"
 st.markdown(vehicle_html, unsafe_allow_html=True)
 
-# --- Section: Cartel Offer ---
+# --- Cartel Offer Table ---
 st.subheader("🎁 Cartel Offer")
 cartel_html = """
 <style>
-.ctable th {
-    background-color: #2e7d32;
-    color: white;
-    padding: 8px;
-}
-.ctable td {
-    background-color: #e8f5e9;
-    padding: 8px;
-}
 .ctable {
     border-collapse: collapse;
     width: 100%;
+    font-weight: bold;
+}
+.ctable th {
+    background-color: #2e7d32;
+    color: white;
+    padding: 6px 8px;
+    text-align: right;
+}
+.ctable td {
+    background-color: #e8f5e9;
+    padding: 6px 8px;
+    font-weight: bold;
+}
+.ctable td:first-child, .ctable th:first-child {
+    text-align: left;
 }
 .ctable, .ctable th, .ctable td {
     border: 1px solid #000;
