@@ -1,8 +1,6 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
 import re
-import os
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -14,17 +12,12 @@ st.set_page_config(
 # --- Load Excel Data ---
 @st.cache_data(show_spinner=False)
 def load_data(file_path):
-    if not os.path.exists(file_path):
-        st.error(f"❌ Excel file not found at: `{file_path}`\n\n"
-                 "📂 Please ensure the file exists at the correct relative path inside the GitHub repo or project folder.")
-        st.stop()
     try:
-        return pd.read_excel(file_path, header=1)  # Skip top row
+        return pd.read_excel(file_path, header=1)  # skip first row
     except Exception as e:
-        st.error(f"❌ Failed to load Excel file:\n\n{e}")
+        st.error(f"❌ Failed to load Excel file: {e}")
         st.stop()
 
-# ✅ Use correct path (relative to repo root or deployment location)
 file_path = "Data/Discount_Cheker/CV Discount Check Master File 12.07.2025.xlsx"
 data = load_data(file_path)
 
@@ -49,45 +42,53 @@ def format_indian_currency(value):
     except Exception:
         return "<i style='color:red;'>Invalid</i>"
 
-# --- Styling ---
+# --- CSS Styling ---
 st.markdown("""
     <style>
     .table-wrapper {
         max-width: 700px;
+        margin-top: 1rem;
     }
     .styled-table {
         width: 100%;
         border-collapse: collapse;
-        table-layout: auto;
         font-size: 14px;
-        line-height: 1;
+        line-height: 1.2;
         border: 2px solid black;
     }
     .styled-table th, .styled-table td {
         border: 1px solid black;
-        padding: 6px 12px;
+        padding: 8px 12px;
     }
     .styled-table th {
-        background-color: #004d40;
-        color: white;
-    }
-    .styled-table th:first-child {
         text-align: left;
     }
-    .styled-table th:last-child {
-        width: 20%;
-        text-align: right;
-    }
-    .styled-table td:first-child {
-        width: 80%;
+    .pricing-table td:first-child {
+        background-color: #e3f2fd;
         font-weight: 600;
-        background-color: #f7f7f7;
-        text-align: left;
     }
-    .styled-table td:last-child {
-        width: 20%;
+    .pricing-table td:last-child {
+        background-color: #bbdefb;
         text-align: right;
         white-space: nowrap;
+    }
+    .pricing-table th {
+        background-color: #1976d2;
+        color: white;
+    }
+
+    .offer-table td:first-child {
+        background-color: #e8f5e9;
+        font-weight: 600;
+    }
+    .offer-table td:last-child {
+        background-color: #c8e6c9;
+        text-align: right;
+        white-space: nowrap;
+    }
+    .offer-table th {
+        background-color: #388e3c;
+        color: white;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -95,7 +96,7 @@ st.markdown("""
 # --- Title ---
 st.title("🚛 Mahindra Docket Audit Tool - CV")
 
-# --- Dropdown for Variant (from column 'Variant') ---
+# --- Dropdown for Variant ---
 variant_col = 'Variant'
 if variant_col not in data.columns:
     st.error("❌ 'Variant' column not found in the Excel file.")
@@ -111,19 +112,59 @@ if filtered_row.empty:
 
 row = filtered_row.iloc[0]
 
-# --- Render Table ---
+# --- Vehicle Pricing Details Table ---
 st.subheader("📋 Vehicle Pricing Details")
 
-html = """
+pricing_keys = [
+    "Ex-Showroom Price",
+    "TCS",
+    "Comprehensive + ZeroDep. Insurance",
+    "R.T.O. Charges WithHypo.",
+    "RSA (Road SideAssistance) For 1Year",
+    "SMC Road - Tax (IfApplicable)",
+    "MAXI CARE",
+    "Accessories",
+    "ON ROAD PRICEWith SMC Road Tax",
+    "ON ROAD PRICEWithout SMC RoadTax"
+]
+
+pricing_html = """
 <div class="table-wrapper">
-<table class="styled-table">
+<table class="styled-table pricing-table">
     <tr><th>Description</th><th>Amount</th></tr>
 """
 
-for col in data.columns:
-    if col not in [variant_col, 'Model Name']:
-        val = format_indian_currency(row.get(col))
-        html += f"<tr><td>{col}</td><td>{val}</td></tr>"
+for key in pricing_keys:
+    if key in row:
+        val = format_indian_currency(row.get(key))
+        pricing_html += f"<tr><td>{key}</td><td>{val}</td></tr>"
 
-html += "</table></div>"
-st.markdown(html, unsafe_allow_html=True)
+pricing_html += "</table></div>"
+st.markdown(pricing_html, unsafe_allow_html=True)
+
+# --- Cartel Offer Table ---
+st.subheader("🎁 Cartel Offer")
+
+cartel_keys = [
+    "M&M Scheme with GST",
+    "Dealer Offer ( Without Exchange Case)",
+    "Dealer Offer ( If Exchange Case)"
+]
+
+cartel_html = """
+<div class="table-wrapper">
+<table class="styled-table offer-table">
+    <tr><th>Description</th><th>Offer</th></tr>
+"""
+
+for key in cartel_keys:
+    if key in row:
+        val = row.get(key)
+        if pd.isnull(val):
+            val = "<i style='color:gray;'>N/A</i>"
+        else:
+            val = str(val)
+        cartel_html += f"<tr><td>{key}</td><td>{val}</td></tr>"
+
+cartel_html += "</table></div>"
+st.markdown(cartel_html, unsafe_allow_html=True)
