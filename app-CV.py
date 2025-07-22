@@ -33,7 +33,7 @@ def format_indian_currency(value):
     except:
         return "Invalid"
 
-# Dropdown
+# Title
 st.title("🚛 Mahindra Docket Audit Tool - CV")
 
 variant_col = "Variant"
@@ -43,63 +43,43 @@ if variant_col not in data.columns:
 
 variants = data[variant_col].dropna().drop_duplicates().tolist()
 
-
-# 🔽 Custom styles for dropdown
+# ✅ Cream background and bold select dropdown (Classic st.selectbox)
 st.markdown("""
 <style>
-/* Outer dropdown box */
-div[data-baseweb="select"] {
+/* Apply to the classic select box */
+select {
     background-color: #fff8e1 !important;  /* light cream */
+    color: black !important;
+    font-weight: bold !important;
+    padding: 4px !important;
+    border-radius: 6px;
     border: 1px solid #e0c07f !important;
-    border-radius: 6px !important;
-    min-height: 38px !important;  /* compact height */
+    height: 36px !important;
 }
 
-/* Selected text in dropdown */
-div[data-baseweb="select"] div[role="combobox"] {
-    font-weight: bold !important;
-    color: black !important;
-    min-height: 38px !important;  /* compact selected box */
-    padding: 2px 8px !important;
+/* Options in dropdown */
+option {
+    background-color: white;
+    color: black;
+    font-weight: bold;
+    padding: 2px 6px !important;
 }
 
-/* Final touch: ensure selected text is always black in dark mode too */
-div[data-baseweb="select"] div[role="combobox"] > div {
-    color: black !important;
-    font-weight: bold !important;
-}
-
-/* Dropdown list itself */
-ul[role='listbox'] {
-    padding: 0 !important;
-}
-
-/* Each dropdown option */
-ul[role='listbox'] li {
-    font-size: 14px !important;
-    font-weight: bold !important;
-    color: black !important;
-    padding: 2px 8px !important;  /* compact spacing */
-    margin: 0 !important;
-}
-
-/* Hover effect for options */
-ul[role='listbox'] li:hover {
-    background-color: #ffe0b2 !important;  /* soft cream hover */
-    color: black !important;
+/* Label */
+label[for="vehicle_variant"] {
+    color: #333;
+    font-weight: bold;
 }
 </style>
 """, unsafe_allow_html=True)
 
 # 🔽 Your dropdown select box
-
 selected_variant = st.selectbox(
     "🎯 Select Vehicle Variant",
-    options=[{"label": v, "value": v} for v in variants],
-    format_func=lambda x: x["label"],
+    variants,
     index=0,
     key="vehicle_variant"
-)["value"]
+)
 
 filtered = data[data[variant_col] == selected_variant]
 
