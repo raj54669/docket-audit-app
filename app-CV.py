@@ -27,12 +27,28 @@ st.markdown("""
     --table-font-size: 14px;
     --variant-title-size: 24px;
 }
-.block-container { padding-top: 0rem; }
+.block-container { padding-top: 0.5rem !important; padding-bottom: 0 !important; }
 header {visibility: hidden;}
-h1 { font-size: var(--title-size) !important; }
-h2 { font-size: var(--subtitle-size) !important; }
-h3 { font-size: var(--variant-title-size) !important; }
-.stCaption { font-size: var(--caption-size) !important; }
+h1 { font-size: var(--title-size) !important; margin-bottom: 0rem !important; }
+.stSelectbox label {
+    font-size: var(--label-size) !important;
+    font-weight: 600 !important;
+}
+.stSelectbox div[data-baseweb="select"] > div {
+    font-size: var(--select-font-size) !important;
+    font-weight: bold !important;
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+    line-height: 1 !important;
+}
+.stSelectbox div[data-baseweb="select"] {
+    align-items: center !important;
+    height: 28px !important;
+}
+.stSelectbox [data-baseweb="option"]:hover {
+    background-color: #f0f0f0 !important;
+    font-weight: 600 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -163,22 +179,46 @@ if not files:
 file_labels = [f"{fname} ({dt.strftime('%d-%b-%Y')})" for fname, dt in files]
 file_map = {label: fname for label, (fname, _) in zip(file_labels, files)}
 
-# --- Title & File Dropdown ---
-st.title("🚛 Mahindra Docket Audit Tool - CV")
-selected_file_label = st.selectbox("📅 Select Excel File", file_labels, key="main_excel_select")
-selected_filepath = os.path.join(DATA_DIR, file_map[selected_file_label])
+# --- Title ---
+st.markdown("<h1>🚛 Mahindra Docket Audit Tool - CV</h1>", unsafe_allow_html=True)
 
-# --- Load Excel ---
-@st.cache_data(show_spinner=False)
-def load_data(path):
-    df = pd.read_excel(path, sheet_name=SHEET_NAME, header=HEADER_ROW)
-    df.drop(df.columns[0], axis=1, inplace=True)
-    df.columns = [str(col).strip().replace("\n", " ").replace("  ", " ") for col in df.columns]
-    return df
+# --- Compact Dropdown Row: Excel + Variant ---
+file_col, variant_col = st.columns([1, 1])
 
-data = load_data(selected_filepath)
+with file_col:
+    selected_file_label = st.selectbox("📅 Select Excel File", file_labels, key="main_excel_select")
+    selected_filepath = os.path.join(DATA_DIR, file_map[selected_file_label])
 
-# --- Currency Format ---
+with variant_col:
+    st.markdown("<div id='variant'></div>", unsafe_allow_html=True)
+    data = pd.read_excel(selected_filepath, sheet_name=SHEET_NAME, header=HEADER_ROW)
+    data.drop(data.columns[0], axis=1, inplace=True)
+    data.columns = [str(col).strip().replace("\n", " ").replace("  ", " ") for col in data.columns]
+
+    current_variants = data["Variant"].dropna().drop_duplicates().tolist()
+
+    if "selected_variant" not in st.session_state:
+        st.session_state.selected_variant = None
+
+    if st.session_state.selected_variant not in current_variants:
+        st.session_state.selected_variant = current_variants[0] if current_variants else None
+
+    selected_variant = st.selectbox(
+        "🎯 Select Vehicle Variant",
+        current_variants,
+        index=current_variants.index(st.session_state.selected_variant),
+        key="variant_selectbox"
+    )
+    st.session_state.selected_variant = selected_variant
+
+# --- Filter by Variant ---
+filtered = data[data["Variant"] == selected_variant]
+if filtered.empty:
+    st.warning("⚠️ No data found for selected variant.")
+    st.stop()
+row = filtered.iloc[0]
+
+# --- Currency Formatter ---
 def format_indian_currency(value):
     try:
         if pd.isnull(value) or value == 0:
@@ -199,36 +239,7 @@ def format_indian_currency(value):
     except:
         return "Invalid"
 
-# --- Anchor for Scrolling ---
-st.markdown("<a name='variant'></a>", unsafe_allow_html=True)
-
-# --- Variant Selection with Silent Reset + Auto Scroll ---
-current_variants = data["Variant"].dropna().drop_duplicates().tolist()
-
-if "selected_variant" not in st.session_state:
-    st.session_state.selected_variant = None
-
-if st.session_state.selected_variant not in current_variants:
-    st.session_state.selected_variant = current_variants[0] if current_variants else None
-    st.markdown("""
-        <script>document.location.href = "#variant";</script>
-    """, unsafe_allow_html=True)
-
-selected_variant = st.selectbox(
-    "🎯 Select Vehicle Variant",
-    current_variants,
-    index=current_variants.index(st.session_state.selected_variant),
-    key="variant_selectbox"
-)
-st.session_state.selected_variant = selected_variant
-
-# --- Display Pricing Table ---
-filtered = data[data["Variant"] == selected_variant]
-if filtered.empty:
-    st.warning("⚠️ No data found for selected variant.")
-    st.stop()
-row = filtered.iloc[0]
-
+# --- Vehicle Pricing Table ---
 st.markdown("<h3>📝 Vehicle Pricing Details</h3>", unsafe_allow_html=True)
 vehicle_cols = [
     "Ex-Showroom Price", "TCS", "Comprehensive + Zero Dep. Insurance",
