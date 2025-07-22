@@ -29,25 +29,13 @@ st.markdown("""
 }
 .block-container { padding-top: 0.5rem !important; padding-bottom: 0 !important; }
 header {visibility: hidden;}
-h1 { font-size: var(--title-size) !important; margin-bottom: 0rem !important; }
+h1 { font-size: var(--title-size) !important; margin-bottom: 0.2rem !important; }
 .stSelectbox label {
     font-size: var(--label-size) !important;
     font-weight: 600 !important;
 }
-.stSelectbox div[data-baseweb="select"] > div {
-    font-size: var(--select-font-size) !important;
-    font-weight: bold !important;
-    padding-top: 2px !important;
-    padding-bottom: 2px !important;
-    line-height: 1 !important;
-}
-.stSelectbox div[data-baseweb="select"] {
-    align-items: center !important;
-    height: 28px !important;
-}
-.stSelectbox [data-baseweb="option"]:hover {
-    background-color: #f0f0f0 !important;
-    font-weight: 600 !important;
+.stSelectbox {
+    margin-bottom: 0.3rem !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -159,7 +147,7 @@ if check_admin_password():
         st.rerun()
 logout_admin()
 
-# --- File Selection ---
+# --- File Listing ---
 def extract_date_from_filename(filename):
     match = re.search(FILE_PATTERN, filename)
     if match:
@@ -182,34 +170,30 @@ file_map = {label: fname for label, (fname, _) in zip(file_labels, files)}
 # --- Title ---
 st.markdown("<h1>🚛 Mahindra Docket Audit Tool - CV</h1>", unsafe_allow_html=True)
 
-# --- Compact Dropdown Row: Excel + Variant ---
-file_col, variant_col = st.columns([1, 1])
+# --- Excel File Selection ---
+selected_file_label = st.selectbox("📅 Select Excel File", file_labels, key="main_excel_select")
+selected_filepath = os.path.join(DATA_DIR, file_map[selected_file_label])
 
-with file_col:
-    selected_file_label = st.selectbox("📅 Select Excel File", file_labels, key="main_excel_select")
-    selected_filepath = os.path.join(DATA_DIR, file_map[selected_file_label])
+# --- Load Data ---
+data = pd.read_excel(selected_filepath, sheet_name=SHEET_NAME, header=HEADER_ROW)
+data.drop(data.columns[0], axis=1, inplace=True)
+data.columns = [str(col).strip().replace("\n", " ").replace("  ", " ") for col in data.columns]
 
-with variant_col:
-    st.markdown("<div id='variant'></div>", unsafe_allow_html=True)
-    data = pd.read_excel(selected_filepath, sheet_name=SHEET_NAME, header=HEADER_ROW)
-    data.drop(data.columns[0], axis=1, inplace=True)
-    data.columns = [str(col).strip().replace("\n", " ").replace("  ", " ") for col in data.columns]
+# --- Variant Dropdown with Reset ---
+current_variants = data["Variant"].dropna().drop_duplicates().tolist()
+if "selected_variant" not in st.session_state:
+    st.session_state.selected_variant = None
 
-    current_variants = data["Variant"].dropna().drop_duplicates().tolist()
+if st.session_state.selected_variant not in current_variants:
+    st.session_state.selected_variant = current_variants[0] if current_variants else None
 
-    if "selected_variant" not in st.session_state:
-        st.session_state.selected_variant = None
-
-    if st.session_state.selected_variant not in current_variants:
-        st.session_state.selected_variant = current_variants[0] if current_variants else None
-
-    selected_variant = st.selectbox(
-        "🎯 Select Vehicle Variant",
-        current_variants,
-        index=current_variants.index(st.session_state.selected_variant),
-        key="variant_selectbox"
-    )
-    st.session_state.selected_variant = selected_variant
+selected_variant = st.selectbox(
+    "🎯 Select Vehicle Variant",
+    current_variants,
+    index=current_variants.index(st.session_state.selected_variant),
+    key="variant_selectbox"
+)
+st.session_state.selected_variant = selected_variant
 
 # --- Filter by Variant ---
 filtered = data[data["Variant"] == selected_variant]
@@ -239,7 +223,7 @@ def format_indian_currency(value):
     except:
         return "Invalid"
 
-# --- Vehicle Pricing Table ---
+# --- Pricing Table ---
 st.markdown("<h3>📝 Vehicle Pricing Details</h3>", unsafe_allow_html=True)
 vehicle_cols = [
     "Ex-Showroom Price", "TCS", "Comprehensive + Zero Dep. Insurance",
@@ -262,7 +246,7 @@ for col in vehicle_cols:
 pricing_html += "</table>"
 st.markdown(pricing_html, unsafe_allow_html=True)
 
-# --- Cartel Offer Table ---
+# --- Cartel Table ---
 st.markdown("<h3>🎁 Cartel Offer</h3>", unsafe_allow_html=True)
 cartel_cols = [
     "M&M Scheme with GST",
