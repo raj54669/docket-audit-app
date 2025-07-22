@@ -1,114 +1,129 @@
 import streamlit as st
 import pandas as pd
+from datetime import datetime
+import re
+import os
 
-# Page configuration
-st.set_page_config(page_title="Mahindra Docket Audit Tool - CV")
+# --- Page Configuration ---
+st.set_page_config(
+    page_title="🚛 Mahindra Docket Audit Tool - CV",
+    layout="centered",
+    initial_sidebar_state="auto"
+)
 
-# Title
-st.title("🚛 Mahindra Commercial Vehicle Docket Audit")
+# --- Load Excel Data ---
+@st.cache_data(show_spinner=False)
+def load_data(file_path):
+    if not os.path.exists(file_path):
+        st.error(f"❌ Excel file not found at: `{file_path}`\n\n"
+                 "📂 Please ensure the file exists at the correct relative path inside the GitHub repo or project folder.")
+        st.stop()
+    try:
+        return pd.read_excel(file_path, header=1)  # Skip top row
+    except Exception as e:
+        st.error(f"❌ Failed to load Excel file:\n\n{e}")
+        st.stop()
 
-# Load data from file inside the repo (no uploader)
-file_path = "data/docket-cv.xlsx"  # <- Update if your file is in a different path
-df = pd.read_excel(file_path)
+# ✅ Use correct path (relative to repo root or deployment location)
+file_path = "Data/Discount_Cheker/CV Discount Check Master File 12.07.2025.xlsx"
+data = load_data(file_path)
 
-# Vehicle variant selection
-variant_column = "Select Vehicle Variant"
-if variant_column not in df.columns:
-    st.error(f"Column '{variant_column}' not found in Excel file.")
-    st.stop()
+# --- Currency Formatter (Indian style) ---
+def format_indian_currency(value):
+    try:
+        if pd.isnull(value):
+            return "<i style='color:gray;'>N/A</i>"
+        value = float(value)
+        is_negative = value < 0
+        value = abs(value)
+        s = f"{int(value)}"
+        last_three = s[-3:]
+        other = s[:-3]
+        if other:
+            other = re.sub(r'(\d)(?=(\d{2})+$)', r'\1,', other)
+            formatted = f"{other},{last_three}"
+        else:
+            formatted = last_three
+        result = f"₹{formatted}"
+        return f"<b>{'-' if is_negative else ''}{result}</b>"
+    except Exception:
+        return "<i style='color:red;'>Invalid</i>"
 
-variants = df[variant_column].dropna().unique()
-selected_variant = st.selectbox("Select Vehicle Variant", sorted(variants))
-
-# Filter selected row
-selected_row = df[df[variant_column] == selected_variant]
-if selected_row.empty:
-    st.warning("No data found for the selected variant.")
-    st.stop()
-
-row = selected_row.iloc[0]  # Single matching row
-
-# Pricing fields as per Excel header — DO NOT change field names
-pricing_fields = [
-    'Ex-Showroom Price',
-    'TCS',
-    'Comprehensive + ZeroDep. Insurance',
-    'R.T.O. Charges With Hypo.',
-    'RSA (Road Side Assistance) For 1 Year',
-    'SMC Road - Tax (If Applicable)',
-    'MAXI CARE',
-    'Accessories',
-    'ON ROAD PRICE With SMC Road Tax',
-    'ON ROAD PRICE Without SMC Road Tax'
-]
-
-# Cartel Offer fields — restored
-cartel_fields = [
-    'M&M Scheme with GST',
-    'Dealer Offer ( Without Exchange Case)',
-    'Dealer Offer ( If Exchange Case)'
-]
-
-# VEHICLE PRICING SECTION
-st.markdown("### 📄 Vehicle Pricing Details")
+# --- Styling ---
 st.markdown("""
-<table style="width:100%; border-collapse: collapse;">
-    <thead>
-        <tr style="background-color: #FF6600; color: white;">
-            <th style="text-align: left; padding: 8px;">Description</th>
-            <th style="text-align: left; padding: 8px;">Amount</th>
-        </tr>
-    </thead>
-    <tbody>
+    <style>
+    .table-wrapper {
+        max-width: 700px;
+    }
+    .styled-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: auto;
+        font-size: 14px;
+        line-height: 1;
+        border: 2px solid black;
+    }
+    .styled-table th, .styled-table td {
+        border: 1px solid black;
+        padding: 6px 12px;
+    }
+    .styled-table th {
+        background-color: #004d40;
+        color: white;
+    }
+    .styled-table th:first-child {
+        text-align: left;
+    }
+    .styled-table th:last-child {
+        width: 20%;
+        text-align: right;
+    }
+    .styled-table td:first-child {
+        width: 80%;
+        font-weight: 600;
+        background-color: #f7f7f7;
+        text-align: left;
+    }
+    .styled-table td:last-child {
+        width: 20%;
+        text-align: right;
+        white-space: nowrap;
+    }
+    </style>
 """, unsafe_allow_html=True)
 
-for field in pricing_fields:
-    value = row.get(field)
-    if pd.isnull(value) or value == "":
-        value_display = "<i style='color: red;'>Missing</i>"
-    else:
-        value_display = f"₹{int(value):,}" if isinstance(value, (int, float)) else str(value)
+# --- Title ---
+st.title("🚛 Mahindra Docket Audit Tool - CV")
 
-    bg_color = "#E6F2FF" if pricing_fields.index(field) % 2 == 0 else "white"
-    st.markdown(
-        f"""
-        <tr style="background-color: {bg_color};">
-            <td style="padding: 8px;">{field}</td>
-            <td style="padding: 8px;">{value_display}</td>
-        </tr>
-        """, unsafe_allow_html=True
-    )
+# --- Dropdown for Variant (from column 'Variant') ---
+variant_col = 'Variant'
+if variant_col not in data.columns:
+    st.error("❌ 'Variant' column not found in the Excel file.")
+    st.stop()
 
-st.markdown("</tbody></table>", unsafe_allow_html=True)
+variants = data[variant_col].dropna().drop_duplicates().tolist()
+selected_variant = st.selectbox("📘 Select Vehicle Variant", variants)
 
-# CARTEL OFFER SECTION
-st.markdown("### 🎯 Cartel Offer")
-st.markdown("""
-<table style="width:100%; border-collapse: collapse;">
-    <thead>
-        <tr style="background-color: #8B0000; color: white;">
-            <th style="text-align: left; padding: 8px;">Offer Type</th>
-            <th style="text-align: left; padding: 8px;">Amount</th>
-        </tr>
-    </thead>
-    <tbody>
-""", unsafe_allow_html=True)
+filtered_row = data[data[variant_col] == selected_variant]
+if filtered_row.empty:
+    st.warning("⚠️ No data found for selected variant.")
+    st.stop()
 
-for field in cartel_fields:
-    value = row.get(field)
-    if pd.isnull(value) or value == "":
-        value_display = "<i style='color: red;'>Missing</i>"
-    else:
-        value_display = f"₹{int(value):,}" if isinstance(value, (int, float)) else str(value)
+row = filtered_row.iloc[0]
 
-    bg_color = "#FFF0F0" if cartel_fields.index(field) % 2 == 0 else "white"
-    st.markdown(
-        f"""
-        <tr style="background-color: {bg_color};">
-            <td style="padding: 8px;">{field}</td>
-            <td style="padding: 8px;">{value_display}</td>
-        </tr>
-        """, unsafe_allow_html=True
-    )
+# --- Render Table ---
+st.subheader("📋 Vehicle Pricing Details")
 
-st.markdown("</tbody></table>", unsafe_allow_html=True)
+html = """
+<div class="table-wrapper">
+<table class="styled-table">
+    <tr><th>Description</th><th>Amount</th></tr>
+"""
+
+for col in data.columns:
+    if col not in [variant_col, 'Model Name']:
+        val = format_indian_currency(row.get(col))
+        html += f"<tr><td>{col}</td><td>{val}</td></tr>"
+
+html += "</table></div>"
+st.markdown(html, unsafe_allow_html=True)
