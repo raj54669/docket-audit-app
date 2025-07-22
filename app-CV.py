@@ -57,10 +57,25 @@ h3 { font-size: var(--variant-title-size) !important; }
     background-color: #f0f0f0 !important;
     font-weight: 600 !important;
 }
-.section-spacing {
-    margin-top: 24px;
+/* Light mode styling */
+[data-theme="light"] .stSelectbox div[data-baseweb="select"] > div {
+    color: black !important;
+    background-color: #f3f4f6 !important; /* Light background */
+    font-weight: bold !important;
 }
 
+/* Dark mode styling */
+[data-theme="dark"] .stSelectbox div[data-baseweb="select"] > div {
+    color: white !important;
+    background-color: #333 !important; /* Dark background */
+    font-weight: bold !important;
+}
+
+/* Hover styling for options (common to both) */
+.stSelectbox [data-baseweb="option"]:hover {
+    background-color: #e0e0e0 !important;
+    font-weight: 600 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
