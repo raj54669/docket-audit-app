@@ -57,6 +57,10 @@ h3 { font-size: var(--variant-title-size) !important; }
     background-color: #f0f0f0 !important;
     font-weight: 600 !important;
 }
+.section-spacing {
+    margin-top: 24px;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -266,6 +270,8 @@ for col in vehicle_cols:
     pricing_html += f"<tr><td>{col}</td><td>{format_indian_currency(row[col])}</td></tr>"
 pricing_html += "</table>"
 st.markdown(pricing_html, unsafe_allow_html=True)
+
+st.markdown('<div class="section-spacing"></div>', unsafe_allow_html=True)
 
 # --- Cartel Table ---
 st.markdown("<h3 style='color:#e65100;'>🎁 Cartel Offer</h3>", unsafe_allow_html=True)
