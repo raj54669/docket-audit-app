@@ -249,7 +249,7 @@ st.markdown(pricing_html, unsafe_allow_html=True)
 # --- CARTEL OFFER TABLE ---
 st.markdown("<h3>🎁 Cartel Offer</h3>", unsafe_allow_html=True)
 cartel_columns = [
-    'M&M\nScheme with\nGST',
+    'M&M Scheme with GST',
     'Dealer Offer ( Without Exchange Case)',
     'Dealer Offer ( If Exchange Case)'
 ]
