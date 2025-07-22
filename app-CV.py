@@ -91,7 +91,7 @@ def upload_to_github(file_path, filename):
         with open(file_path, "rb") as f:
             content = base64.b64encode(f.read()).decode()
 
-        # Check for existing file to update
+        # Check if file exists
         url = f"https://api.github.com/repos/{username}/{repo}/contents/{github_file_path}"
         check = requests.get(url, headers=headers)
         sha = check.json().get("sha") if check.status_code == 200 else None
@@ -111,7 +111,7 @@ def upload_to_github(file_path, filename):
 
         st.sidebar.success(f"✅ Uploaded to GitHub: {filename}")
 
-        # --- Clean up old files (keep only last 5) ---
+        # --- Keep only last 5 ---
         list_url = f"https://api.github.com/repos/{username}/{repo}/contents/{github_dir}"
         files_resp = requests.get(list_url, headers=headers)
         if files_resp.status_code != 200:
@@ -147,7 +147,7 @@ def upload_to_github(file_path, filename):
     except Exception as e:
         st.sidebar.error(f"❌ GitHub Error: {str(e)}")
 
-# --- Sidebar: Upload File ---
+# --- Sidebar Upload ---
 st.sidebar.header("📂 File Selection")
 
 uploaded_file = st.sidebar.file_uploader("Upload New Excel File", type=["xlsx"])
@@ -217,7 +217,7 @@ def format_indian_currency(value):
     except:
         return "Invalid"
 
-# --- Variant Selector ---
+# --- Variant Selector (now correctly positioned) ---
 variant_col = "Variant"
 if variant_col not in data.columns:
     st.error("❌ 'Variant' column not found.")
