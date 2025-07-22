@@ -54,24 +54,6 @@ h3 { font-size: var(--variant-title-size) !important; }
 DATA_DIR = "Data/Discount_Cheker"
 FILE_PATTERN = r"CV Discount Check Master File (\d{2})\.(\d{2})\.(\d{4})\.xlsx"
 
-# --- Fixed Column Names by Position ---
-COLUMN_MAP = {
-    "Variant": 0,
-    "Ex-Showroom Price": 1,
-    "TCS": 2,
-    "Comprehensive + Zero Dep. Insurance": 3,
-    "R.T.O. Charges With Hypo.": 4,
-    "RSA (Road Side Assistance) For 1 Year": 5,
-    "SMC Road - Tax (If Applicable)": 6,
-    "MAXI CARE": 7,
-    "Accessories": 8,
-    "ON ROAD PRICE With SMC Road Tax": 9,
-    "ON ROAD PRICE Without SMC Road Tax": 10,
-    "M&M Scheme with GST": 11,
-    "Dealer Offer ( Without Exchange Case)": 12,
-    "Dealer Offer ( If Exchange Case)": 13,
-}
-
 # --- GitHub Upload + Auto-Cleanup ---
 def upload_to_github(file_path, filename):
     try:
@@ -109,6 +91,7 @@ def upload_to_github(file_path, filename):
 
         st.sidebar.success(f"✅ Uploaded to GitHub: {filename}")
 
+        # Clean up old files
         list_url = f"https://api.github.com/repos/{username}/{repo}/contents/{github_dir}"
         files_resp = requests.get(list_url, headers=headers)
         if files_resp.status_code != 200:
@@ -152,7 +135,7 @@ if uploaded_file:
     upload_to_github(save_path, uploaded_file.name)
     st.rerun()
 
-# --- File Selection ---
+# --- File Listing ---
 def extract_date_from_filename(filename):
     match = re.search(FILE_PATTERN, filename)
     if match:
@@ -171,21 +154,20 @@ if not files:
 
 file_labels = [f"{fname} ({dt.strftime('%d-%b-%Y')})" for fname, dt in files]
 file_map = {label: fname for label, (fname, _) in zip(file_labels, files)}
-selected_file_label = st.selectbox("📅 Select Excel File", file_labels)
+
+# --- Title and Excel File Selection ---
+st.title("🚛 Mahindra Docket Audit Tool - CV")
+selected_file_label = st.selectbox("📅 Select Excel File", file_labels, key="main_excel_select")
 selected_filepath = os.path.join(DATA_DIR, file_map[selected_file_label])
 
 # --- Load Excel ---
 @st.cache_data(show_spinner=False)
 def load_data(path):
-    # Skip first row (use 2nd row as header), and read full sheet
     df = pd.read_excel(path, sheet_name="Sheet1", header=1)
-
-    # Drop the first column (assumed to be index or serial)
-    df.drop(df.columns[0], axis=1, inplace=True)
-
-    # Strip all headers to handle spacing inconsistencies
+    df.drop(df.columns[0], axis=1, inplace=True)  # Drop index/serial column
     df.columns = [str(col).strip().replace("\n", " ").replace("  ", " ") for col in df.columns]
     return df
+
 data = load_data(selected_filepath)
 
 # --- Currency Formatter ---
@@ -209,13 +191,6 @@ def format_indian_currency(value):
     except:
         return "Invalid"
 
-# --- Title ---
-st.title("🚛 Mahindra Docket Audit Tool - CV")
-
-# --- Select Excel File --- 
-selected_file_label = st.selectbox("📅 Select Excel File", file_labels)
-selected_filepath = os.path.join(DATA_DIR, file_map[selected_file_label])
-
 # --- Variant Selection ---
 variants = data["Variant"].dropna().drop_duplicates().tolist()
 selected_variant = st.selectbox("🎯 Select Vehicle Variant", variants)
@@ -225,7 +200,7 @@ if filtered.empty:
     st.stop()
 row = filtered.iloc[0]
 
-# --- VEHICLE PRICING TABLE ---
+# --- Vehicle Pricing Table ---
 st.markdown("<h3>📝 Vehicle Pricing Details</h3>", unsafe_allow_html=True)
 vehicle_cols = [
     "Ex-Showroom Price", "TCS", "Comprehensive + Zero Dep. Insurance",
@@ -248,7 +223,7 @@ for col in vehicle_cols:
 pricing_html += "</table>"
 st.markdown(pricing_html, unsafe_allow_html=True)
 
-# --- CARTEL OFFER TABLE ---
+# --- Cartel Offer Table ---
 st.markdown("<h3>🎁 Cartel Offer</h3>", unsafe_allow_html=True)
 cartel_cols = [
     "M&M Scheme with GST",
