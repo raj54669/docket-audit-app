@@ -84,7 +84,7 @@ vehicle_html = """
 }
 .vtable th {
     background-color: #01579b;
-    color: black !important;
+    color: white !important;
     padding: 4px 6px;
     text-align: right;
 }
@@ -126,7 +126,7 @@ cartel_html = """
 }
 .ctable th {
     background-color: #2e7d32;
-    color: black !important;
+    color: white !important;
     padding: 4px 6px;
     text-align: right;
 }
