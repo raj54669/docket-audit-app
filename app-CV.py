@@ -271,8 +271,6 @@ for col in vehicle_cols:
 pricing_html += "</table>"
 st.markdown(pricing_html, unsafe_allow_html=True)
 
-st.markdown('<div class="section-spacing"></div>', unsafe_allow_html=True)
-
 # --- Cartel Table ---
 st.markdown("<h3 style='color:#e65100;'>🎁 Cartel Offer</h3>", unsafe_allow_html=True)
 
