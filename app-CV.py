@@ -45,23 +45,31 @@ variants = data[variant_col].dropna().drop_duplicates().tolist()
 
 
 # 🔽 Custom styles for dropdown
-# 🔽 Custom styles for dropdown
 st.markdown("""
 <style>
-/* Select box outer wrapper */
+/* Outer dropdown box */
 div[data-baseweb="select"] {
     background-color: #fff8e1 !important;  /* light cream */
     border: 1px solid #e0c07f !important;
     border-radius: 6px !important;
+    min-height: 38px !important;  /* compact height */
 }
 
-/* Selected item inside the box */
+/* Selected text in dropdown */
 div[data-baseweb="select"] div[role="combobox"] {
     font-weight: bold !important;
     color: black !important;
+    min-height: 38px !important;  /* compact selected box */
+    padding: 2px 8px !important;
 }
 
-/* Dropdown menu items */
+/* Final touch: ensure selected text is always black in dark mode too */
+div[data-baseweb="select"] div[role="combobox"] > div {
+    color: black !important;
+    font-weight: bold !important;
+}
+
+/* Dropdown list itself */
 ul[role='listbox'] {
     padding: 0 !important;
 }
@@ -71,20 +79,14 @@ ul[role='listbox'] li {
     font-size: 14px !important;
     font-weight: bold !important;
     color: black !important;
-    padding: 2px 6px !important; /* tighter spacing */
+    padding: 2px 8px !important;  /* compact spacing */
     margin: 0 !important;
 }
 
-/* Hover effect for dropdown options */
+/* Hover effect for options */
 ul[role='listbox'] li:hover {
-    background-color: #ffe0b2 !important; /* hover cream */
+    background-color: #ffe0b2 !important;  /* soft cream hover */
     color: black !important;
-}
-
-/* ✅ Final touch: ensure selected text is always black and bold */
-div[data-baseweb="select"] div[role="combobox"] > div {
-    color: black !important;
-    font-weight: bold !important;
 }
 </style>
 """, unsafe_allow_html=True)
