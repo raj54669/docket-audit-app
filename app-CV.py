@@ -46,7 +46,16 @@ h3 { font-size: var(--variant-title-size) !important; }
     padding-bottom: 2px !important;
     line-height: 1 !important;
     min-height: 24px !important;
+}
+
+/* Adaptive color based on theme */
+[data-theme="light"] .stSelectbox div[data-baseweb="select"] > div {
     color: black !important;
+    background-color: #f3f4f6 !important;
+}
+[data-theme="dark"] .stSelectbox div[data-baseweb="select"] > div {
+    color: white !important;
+    background-color: #333 !important;
 }
 .stSelectbox div[data-baseweb="select"] {
     align-items: center !important;
