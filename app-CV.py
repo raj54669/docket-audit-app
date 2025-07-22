@@ -27,33 +27,35 @@ st.markdown("""
     --table-font-size: 14px;
     --variant-title-size: 24px;
 }
-
-.block-container {
-    padding-top: 0.5rem !important;
-    padding-bottom: 0 !important;
-}
+.block-container { padding-top: 0rem; }
 header {visibility: hidden;}
-h1 {
-    font-size: var(--title-size) !important;
-    margin-bottom: 0.2rem !important;
-}
+h1 { font-size: var(--title-size) !important; }
+h2 { font-size: var(--subtitle-size) !important; }
+h3 { font-size: var(--variant-title-size) !important; }
+.stCaption { font-size: var(--caption-size) !important; }
 .stSelectbox label {
     font-size: var(--label-size) !important;
     font-weight: 600 !important;
 }
-.stSelectbox {
-    margin-bottom: 0.3rem !important;
-}
 
-/* 👉 Remove space between the two select boxes */
-div[data-testid="stSelectbox"] + div[data-testid="stSelectbox"] {
-    margin-top: -8px !important;
-}
-
-/* 👉 Make selected value bold and black */
-span.css-1dimb5e, .stSelectbox div[role="button"] {
-    font-weight: 700 !important;
+/* ✅ MINIMAL DROPDOWN STYLING */
+.stSelectbox div[data-baseweb="select"] > div {
+    font-size: 15px !important;
+    font-weight: bold !important;
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+    line-height: 1 !important;
+    min-height: 24px !important;
     color: black !important;
+}
+.stSelectbox div[data-baseweb="select"] {
+    align-items: center !important;
+    height: 28px !important;
+}
+
+.stSelectbox [data-baseweb="option"]:hover {
+    background-color: #f0f0f0 !important;
+    font-weight: 600 !important;
 }
 </style>
 """, unsafe_allow_html=True)
