@@ -184,8 +184,7 @@ def load_data(path):
     df.drop(df.columns[0], axis=1, inplace=True)
 
     # Strip all headers to handle spacing inconsistencies
-    df.columns = [str(col).strip() for col in df.columns]
-
+    df.columns = [str(col).strip().replace("\n", " ").replace("  ", " ") for col in df.columns]
     return df
 data = load_data(selected_filepath)
 
