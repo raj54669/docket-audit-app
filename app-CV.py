@@ -57,6 +57,7 @@ st.markdown("""
         line-height: 1.2 !important;
         min-height: 28px !important;
         color: black !important;
+        background-color: #fff8e1 !important;
     }
     .stSelectbox [data-baseweb="option"]:hover {
         background-color: #ffe0b2 !important;
