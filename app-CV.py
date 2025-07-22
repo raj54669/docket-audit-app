@@ -42,6 +42,35 @@ if variant_col not in data.columns:
     st.stop()
 
 variants = data[variant_col].dropna().drop_duplicates().tolist()
+
+
+# 🔽 Custom styles for dropdown
+st.markdown("""
+<style>
+/* Dropdown input box */
+div[data-baseweb="select"] > div {
+    background-color: #fff8e1 !important;  /* light cream */
+    border-radius: 6px !important;
+    border: 1px solid #e0c07f !important;
+}
+
+/* Dropdown list item hover */
+ul[role='listbox'] li:hover {
+    background-color: #ffe0b2 !important;  /* hover cream */
+}
+
+/* Dropdown list item text and padding */
+ul[role='listbox'] li {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+    padding-left: 10px !important;
+    font-size: 14px !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# 🔽 Your dropdown select box
+
 selected_variant = st.selectbox("🔷 Select Vehicle Variant", variants)
 filtered = data[data[variant_col] == selected_variant]
 
