@@ -71,7 +71,7 @@ ul[role='listbox'] li {
 
 # 🔽 Your dropdown select box
 
-selected_variant = st.selectbox("🔷 Select Vehicle Variant", variants)
+selected_variant = st.selectbox("🎯 Select Vehicle Variant", variants)
 filtered = data[data[variant_col] == selected_variant]
 
 if filtered.empty:
