@@ -132,6 +132,47 @@ cartel_columns = [
 ]
 
 # --- VEHICLE PRICING TABLE ---
+st.markdown("<h3>📝 Vehicle Pricing Details</h3>", unsafe_allow_html=True)
+pricing_html = """
+<style>
+.vtable {
+    border-collapse: collapse;
+    width: 100%;
+    font-weight: bold;
+    font-size: 14px;
+}
+.vtable th {
+    background-color: #004080;
+    color: white !important;
+    padding: 4px 6px;
+    text-align: right;
+}
+.vtable td {
+    background-color: #f0f4f8;
+    padding: 4px 6px;
+    font-weight: bold;
+    text-align: right;
+    color: black !important;
+}
+.vtable td:first-child, .vtable th:first-child {
+    text-align: left;
+}
+.vtable, .vtable th, .vtable td {
+    border: 1px solid #000;
+}
+</style>
+<table class='vtable'>
+<tr><th>Description</th><th>Amount</th></tr>
+"""
+for col in vehicle_columns:
+    if col in row:
+        val = row[col]
+        val_fmt = format_indian_currency(val)
+        pricing_html += f"<tr><td>{col}</td><td>{val_fmt}</td></tr>"
+pricing_html += "</table>"
+st.markdown(pricing_html, unsafe_allow_html=True)
+
+# --- CARTEL OFFER TABLE ---
 st.markdown("<h3>🎁 Cartel Offer</h3>", unsafe_allow_html=True)
 cartel_html = """
 <style>
