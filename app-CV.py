@@ -171,8 +171,7 @@ if not files:
 
 file_labels = [f"{fname} ({dt.strftime('%d-%b-%Y')})" for fname, dt in files]
 file_map = {label: fname for label, (fname, _) in zip(file_labels, files)}
-selected_file_label = st.sidebar.selectbox("📅 Select Excel File", file_labels)
-selected_filepath = os.path.join(DATA_DIR, file_map[selected_file_label])
+
 
 # --- Load Excel ---
 @st.cache_data(show_spinner=False)
@@ -211,6 +210,10 @@ def format_indian_currency(value):
 
 # --- Title ---
 st.title("🚛 Mahindra Docket Audit Tool - CV")
+
+# --- Select Excel File --- 
+selected_file_label = st.selectbox("📅 Select Excel File", file_labels)
+selected_filepath = os.path.join(DATA_DIR, file_map[selected_file_label])
 
 # --- Variant Selection ---
 variants = data["Variant"].dropna().drop_duplicates().tolist()
