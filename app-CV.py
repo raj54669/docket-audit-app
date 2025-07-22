@@ -49,24 +49,31 @@ st.markdown("""
 <style>
 /* Dropdown input box */
 div[data-baseweb="select"] > div {
-    background-color: #fff8e1 !important;  /* light cream */
+    background-color: #fff8e1 !important;  /* Light cream */
     border-radius: 6px !important;
     border: 1px solid #e0c07f !important;
 }
 
-/* Dropdown list item hover */
-ul[role='listbox'] li:hover {
-    background-color: #ffe0b2 !important;  /* hover cream */
+/* Dropdown options container */
+ul[role='listbox'] {
+    padding: 0px !important;
 }
 
-/* Dropdown list item text and padding */
+/* Dropdown list item */
 ul[role='listbox'] li {
-    padding-top: 4px !important;
-    padding-bottom: 4px !important;
-    padding-left: 10px !important;
+    padding: 2px 8px !important;  /* Smaller padding */
     font-size: 14px !important;
+    font-weight: bold !important;
+    color: black !important;
+}
+
+/* Hover effect on dropdown list item */
+ul[role='listbox'] li:hover {
+    background-color: #ffe0b2 !important;  /* Lighter cream on hover */
+    color: black !important;
 }
 </style>
+
 """, unsafe_allow_html=True)
 
 # 🔽 Your dropdown select box
