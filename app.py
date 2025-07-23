@@ -27,7 +27,7 @@ st.markdown("""
     --caption-size: 16px;
     --label-size: 14px;
     --select-font-size: 15px;
-    --table-font-size: 14px;
+    --table-font-size: 15px;
     --variant-title-size: 20px;
 }
 .block-container { padding-top: 0rem; }
@@ -246,45 +246,35 @@ def format_indian_currency(value):
 def render_combined_table(row, shared_fields, grouped_fields, group_keys):
     html = """
     <style>
-    .vtable-wrapper {
-        overflow-x: auto;
-    }
     .vtable {
         border-collapse: collapse;
         width: 100%;
-        font-family: Arial, sans-serif;
+        font-weight: bold;
         font-size: 14px;
-        font-weight: 600;
-        border: 2px solid #000;
     }
     .vtable th {
         background-color: #004080;
         color: white;
-        padding: 8px 10px;
+        padding: 4px 6px;
         text-align: center;
-        font-weight: 700;
+        font-weight: bold;
     }
     .vtable td {
-        padding: 8px 10px;
-        border: 1px solid #000;
-        text-align: right;
-        background-color: #ffffff;
-        white-space: nowrap;
-    }
-    .vtable td:first-child {
-        text-align: left;
-        background-color: white;
-    }
-    .vtable tr:nth-child(even) td {
         background-color: #f0f4f8;
+        padding: 4px 6px;
+        text-align: center;
+        color: black;
+        font-weight: 600;
     }
-    .vtable tr:nth-child(even) td:first-child {
-        background-color: white;
+    .vtable td:first-child, .vtable th:first-child {
+        text-align: left;
+    }
+    .vtable, .vtable th, .vtable td {
+        border: 1px solid #000;
     }
     </style>
-    <div class='vtable-wrapper'>
     <table class='vtable'>
-    <tr><th>Description</th><th>Individual</th><th>Corporate</th></tr>
+        <tr><th>Description</th><th>Individual</th><th>Corporate</th></tr>
     """
 
     for field in shared_fields:
@@ -297,9 +287,8 @@ def render_combined_table(row, shared_fields, grouped_fields, group_keys):
         corp_val = format_indian_currency(row.get(corp_key))
         html += f"<tr><td>{field}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
 
-    html += "</table></div>"
+    html += "</table>"
     return html
-
 
 # --- Output ---
 st.markdown(f"### 🚙 {model} - {fuel_type} - {variant}")
