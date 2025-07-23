@@ -29,7 +29,7 @@ st.markdown("""
 }
 .block-container { padding-top: 0rem; }
 header {visibility: hidden;}
-h1 { font-size: var(--title-size) !important; }
+h1 { font-size: var(--title-size) !important; color: #003366 !important; }
 h2 { font-size: var(--subtitle-size) !important; }
 h3 { font-size: var(--variant-title-size) !important; }
 .stCaption { font-size: var(--caption-size) !important; }
