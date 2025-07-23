@@ -1,4 +1,4 @@
-# streamlit_app.py (Final Integrated)
+# streamlit_app.py (Final Integrated - Fixed HTML Syntax Error)
 import streamlit as st
 import pandas as pd
 import os
@@ -18,7 +18,7 @@ st.set_page_config(
 DATA_DIR = "Data/Price_List"
 FILE_PATTERN = r"PV Price List Master D\. (\d{2})\.(\d{2})\.(\d{4})\.xlsx"
 
-# --- Styling ---
+# --- Global Styling ---
 st.markdown("""
 <style>
 :root {
@@ -36,10 +36,7 @@ h1 { font-size: var(--title-size) !important; }
 h2 { font-size: var(--subtitle-size) !important; }
 h3 { font-size: var(--variant-title-size) !important; }
 .stCaption { font-size: var(--caption-size) !important; }
-.stSelectbox label {
-    font-size: var(--label-size) !important;
-    font-weight: 600 !important;
-}
+.stSelectbox label { font-size: var(--label-size) !important; font-weight: 600 !important; }
 .stSelectbox div[data-baseweb="select"] > div {
     font-size: var(--select-font-size) !important;
     font-weight: bold !important;
@@ -48,14 +45,8 @@ h3 { font-size: var(--variant-title-size) !important; }
     line-height: 1 !important;
     min-height: 24px !important;
 }
-.stSelectbox div[data-baseweb="select"] {
-    align-items: center !important;
-    height: 28px !important;
-}
-.stSelectbox [data-baseweb="menu"] > div {
-    padding-top: 2px !important;
-    padding-bottom: 2px !important;
-}
+.stSelectbox div[data-baseweb="select"] { align-items: center !important; height: 28px !important; }
+.stSelectbox [data-baseweb="menu"] > div { padding-top: 2px !important; padding-bottom: 2px !important; }
 .stSelectbox [data-baseweb="option"] {
     padding: 4px 10px !important;
     font-size: var(--select-font-size) !important;
@@ -75,9 +66,13 @@ h3 { font-size: var(--variant-title-size) !important; }
 .styled-table th, .styled-table td {
     border: 1px solid black; padding: 4px 10px; text-align: center; line-height: 1;
 }
-.styled-table th:nth-child(1), .styled-table td:nth-child(1) { width: 60%; }
+.styled-table th:nth-child(1), .styled-table td:nth-child(1) {
+    width: 60%;
+}
 .styled-table th:nth-child(2), .styled-table td:nth-child(2),
-.styled-table th:nth-child(3), .styled-table td:nth-child(3) { width: 20%; }
+.styled-table th:nth-child(3), .styled-table td:nth-child(3) {
+    width: 20%;
+}
 .styled-table th { background-color: #004d40; color: white; font-weight: bold; }
 .styled-table td:first-child {
     text-align: left; font-weight: 600; background-color: #f7f7f7;
@@ -238,7 +233,7 @@ def format_indian_currency(value):
         last_three = s[-3:]
         other = s[:-3]
         if other:
-            other = re.sub(r'(\\d)(?=(\\d{2})+$)', r'\\1,', other)
+            other = re.sub(r'(\d)(?=(\d{2})+$)', r'\1,', other)
             formatted = f"{other},{last_three}"
         else:
             formatted = last_three
@@ -249,7 +244,22 @@ def format_indian_currency(value):
 
 # --- Table Renderer ---
 def render_combined_table(row, shared_fields, grouped_fields, group_keys):
-    html = \"\"\"\n    <div class=\"table-wrapper\">\n    <table class=\"styled-table\">\n        <tr><th>Description</th><th>Individual</th><th>Corporate</th></tr>\n    \"\"\"\n    for field in shared_fields:\n        val = format_indian_currency(row.get(field))\n        html += f\"<tr><td>{field}</td><td>{val}</td><td>{val}</td></tr>\"\n    for field in grouped_fields:\n        ind_key, corp_key = group_keys.get(field, (\"\", \"\"))\n        ind_val = format_indian_currency(row.get(ind_key))\n        corp_val = format_indian_currency(row.get(corp_key))\n        highlight = \" style='background-color:#fff3cd;font-weight:bold;'\" if field.startswith(\"On Road\") else \"\"\n        html += f\"<tr{highlight}><td>{field}</td><td>{ind_val}</td><td>{corp_val}</td></tr>\"\n    html += \"</table></div>\"\n    return html
+    html = '''
+    <div class="table-wrapper">
+    <table class="styled-table">
+        <tr><th>Description</th><th>Individual</th><th>Corporate</th></tr>
+    '''
+    for field in shared_fields:
+        val = format_indian_currency(row.get(field))
+        html += f"<tr><td>{field}</td><td>{val}</td><td>{val}</td></tr>"
+    for field in grouped_fields:
+        ind_key, corp_key = group_keys.get(field, ("", ""))
+        ind_val = format_indian_currency(row.get(ind_key))
+        corp_val = format_indian_currency(row.get(corp_key))
+        highlight = " style='background-color:#fff3cd;font-weight:bold;'" if field.startswith("On Road") else ""
+        html += f"<tr{highlight}><td>{field}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
+    html += "</table></div>"
+    return html
 
 # --- Output ---
 st.markdown(f"### 🚙 {model} - {fuel_type} - {variant}")
