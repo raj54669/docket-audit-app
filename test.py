@@ -1,4 +1,4 @@
-# streamlit_app.py (Target Code - Enhanced with Feature Migration)
+# streamlit_app.py (Final Integrated)
 import streamlit as st
 import pandas as pd
 import os
@@ -18,7 +18,7 @@ st.set_page_config(
 DATA_DIR = "Data/Price_List"
 FILE_PATTERN = r"PV Price List Master D\. (\d{2})\.(\d{2})\.(\d{4})\.xlsx"
 
-# --- Global Styling ---
+# --- Styling ---
 st.markdown("""
 <style>
 :root {
@@ -36,7 +36,10 @@ h1 { font-size: var(--title-size) !important; }
 h2 { font-size: var(--subtitle-size) !important; }
 h3 { font-size: var(--variant-title-size) !important; }
 .stCaption { font-size: var(--caption-size) !important; }
-.stSelectbox label { font-size: var(--label-size) !important; font-weight: 600 !important; }
+.stSelectbox label {
+    font-size: var(--label-size) !important;
+    font-weight: 600 !important;
+}
 .stSelectbox div[data-baseweb="select"] > div {
     font-size: var(--select-font-size) !important;
     font-weight: bold !important;
@@ -45,8 +48,14 @@ h3 { font-size: var(--variant-title-size) !important; }
     line-height: 1 !important;
     min-height: 24px !important;
 }
-.stSelectbox div[data-baseweb="select"] { align-items: center !important; height: 28px !important; }
-.stSelectbox [data-baseweb="menu"] > div { padding-top: 2px !important; padding-bottom: 2px !important; }
+.stSelectbox div[data-baseweb="select"] {
+    align-items: center !important;
+    height: 28px !important;
+}
+.stSelectbox [data-baseweb="menu"] > div {
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+}
 .stSelectbox [data-baseweb="option"] {
     padding: 4px 10px !important;
     font-size: var(--select-font-size) !important;
@@ -58,11 +67,31 @@ h3 { font-size: var(--variant-title-size) !important; }
     background-color: #f0f0f0 !important;
     font-weight: 600 !important;
 }
-.styled-table { font-size: var(--table-font-size) !important; }
+.table-wrapper { margin-bottom: 15px; padding: 0; }
+.styled-table {
+    width: 100%; border-collapse: collapse; table-layout: fixed;
+    font-size: var(--table-font-size); line-height: 1; border: 2px solid black;
+}
+.styled-table th, .styled-table td {
+    border: 1px solid black; padding: 4px 10px; text-align: center; line-height: 1;
+}
+.styled-table th:nth-child(1), .styled-table td:nth-child(1) { width: 60%; }
+.styled-table th:nth-child(2), .styled-table td:nth-child(2),
+.styled-table th:nth-child(3), .styled-table td:nth-child(3) { width: 20%; }
+.styled-table th { background-color: #004d40; color: white; font-weight: bold; }
+.styled-table td:first-child {
+    text-align: left; font-weight: 600; background-color: #f7f7f7;
+}
+@media (prefers-color-scheme: dark) {
+    .styled-table { border: 2px solid white; }
+    .styled-table th, .styled-table td { border: 1px solid white; }
+    .styled-table td { background-color: #111; color: #eee; }
+    .styled-table td:first-child { background-color: #1e1e1e; color: white; }
+}
 </style>
 """, unsafe_allow_html=True)
 
-# --- Admin Auth (GitHub Token Required in st.secrets) ---
+# --- Admin Auth ---
 def check_admin():
     if "admin_authenticated" not in st.session_state:
         st.session_state["admin_authenticated"] = False
@@ -119,7 +148,10 @@ if check_admin():
         upload_to_github(file)
         st.rerun()
 
-# --- List & Load Excel Files from Disk ---
+# --- Title ---
+st.title("🚗 Mahindra Vehicle Pricing Viewer")
+
+# --- File Listing ---
 def extract_date_from_filename(filename):
     match = re.match(FILE_PATTERN, filename)
     if match:
@@ -136,36 +168,31 @@ def list_recent_files():
     valid = [(f, extract_date_from_filename(f)) for f in all_files if re.match(FILE_PATTERN, f)]
     return sorted([f for f in valid if f[1]], key=lambda x: x[1], reverse=True)[:5]
 
-file_entries = list_recent_files()
-if not file_entries:
+files = list_recent_files()
+if not files:
     st.error("❌ No valid Excel files found")
     st.stop()
 
-file_labels = [f"{name} ({dt.strftime('%d-%b-%Y')})" for name, dt in file_entries]
-file_map = {label: name for label, (name, _) in zip(file_labels, file_entries)}
+file_labels = [f"{name} ({dt.strftime('%d-%b-%Y')})" for name, dt in files]
+file_map = {label: name for label, (name, _) in zip(file_labels, files)}
 
-# --- Dropdown for File Selection ---
 selected_label = st.selectbox("📅 Select Excel File", file_labels, key="main_excel_file")
-selected_file_path = os.path.join(DATA_DIR, file_map[selected_label])
+selected_path = os.path.join(DATA_DIR, file_map[selected_label])
 
 @st.cache_data(show_spinner=False)
 def load_data(file_path):
-    try:
-        return pd.read_excel(file_path)
-    except Exception as e:
-        st.error(f"❌ Error loading file: {e}")
-        st.stop()
+    return pd.read_excel(file_path)
 
-price_data = load_data(selected_file_path)
+df = load_data(selected_path)
 
 # --- Timestamp ---
 try:
-    ist_time = datetime.fromtimestamp(os.path.getmtime(selected_file_path)) + timedelta(hours=5, minutes=30)
+    ist_time = datetime.fromtimestamp(os.path.getmtime(selected_path)) + timedelta(hours=5, minutes=30)
     st.caption(f"📅 Data last updated on: {ist_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
 except:
     st.caption("📅 Last update timestamp not available")
 
-# --- Dropdown Persistence ---
+# --- Dropdown State Logic ---
 def safe_selectbox(label, options, session_key):
     selected = st.session_state.get(session_key)
     if selected not in options:
@@ -173,7 +200,7 @@ def safe_selectbox(label, options, session_key):
     return st.selectbox(label, options, index=options.index(selected) if selected in options else 0, key=session_key)
 
 # --- Dynamic Dropdowns ---
-models = sorted(price_data["Model"].dropna().unique())
+models = sorted(df["Model"].dropna().unique())
 if not models:
     st.error("❌ No models found")
     st.stop()
@@ -182,28 +209,23 @@ col1, col2 = st.columns([2, 1])
 with col1:
     model = safe_selectbox("🚘 Select Model", models, "selected_model")
 
-fuel_df = price_data[price_data["Model"] == model]
-fuel_types = sorted(fuel_df["Fuel Type"].dropna().unique())
-if not fuel_types:
+fuel_df = df[df["Model"] == model]
+fuels = sorted(fuel_df["Fuel Type"].dropna().unique())
+if not fuels:
     st.error("❌ No fuel types found")
     st.stop()
 
 with col2:
-    fuel_type = safe_selectbox("⛽ Select Fuel Type", fuel_types, "selected_fuel")
+    fuel_type = safe_selectbox("⛽ Select Fuel Type", fuels, "selected_fuel")
 
 variant_df = fuel_df[fuel_df["Fuel Type"] == fuel_type]
-variant_options = sorted(variant_df["Variant"].dropna().unique())
-if not variant_options:
+variants = sorted(variant_df["Variant"].dropna().unique())
+if not variants:
     st.error("❌ No variants available")
     st.stop()
 
-variant = safe_selectbox("🎯 Select Variant", variant_options, "selected_variant")
-selected_row = variant_df[variant_df["Variant"] == variant]
-if selected_row.empty:
-    st.warning("⚠️ No data found for selected filters")
-    st.stop()
-
-row = selected_row.iloc[0]
+variant = safe_selectbox("🎯 Select Variant", variants, "selected_variant")
+row = variant_df[variant_df["Variant"] == variant].iloc[0]
 
 # --- Format Currency ---
 def format_indian_currency(value):
@@ -215,35 +237,21 @@ def format_indian_currency(value):
         s = f"{int(value)}"
         last_three = s[-3:]
         other = s[:-3]
-        if other: other = re.sub(r'(\d)(?=(\d{2})+$)', r'\1,', other)
-        formatted = f"{other},{last_three}" if other else last_three
+        if other:
+            other = re.sub(r'(\\d)(?=(\\d{2})+$)', r'\\1,', other)
+            formatted = f"{other},{last_three}"
+        else:
+            formatted = last_three
         result = f"₹{formatted}"
         return f"<b>{'-' if is_negative else ''}{result}</b>"
     except:
         return "<i style='color:red;'>Invalid</i>"
 
-# --- Combined Table ---
+# --- Table Renderer ---
 def render_combined_table(row, shared_fields, grouped_fields, group_keys):
-    html = """
-    <div class="table-wrapper">
-    <table class="styled-table">
-        <tr><th>Description</th><th>Individual</th><th>Corporate</th></tr>
-    """
-    for field in shared_fields:
-        ind_val = format_indian_currency(row.get(field))
-        corp_val = format_indian_currency(row.get(field))
-        html += f"<tr><td>{field}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
-    for field in grouped_fields:
-        ind_key, corp_key = group_keys.get(field, ("", ""))
-        ind_val = format_indian_currency(row.get(ind_key))
-        corp_val = format_indian_currency(row.get(corp_key))
-        highlight = " style='background-color:#fff3cd;font-weight:bold;'" if field.startswith("On Road") else ""
-        html += f"<tr{highlight}><td>{field}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
-    html += "</table></div>"
-    return html
+    html = \"\"\"\n    <div class=\"table-wrapper\">\n    <table class=\"styled-table\">\n        <tr><th>Description</th><th>Individual</th><th>Corporate</th></tr>\n    \"\"\"\n    for field in shared_fields:\n        val = format_indian_currency(row.get(field))\n        html += f\"<tr><td>{field}</td><td>{val}</td><td>{val}</td></tr>\"\n    for field in grouped_fields:\n        ind_key, corp_key = group_keys.get(field, (\"\", \"\"))\n        ind_val = format_indian_currency(row.get(ind_key))\n        corp_val = format_indian_currency(row.get(corp_key))\n        highlight = \" style='background-color:#fff3cd;font-weight:bold;'\" if field.startswith(\"On Road\") else \"\"\n        html += f\"<tr{highlight}><td>{field}</td><td>{ind_val}</td><td>{corp_val}</td></tr>\"\n    html += \"</table></div>\"\n    return html
 
-# --- Render Output ---
-st.title("🚗 Mahindra Vehicle Pricing Viewer")
+# --- Output ---
 st.markdown(f"### 🚙 {model} - {fuel_type} - {variant}")
 st.subheader("📋 Vehicle Pricing Details")
 
