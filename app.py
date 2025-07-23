@@ -181,11 +181,11 @@ def load_data(file_path):
 df = load_data(selected_path)
 
 # --- Timestamp ---
-try:
-    ist_time = datetime.fromtimestamp(os.path.getmtime(selected_path)) + timedelta(hours=5, minutes=30)
-    st.caption(f"📅 Data last updated on: {ist_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
-except:
-    st.caption("📅 Last update timestamp not available")
+#try:
+#    ist_time = datetime.fromtimestamp(os.path.getmtime(selected_path)) + timedelta(hours=5, minutes=30)
+#    st.caption(f"📅 Data last updated on: {ist_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
+#except:
+#    st.caption("📅 Last update timestamp not available")
 
 # --- Dropdown State Logic ---
 def safe_selectbox(label, options, session_key):
