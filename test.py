@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 
 # --- Page Configuration ---
 st.set_page_config(
-    page_title="Mahindra Pricing Viewer",
+    page_title="🚗 Mahindra Vehicle Pricing Viewer",
     layout="centered",
     initial_sidebar_state="auto"
 )
@@ -23,11 +23,11 @@ st.markdown("""
 <style>
 :root {
     --title-size: 40px;
-    --subtitle-size: 18px;
+    --subtitle-size: 24px;
     --caption-size: 16px;
     --label-size: 14px;
     --select-font-size: 15px;
-    --table-font-size: 14px;
+    --table-font-size: 15px;
     --variant-title-size: 20px;
 }
 .block-container { padding-top: 0rem; }
@@ -181,11 +181,11 @@ def load_data(file_path):
 df = load_data(selected_path)
 
 # --- Timestamp ---
-try:
-    ist_time = datetime.fromtimestamp(os.path.getmtime(selected_path)) + timedelta(hours=5, minutes=30)
-    st.caption(f"📅 Data last updated on: {ist_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
-except:
-    st.caption("📅 Last update timestamp not available")
+#try:
+#    ist_time = datetime.fromtimestamp(os.path.getmtime(selected_path)) + timedelta(hours=5, minutes=30)
+#    st.caption(f"📅 Data last updated on: {ist_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
+#except:
+#    st.caption("📅 Last update timestamp not available")
 
 # --- Dropdown State Logic ---
 def safe_selectbox(label, options, session_key):
@@ -244,26 +244,55 @@ def format_indian_currency(value):
 
 # --- Table Renderer ---
 def render_combined_table(row, shared_fields, grouped_fields, group_keys):
-    html = '''
-    <div class="table-wrapper">
-    <table class="styled-table">
+    html = """
+    <style>
+    .vtable {
+        border-collapse: collapse;
+        width: 100%;
+        font-weight: bold;
+        font-size: 14px;
+    }
+    .vtable th {
+        background-color: #004080;
+        color: white;
+        padding: 4px 6px;
+        text-align: center;
+        font-weight: bold;
+    }
+    .vtable td {
+        background-color: #f0f4f8;
+        padding: 4px 6px;
+        text-align: center;
+        color: black;
+        font-weight: 600;
+    }
+    .vtable td:first-child, .vtable th:first-child {
+        text-align: left;
+    }
+    .vtable, .vtable th, .vtable td {
+        border: 1px solid #000;
+    }
+    </style>
+    <table class='vtable'>
         <tr><th>Description</th><th>Individual</th><th>Corporate</th></tr>
-    '''
+    """
+
     for field in shared_fields:
         val = format_indian_currency(row.get(field))
         html += f"<tr><td>{field}</td><td>{val}</td><td>{val}</td></tr>"
+
     for field in grouped_fields:
         ind_key, corp_key = group_keys.get(field, ("", ""))
         ind_val = format_indian_currency(row.get(ind_key))
         corp_val = format_indian_currency(row.get(corp_key))
-        highlight = " style='background-color:#fff3cd;font-weight:bold;'" if field.startswith("On Road") else ""
-        html += f"<tr{highlight}><td>{field}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
-    html += "</table></div>"
+        html += f"<tr><td>{field}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
+
+    html += "</table>"
     return html
 
 # --- Output ---
 st.markdown(f"### 🚙 {model} - {fuel_type} - {variant}")
-st.subheader("📋 Vehicle Pricing Details")
+st.subheader("📝 Vehicle Pricing Details")
 
 shared_fields = [
     "Ex-Showroom Price", "TCS 1%", "Insurance 1 Yr OD + 3 Yr TP + Zero Dep.",
