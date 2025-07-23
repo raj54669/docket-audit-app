@@ -246,35 +246,41 @@ def format_indian_currency(value):
 def render_combined_table(row, shared_fields, grouped_fields, group_keys):
     html = """
     <style>
+    .vtable-wrapper {
+        overflow-x: auto;        
+    }
     .vtable {
         border-collapse: collapse;
         width: 100%;
         font-family: Arial, sans-serif;
-        font-size: var(--table-font-size);
+        font-size: 14px;
         font-weight: 600;
+        border: 2px solid #000;
     }
     .vtable th {
         background-color: #004080;
         color: white;
-        padding: 6px 10px;
-        text-align: left;
+        padding: 8px 10px;
+        text-align: center;
         font-weight: 700;
     }
     .vtable td {
-        padding: 6px 10px;
+        padding: 8px 10px;
         border: 1px solid #000;
         font-weight: 600;
         text-align: right;
         background-color: #f9f9f9;
+        white-space: nowrap;
     }
     .vtable td:first-child {
         text-align: left;
         background-color: #ffffff;
     }
-    .vtable, .vtable th, .vtable td {
-        border: 1px solid black;
+    .vtable tr:nth-child(even) td {
+        background-color: #f0f4f8;
     }
     </style>
+    <div class='vtable-wrapper'>
     <table class='vtable'>
         <tr><th>Description</th><th>Individual</th><th>Corporate</th></tr>
     """
@@ -289,8 +295,9 @@ def render_combined_table(row, shared_fields, grouped_fields, group_keys):
         corp_val = format_indian_currency(row.get(corp_key))
         html += f"<tr><td>{field}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
 
-    html += "</table>"
+    html += "</table></div>"
     return html
+
 
 # --- Output ---
 st.markdown(f"### 🚙 {model} - {fuel_type} - {variant}")
