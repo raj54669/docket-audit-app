@@ -5,6 +5,7 @@ import os
 import re
 import requests
 import base64
+from io import BytesIO
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -138,7 +139,7 @@ def load_excel_file(file_url, headers):
     if response.status_code != 200:
         st.error("Failed to load Excel file from GitHub.")
         st.stop()
-    return pd.read_excel(response.content)
+    return pd.read_excel(BytesIO(response.content))
 
 # --- Currency Formatter ---
 def format_indian_currency(value):
