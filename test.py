@@ -183,10 +183,10 @@ st.markdown("""
     .table-wrapper { margin-bottom: 15px; padding: 0; }
     .styled-table {
         width: 100%; border-collapse: collapse; table-layout: fixed;
-        font-size: 14px; line-height: 1; border: 2px solid black;
+        font-size: 14px; line-height: 1; border: 2px solid #333 !important;
     }
     .styled-table th, .styled-table td {
-        border: 1px solid black; padding: 4px 10px; text-align: center; line-height: 1;
+        border: 1px solid #333 !important; padding: 4px 10px; text-align: center; line-height: 1;
     }
     .styled-table th:nth-child(1), .styled-table td:nth-child(1) { width: 60%; }
     .styled-table th:nth-child(2), .styled-table td:nth-child(2),
@@ -194,8 +194,8 @@ st.markdown("""
     .styled-table th { background-color: #004d40; color: white; font-weight: bold; }
     .styled-table td:first-child { text-align: left; font-weight: 600; background-color: #f7f7f7; }
     @media (prefers-color-scheme: dark) {
-        .styled-table { border: 2px solid white; }
-        .styled-table th, .styled-table td { border: 1px solid white; }
+        .styled-table { border: 2px solid white !important; }
+        .styled-table th, .styled-table td { border: 1px solid white !important; }
         .styled-table td { background-color: #111; color: #eee; }
         .styled-table td:first-child { background-color: #1e1e1e; color: white; }
     }
