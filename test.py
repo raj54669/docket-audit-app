@@ -271,6 +271,7 @@ def format_indian_currency(value):
 # --- Table Renderer ---
 def render_combined_table(row, shared_fields, grouped_fields, group_keys):
     html = """
+    <div class="table-wrapper">
     <table class='vtable'>
         <tr><th>Description</th><th>Individual</th><th>Corporate</th></tr>
     """
