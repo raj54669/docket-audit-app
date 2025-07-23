@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 
 # --- Page Configuration ---
 st.set_page_config(
-    page_title="Mahindra Pricing Viewer",
+    page_title="🚗 Mahindra Vehicle Pricing Viewer",
     layout="centered",
     initial_sidebar_state="auto"
 )
@@ -23,7 +23,7 @@ st.markdown("""
 <style>
 :root {
     --title-size: 40px;
-    --subtitle-size: 18px;
+    --subtitle-size: 24px;
     --caption-size: 16px;
     --label-size: 14px;
     --select-font-size: 15px;
@@ -33,7 +33,7 @@ st.markdown("""
 .block-container { padding-top: 0rem; }
 header {visibility: hidden;}
 h1 { font-size: var(--title-size) !important; }
-h2 { font-size: var(--subtitle-size) !important; }
+h2 { font-size: var(--subtitle-size) !important; color:#e65100; }
 h3 { font-size: var(--variant-title-size) !important; }
 .stCaption { font-size: var(--caption-size) !important; }
 .stSelectbox label { font-size: var(--label-size) !important; font-weight: 600 !important; }
@@ -256,12 +256,12 @@ def render_combined_table(row, shared_fields, grouped_fields, group_keys):
         background-color: #004080;
         color: white;
         padding: 4px 6px;
-        text-align: right;
+        text-align: center;
     }
     .vtable td {
         background-color: #f0f4f8;
         padding: 4px 6px;
-        text-align: right;
+        text-align: center;
         color: black;
     }
     .vtable td:first-child, .vtable th:first-child {
@@ -290,7 +290,7 @@ def render_combined_table(row, shared_fields, grouped_fields, group_keys):
 
 # --- Output ---
 st.markdown(f"### 🚙 {model} - {fuel_type} - {variant}")
-st.subheader("📋 Vehicle Pricing Details")
+st.subheader("📝 Vehicle Pricing Details")
 
 shared_fields = [
     "Ex-Showroom Price", "TCS 1%", "Insurance 1 Yr OD + 3 Yr TP + Zero Dep.",
