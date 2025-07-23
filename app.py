@@ -264,7 +264,7 @@ def render_combined_table(row, shared_fields, grouped_fields, group_keys):
         padding: 4px 6px;
         text-align: center;
         color: black;
-        font-weight: bold;
+        font-weight: 600;
     }
     .vtable td:first-child, .vtable th:first-child {
         text-align: left;
