@@ -249,28 +249,30 @@ def render_combined_table(row, shared_fields, grouped_fields, group_keys):
     .vtable {
         border-collapse: collapse;
         width: 100%;
-        font-weight: bold;
-        font-size: 14px;
+        font-family: Arial, sans-serif;
+        font-size: var(--table-font-size);
+        font-weight: 600;
     }
     .vtable th {
         background-color: #004080;
         color: white;
-        padding: 4px 6px;
-        text-align: center;
-        font-weight: bold;
+        padding: 6px 10px;
+        text-align: left;
+        font-weight: 700;
     }
     .vtable td {
-        background-color: #f0f4f8;
-        padding: 4px 6px;
-        text-align: center;
-        color: black;
+        padding: 6px 10px;
+        border: 1px solid #000;
         font-weight: 600;
+        text-align: right;
+        background-color: #f9f9f9;
     }
-    .vtable td:first-child, .vtable th:first-child {
+    .vtable td:first-child {
         text-align: left;
+        background-color: #ffffff;
     }
     .vtable, .vtable th, .vtable td {
-        border: 1px solid #000;
+        border: 1px solid black;
     }
     </style>
     <table class='vtable'>
