@@ -38,14 +38,19 @@ st.markdown("""
     .stSelectbox div[data-baseweb="select"] > div {
         font-size: var(--select-font-size) !important;
         font-weight: bold !important;
-        padding-top: 2px !important;
-        padding-bottom: 2px !important;
-        line-height: 1 !important;
-        min-height: 24px !important;
+        padding: 2px 6px !important;
+        line-height: 1.2 !important;
+        min-height: 28px !important;
+        white-space: normal !important;
+        word-wrap: break-word !important;
+        overflow-wrap: anywhere !important;
+        display: flex !important;
+        align-items: center !important;
     }
     .stSelectbox div[data-baseweb="select"] {
         align-items: center !important;
-        height: 28px !important;
+        height: auto !important;
+        min-height: 28px !important;
     }
     .stSelectbox [data-baseweb="menu"] > div {
         padding-top: 2px !important;
