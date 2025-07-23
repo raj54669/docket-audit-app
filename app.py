@@ -33,7 +33,7 @@ st.markdown("""
 .block-container { padding-top: 0rem; }
 header {visibility: hidden;}
 h1 { font-size: var(--title-size) !important; }
-h2 { font-size: var(--subtitle-size) !important; color:#e65100; }
+h2 { font-size: var(--subtitle-size) !important; }
 h3 { font-size: var(--variant-title-size) !important; }
 .stCaption { font-size: var(--caption-size) !important; }
 .stSelectbox label { font-size: var(--label-size) !important; font-weight: 600 !important; }
@@ -257,12 +257,14 @@ def render_combined_table(row, shared_fields, grouped_fields, group_keys):
         color: white;
         padding: 4px 6px;
         text-align: center;
+        font-weight: bold;
     }
     .vtable td {
         background-color: #f0f4f8;
         padding: 4px 6px;
         text-align: center;
         color: black;
+        font-weight: bold;
     }
     .vtable td:first-child, .vtable th:first-child {
         text-align: left;
