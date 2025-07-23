@@ -244,48 +244,48 @@ def format_indian_currency(value):
 
 # --- Table Renderer ---
 def render_combined_table(row, shared_fields, grouped_fields, group_keys):
-html = """
-<style>
-.vtable-wrapper {
-    overflow-x: auto;
-}
-.vtable {
-    border-collapse: collapse;
-    width: 100%;
-    font-family: Arial, sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    border: 2px solid #000;
-}
-.vtable th {
-    background-color: #004080;
-    color: white;
-    padding: 8px 10px;
-    text-align: center;
-    font-weight: 700;
-}
-.vtable td {
-    padding: 8px 10px;
-    border: 1px solid #000;
-    text-align: right;
-    background-color: #ffffff;
-    white-space: nowrap;
-}
-.vtable td:first-child {
-    text-align: left;
-    background-color: white;
-}
-.vtable tr:nth-child(even) td {
-    background-color: #f0f4f8;
-}
-.vtable tr:nth-child(even) td:first-child {
-    background-color: white;
-}
-</style>
-<div class='vtable-wrapper'>
-<table class='vtable'>
-<tr><th>Description</th><th>Individual</th><th>Corporate</th></tr>
-"""
+    html = """
+    <style>
+    .vtable-wrapper {
+        overflow-x: auto;
+    }
+    .vtable {
+        border-collapse: collapse;
+        width: 100%;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        border: 2px solid #000;
+    }
+    .vtable th {
+        background-color: #004080;
+        color: white;
+        padding: 8px 10px;
+        text-align: center;
+        font-weight: 700;
+    }
+    .vtable td {
+        padding: 8px 10px;
+        border: 1px solid #000;
+        text-align: right;
+        background-color: #ffffff;
+        white-space: nowrap;
+    }
+    .vtable td:first-child {
+        text-align: left;
+        background-color: white;
+    }
+    .vtable tr:nth-child(even) td {
+        background-color: #f0f4f8;
+    }
+    .vtable tr:nth-child(even) td:first-child {
+        background-color: white;
+    }
+    </style>
+    <div class='vtable-wrapper'>
+    <table class='vtable'>
+    <tr><th>Description</th><th>Individual</th><th>Corporate</th></tr>
+    """
 
     for field in shared_fields:
         val = format_indian_currency(row.get(field))
