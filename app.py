@@ -1,232 +1,189 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime, timedelta
 import os
 import re
+import base64
+import requests
+from datetime import datetime, timedelta
 
-# --- Page Configuration ---
-st.set_page_config(
-    page_title="Mahindra Pricing Viewer",
-    layout="centered",
-    initial_sidebar_state="auto"
-)
+# --- Page Config ---
+st.set_page_config(page_title="Mahindra Vehicle Pricing Viewer", layout="centered")
 
-# --- Global Styling ---
-st.markdown("""
-    <style>
-    :root {
-        --title-size: 40px;
-        --subtitle-size: 18px;
-        --caption-size: 16px;
-        --label-size: 14px;
-        --select-font-size: 15px;
-        --table-font-size: 14px;
-        --variant-title-size: 20px;
-    }
+# --- Constants ---
+REPO = "raj54669/docket-audit-app"
+UPLOAD_DIR = "Data/Price_List"
+DATA_DIR = "Data/Price_List"
+FILE_PATTERN = r"PV Price List Master D\. (\d{2})\.(\d{2})\.(\d{4})\.xlsx"
 
-    .block-container {
-        padding-top: 0rem;
-    }
-    header {visibility: hidden;}
+# --- Styling (optional: paste your existing CSS here) ---
 
-    h1 { font-size: var(--title-size) !important; }
-    h2 { font-size: var(--subtitle-size) !important; }
-    h3 { font-size: var(--variant-title-size) !important; }
-    .stCaption { font-size: var(--caption-size) !important; }
+# --- Admin Login & GitHub Upload ---
+def check_admin():
+    if "admin_authenticated" not in st.session_state:
+        st.session_state.admin_authenticated = False
 
-    /* Label above dropdown */
-    .stSelectbox label {
-        font-size: var(--label-size) !important;
-        font-weight: 600 !important;
-    }
+    if not st.session_state.admin_authenticated:
+        with st.sidebar.expander("🔐 Admin Login", expanded=True):
+            pwd = st.text_input("Enter admin password:", type="password")
+            if st.button("Login"):
+                if pwd == st.secrets["auth"]["admin_password"]:
+                    st.session_state.admin_authenticated = True
+                    st.rerun()
+                else:
+                    st.error("❌ Incorrect password")
+    return st.session_state.admin_authenticated
 
-    /* Selected value in dropdown (closed state) */
-    .stSelectbox div[data-baseweb="select"] > div {
-        font-size: var(--select-font-size) !important;
-        font-weight: bold !important;
-        padding-top: 2px !important;
-        padding-bottom: 2px !important;
-        line-height: 1 !important;
-        min-height: 24px !important;
-    }
+def logout_admin():
+    if st.session_state.get("admin_authenticated", False):
+        if st.sidebar.button("🔓 Logout Admin"):
+            st.session_state.admin_authenticated = False
+            st.rerun()
 
-    .stSelectbox div[data-baseweb="select"] {
-        align-items: center !important;
-        height: 28px !important;
-    }
-
-    /* Dropdown menu popup spacing */
-    .stSelectbox [data-baseweb="menu"] > div {
-        padding-top: 2px !important;
-        padding-bottom: 2px !important;
-    }
-
-    /* Each selectable option */
-    .stSelectbox [data-baseweb="option"] {
-        padding: 4px 10px !important;
-        font-size: var(--select-font-size) !important;
-        font-weight: 500 !important;
-        line-height: 1.2 !important;
-        min-height: 28px !important;
-    }
-
-    /* Hover effect for dropdown options */
-    .stSelectbox [data-baseweb="option"]:hover {
-        background-color: #f0f0f0 !important;
-        font-weight: 600 !important;
-    }
-
-    .styled-table { font-size: var(--table-font-size) !important; }
-    </style>
-""", unsafe_allow_html=True)
-
-# --- Load Excel Data ---
-@st.cache_data(show_spinner=False)
-def load_data(file_path):
-    if not os.path.exists(file_path):
-        st.error("❌ Pricing file not found.")
-        st.stop()
+def upload_to_github(file_path, filename):
     try:
-        return pd.read_excel(file_path)
+        token = st.secrets["github"]["token"]
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json"
+        }
+        url = f"https://api.github.com/repos/{REPO}/contents/{UPLOAD_DIR}/{filename}"
+
+        with open(file_path, "rb") as f:
+            content = base64.b64encode(f.read()).decode()
+
+        check = requests.get(url, headers=headers)
+        sha = check.json().get("sha") if check.status_code == 200 else None
+
+        payload = {"message": f"Upload file {filename}", "content": content, "branch": "main"}
+        if sha:
+            payload["sha"] = sha
+
+        put = requests.put(url, headers=headers, json=payload)
+        if put.status_code not in [200, 201]:
+            st.sidebar.error(f"GitHub upload failed: {put.json().get('message')}")
+        else:
+            st.sidebar.success(f"✅ Uploaded to GitHub: {filename}")
+
     except Exception as e:
-        st.error(f"❌ Failed to load Excel file: {e}")
-        st.stop()
+        st.sidebar.error(f"GitHub Error: {e}")
 
-file_path = "PV Price List Master D. 08.07.2025.xlsx"
-price_data = load_data(file_path)
+# --- Admin Upload Section ---
+if check_admin():
+    st.sidebar.header("📤 Upload Excel File")
+    up = st.sidebar.file_uploader("Upload new .xlsx file", type=["xlsx"])
+    if up:
+        tmp = os.path.join("/tmp", up.name)
+        with open(tmp, "wb") as f:
+            f.write(up.getbuffer())
+        upload_to_github(tmp, up.name)
+        st.rerun()
+logout_admin()
 
-# --- Currency Formatter (Indian style) ---
+# --- File Listing ---
+def extract_date(name):
+    m = re.search(FILE_PATTERN, name)
+    if m:
+        try:
+            return datetime.strptime(".".join(m.groups()), "%d.%m.%Y")
+        except:
+            return None
+    return None
+
+files = [(f, extract_date(f)) for f in os.listdir(DATA_DIR) if re.match(FILE_PATTERN, f)]
+files = sorted([fi for fi in files if fi[1]], key=lambda x: x[1], reverse=True)[:5]
+
+if not files:
+    st.error("❌ No valid Excel files found.")
+    st.stop()
+
+file_labels = [f"{fname} ({dt.strftime('%d-%b-%Y')})" for fname, dt in files]
+file_map = {label: fname for label, (fname, _) in zip(file_labels, files)}
+
+st.title("🚗 Mahindra Vehicle Pricing Viewer")
+selected_label = st.selectbox("📂 Select File", file_labels, key="selected_excel")
+selected_path = os.path.join(DATA_DIR, file_map[selected_label])
+
+# --- Load Excel ---
+@st.cache_data
+def load_data(path):
+    return pd.read_excel(path)
+
+df = load_data(selected_path)
+df.columns = [str(c).strip() for c in df.columns]
+
+# --- Dropdowns (Preserve State) ---
+def dropdown(col, key):
+    opts = sorted(df[col].dropna().unique())
+    prev = st.session_state.get(key)
+    if prev not in opts:
+        prev = opts[0] if opts else None
+    sel = st.selectbox(col, opts, index=opts.index(prev) if prev else 0, key=key)
+    st.session_state[key] = sel
+    return sel
+
+model = dropdown("Model", "sel_model")
+fuel_df = df[df["Model"] == model]
+fuel = dropdown("Fuel Type", "sel_fuel") if fuel_df.shape[0] else None
+var_df = fuel_df[fuel_df["Fuel Type"] == fuel] if fuel else fuel_df
+variant = dropdown("Variant", "sel_variant") if var_df.shape[0] else None
+
+row = var_df[var_df["Variant"] == variant].iloc[0] if variant else None
+
+# --- Table Renderer ---
 def format_indian_currency(value):
-    if pd.isnull(value):
-        return "<i style='color:gray;'>N/A</i>"
+    if pd.isnull(value): return "N/A"
     try:
         value = float(value)
-        is_negative = value < 0
-        value = abs(value)
-        s = f"{int(value)}"
-        last_three = s[-3:]
-        other = s[:-3]
-        if other:
-            other = re.sub(r'(\d)(?=(\d{2})+$)', r'\1,', other)
-            formatted = f"{other},{last_three}"
-        else:
-            formatted = last_three
-        result = f"₹{formatted}"
-        return f"<b>{'-' if is_negative else ''}{result}</b>"
-    except Exception:
-        return "<i style='color:red;'>Invalid</i>"
+        sign = "-" if value < 0 else ""
+        value = abs(int(value))
+        s = f"{value:,}".replace(",", "x").replace(".", ",").replace("x", ",")
+        if len(s) > 3:
+            parts = s.split(",")
+            s = ",".join([parts[0]] + [",".join(parts[1:])])
+        return f"{sign}₹{s}"
+    except:
+        return "Invalid"
 
-# --- Unified Table Renderer ---
-def render_combined_table(row, shared_fields, grouped_fields, group_keys):
-    html = """
-    <div class="table-wrapper">
-    <table class="styled-table">
-        <tr><th>Description</th><th>Individual</th><th>Corporate</th></tr>
-    """
-    for field in shared_fields:
-        ind_val = format_indian_currency(row.get(field))
-        corp_val = format_indian_currency(row.get(field))
-        html += f"<tr><td>{field}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
-    for field in grouped_fields:
-        ind_key, corp_key = group_keys.get(field, ("", ""))
-        ind_val = format_indian_currency(row.get(ind_key))
-        corp_val = format_indian_currency(row.get(corp_key))
-        highlight = " style='background-color:#fff3cd;font-weight:bold;'" if field.startswith("On Road Price") else ""
-        html += f"<tr{highlight}><td>{field}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
-    html += "</table></div>"
-    return html
+if row is not None:
+    st.subheader(f"📋 Vehicle Pricing: {model} - {fuel} - {variant}")
+    shared_fields = [
+        "Ex-Showroom Price", "TCS 1%", "Insurance 1 Yr OD + 3 Yr TP + Zero Dep.",
+        "Accessories Kit", "SMC", "Extended Warranty", "Maxi Care", "RSA (1 Year)", "Fastag"
+    ]
+    grouped_fields = [
+        "RTO (W/O HYPO)", "RTO (With HYPO)",
+        "On Road Price (W/O HYPO)", "On Road Price (With HYPO)"
+    ]
+    group_keys = {
+        "RTO (W/O HYPO)": ("RTO (W/O HYPO) - Individual", "RTO (W/O HYPO) - Corporate"),
+        "RTO (With HYPO)": ("RTO (With HYPO) - Individual", "RTO (With HYPO) - Corporate"),
+        "On Road Price (W/O HYPO)": ("On Road Price (W/O HYPO) - Individual", "On Road Price (W/O HYPO) - Corporate"),
+        "On Road Price (With HYPO)": ("On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"),
+    }
 
-# --- Table Styling ---
-st.markdown("""
+    st.markdown("""
     <style>
-    .table-wrapper { margin-bottom: 15px; padding: 0; }
     .styled-table {
-        width: 100%; border-collapse: collapse; table-layout: fixed;
-        font-size: 14px; line-height: 1; border: 2px solid black;
+        width: 100%; border-collapse: collapse;
+        font-size: 14px; table-layout: fixed;
     }
     .styled-table th, .styled-table td {
-        border: 1px solid black; padding: 4px 10px; text-align: center; line-height: 1;
+        border: 1px solid black; padding: 4px; text-align: center;
     }
-    .styled-table th:nth-child(1), .styled-table td:nth-child(1) {
-        width: 60%;
-    }
-    .styled-table th:nth-child(2), .styled-table td:nth-child(2),
-    .styled-table th:nth-child(3), .styled-table td:nth-child(3) {
-        width: 20%;
-    }
-    .styled-table th { background-color: #004d40; color: white; font-weight: bold; }
-    .styled-table td:first-child {
-        text-align: left; font-weight: 600; background-color: #f7f7f7;
-    }
-    @media (prefers-color-scheme: dark) {
-        .styled-table { border: 2px solid white; }
-        .styled-table th, .styled-table td { border: 1px solid white; }
-        .styled-table td { background-color: #111; color: #eee; }
-        .styled-table td:first-child { background-color: #1e1e1e; color: white; }
+    .styled-table th:first-child, .styled-table td:first-child {
+        text-align: left; background-color: #f0f0f0; font-weight: bold;
     }
     </style>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
-# --- Title ---
-st.title("🚗 Mahindra Vehicle Pricing Viewer")
-
-# --- Timestamp Display ---
-try:
-    ist_time = datetime.fromtimestamp(os.path.getmtime(file_path)) + timedelta(hours=5, minutes=30)
-    st.caption(f"📅 Data last updated on: {ist_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
-except Exception:
-    st.caption("📅 Last update timestamp not available.")
-
-# --- Dropdowns ---
-models = sorted(price_data["Model"].dropna().unique())
-if not models:
-    st.error("❌ No models found in data.")
-    st.stop()
-
-col1, col2 = st.columns([2, 1])
-with col1:
-    model = st.selectbox("🚘 Select Model", models)
-
-fuel_df = price_data[price_data["Model"] == model]
-fuel_types = sorted(fuel_df["Fuel Type"].dropna().unique())
-if not fuel_types:
-    st.error("❌ No fuel types found for selected model.")
-    st.stop()
-
-with col2:
-    fuel_type = st.selectbox("⛽ Select Fuel Type", fuel_types)
-
-variant_df = fuel_df[fuel_df["Fuel Type"] == fuel_type]
-variant_options = sorted(variant_df["Variant"].dropna().unique())
-if not variant_options:
-    st.error("❌ No variants available for selected fuel type.")
-    st.stop()
-
-variant = st.selectbox("🎯 Select Variant", variant_options)
-selected_row = variant_df[variant_df["Variant"] == variant]
-if selected_row.empty:
-    st.warning("⚠️ No data found for selected filters.")
-    st.stop()
-
-row = selected_row.iloc[0]
-
-shared_fields = [
-    "Ex-Showroom Price", "TCS 1%", "Insurance 1 Yr OD + 3 Yr TP + Zero Dep.",
-    "Accessories Kit", "SMC", "Extended Warranty", "Maxi Care", "RSA (1 Year)", "Fastag"
-]
-
-grouped_fields = [
-    "RTO (W/O HYPO)", "RTO (With HYPO)",
-    "On Road Price (W/O HYPO)", "On Road Price (With HYPO)"
-]
-
-group_keys = {
-    "RTO (W/O HYPO)": ("RTO (W/O HYPO) - Individual", "RTO (W/O HYPO) - Corporate"),
-    "RTO (With HYPO)": ("RTO (With HYPO) - Individual", "RTO (With HYPO) - Corporate"),
-    "On Road Price (W/O HYPO)": ("On Road Price (W/O HYPO) - Individual", "On Road Price (W/O HYPO) - Corporate"),
-    "On Road Price (With HYPO)": ("On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"),
-}
-
-st.markdown(f"### 🚙 {model} - {fuel_type} - {variant}")
-st.subheader("📋 Vehicle Pricing Details")
-st.markdown(render_combined_table(row, shared_fields, grouped_fields, group_keys), unsafe_allow_html=True)
+    html = "<table class='styled-table'><tr><th>Description</th><th>Individual</th><th>Corporate</th></tr>"
+    for field in shared_fields:
+        val = format_indian_currency(row.get(field))
+        html += f"<tr><td>{field}</td><td>{val}</td><td>{val}</td></tr>"
+    for field in grouped_fields:
+        ind_key, corp_key = group_keys[field]
+        ind_val = format_indian_currency(row.get(ind_key))
+        corp_val = format_indian_currency(row.get(corp_key))
+        html += f"<tr><td>{field}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
+    html += "</table>"
+    st.markdown(html, unsafe_allow_html=True)
