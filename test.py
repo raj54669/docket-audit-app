@@ -1,143 +1,107 @@
 import streamlit as st
-import pandas as pd
-from datetime import datetime, timedelta
 import os
-import re
 import base64
-import requests
+import datetime
+import pandas as pd
+from github import Github
 
 # --- Page Configuration ---
-st.set_page_config(
-    page_title="Mahindra Pricing Viewer",
-    layout="centered",
-    initial_sidebar_state="auto"
-)
+st.set_page_config(page_title="Mahindra Vehicle Pricing Viewer", page_icon="🚗", layout="wide")
 
-# --- Styling (unchanged, omitted for brevity) ---
-# You can paste the full style block here from your original code if needed
+# --- Top Padding Restore ---
+st.markdown(
+    """
+    <style>
+    .main > div:first-child {
+        padding-top: 3rem;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 # --- Authentication ---
 def admin_login():
-    st.sidebar.header("🔒 Admin Login")
-    password = st.sidebar.text_input("Enter Admin Password", type="password")
-    if password == st.secrets["auth"]["admin_password"]:
-        st.sidebar.success("Access granted.")
-        return True
-    elif password:
-        st.sidebar.error("Invalid password.")
+    with st.sidebar:
+        st.markdown("### 🔐 Admin Login")
+        password = st.text_input("Enter Admin Password", type="password")
+        if password:
+            if "auth" in st.secrets and st.secrets["auth"].get("admin_password") == password:
+                st.success("Admin authenticated")
+                return True
+            else:
+                st.error("Incorrect password")
     return False
 
-# --- GitHub Upload ---
-def upload_to_github(file):
-    token = st.secrets["github"]["token"]
-    repo = st.secrets["github"]["REPO"]
-    path = st.secrets["github"]["DATA_DIR"] + "/" + file.name
-    url = f"https://api.github.com/repos/{repo}/contents/{path}"
-    content = base64.b64encode(file.read()).decode("utf-8")
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Accept": "application/vnd.github+json"
-    }
-    data = {
-        "message": f"Upload {file.name}",
-        "content": content
-    }
-    r = requests.put(url, json=data, headers=headers)
-    if r.status_code in [200, 201]:
-        st.success(f"✅ Uploaded {file.name} to GitHub")
-    else:
-        st.error(f"❌ GitHub upload failed: {r.json().get('message')}")
+# --- GitHub Setup ---
+@st.cache_resource
+def connect_github():
+    access_token = st.secrets["github"]["access_token"]
+    repo_name = "raj54669/docket-audit-app"
+    g = Github(access_token)
+    repo = g.get_repo(repo_name)
+    return repo
 
-# --- Get File List from GitHub ---
+# --- Utility: Get recent pricing files ---
+def get_recent_files(repo, folder="Data/Price_List"):
+    contents = repo.get_contents(folder)
+    files = [f for f in contents if f.name.endswith(".xlsx")]
+    sorted_files = sorted(
+        files,
+        key=lambda f: datetime.datetime.strptime(f.name.split(" D. ")[-1].replace(".xlsx", ""), "%d.%m.%Y"),
+        reverse=True
+    )
+    return sorted_files[:5]
+
+# --- Utility: Load Excel from GitHub ---
 @st.cache_data(show_spinner=False)
-def get_file_list():
-    token = st.secrets["github"]["token"]
-    repo = st.secrets["github"]["REPO"]
-    path = st.secrets["github"]["DATA_DIR"]
-    url = f"https://api.github.com/repos/{repo}/contents/{path}"
-    headers = {"Authorization": f"Bearer {token}"}
-    r = requests.get(url, headers=headers)
-    files = r.json()
-    xls_files = [f['name'] for f in files if f['name'].endswith('.xlsx')]
-    xls_files.sort(key=lambda x: datetime.strptime(re.findall(r"\d{2}\.\d{2}\.\d{4}", x)[0], "%d.%m.%Y"), reverse=True)
-    return xls_files[:5]  # return latest 5 files
+def load_excel_file(file_content):
+    return pd.read_excel(file_content)
 
-# --- Load Excel Data ---
-@st.cache_data(show_spinner=False)
-def load_data(file_name):
-    path = os.path.join("Data", "Price_List", file_name)
-    if not os.path.exists(path):
-        st.error("❌ Pricing file not found.")
-        st.stop()
-    try:
-        return pd.read_excel(path)
-    except Exception as e:
-        st.error(f"❌ Failed to load Excel file: {e}")
-        st.stop()
+# --- Main App ---
+def main():
+    st.markdown("<h1 style='text-align: center;'>🚗 Mahindra Vehicle Pricing Viewer</h1>", unsafe_allow_html=True)
 
-# --- UI Begins ---
-st.title("🚗 Mahindra Vehicle Pricing Viewer")
+    repo = connect_github()
+    recent_files = get_recent_files(repo)
 
-admin_mode = admin_login()
+    file_names = [f.name for f in recent_files]
+    default_index = 0  # most recent file is first
 
-if admin_mode:
-    uploaded_file = st.sidebar.file_uploader("📤 Upload Excel File", type=["xlsx"])
-    if uploaded_file:
-        upload_to_github(uploaded_file)
+    selected_file_name = st.selectbox("Select Price List File", file_names, index=default_index)
+    selected_file = next(f for f in recent_files if f.name == selected_file_name)
+    excel_bytes = selected_file.decoded_content
+    df = load_excel_file(excel_bytes)
 
-# --- File Dropdown ---
-file_list = get_file_list()
-def extract_date(filename):
-    try:
-        return datetime.strptime(re.findall(r"\d{2}\.\d{2}\.\d{4}", filename)[0], "%d.%m.%Y")
-    except:
-        return datetime.min
+    # --- Dropdowns ---
+    model_options = sorted(df['Model'].dropna().unique())
+    model = st.selectbox("Select Model", model_options, key="model")
 
-selected_file = st.selectbox("📁 Select Price File", file_list, index=0, format_func=lambda x: f"{x}")
+    fuel_options = sorted(df[df['Model'] == model]['Fuel Type'].dropna().unique())
+    fuel = st.selectbox("Select Fuel Type", fuel_options, key="fuel")
 
-# --- Load Data ---
-data = load_data(selected_file)
+    variant_options = sorted(df[(df['Model'] == model) & (df['Fuel Type'] == fuel)]['Variant'].dropna().unique())
+    variant = st.selectbox("Select Variant", variant_options, key="variant")
 
-# --- Dropdowns with persistence ---
-if "model" not in st.session_state:
-    st.session_state.model = ""
-    st.session_state.fuel_type = ""
-    st.session_state.variant = ""
+    # --- Show Filtered Data ---
+    filtered_df = df[(df['Model'] == model) & (df['Fuel Type'] == fuel) & (df['Variant'] == variant)]
+    st.write("### Price Details")
+    st.dataframe(filtered_df)
 
-models = sorted(data["Model"].dropna().unique())
-if st.session_state.model not in models:
-    st.session_state.model = models[0]
+    # --- Admin Upload Feature ---
+    if admin_login():
+        st.write("---")
+        st.markdown("### 📤 Upload New Price List")
+        uploaded_file = st.file_uploader("Upload .xlsx File", type=["xlsx"])
+        if uploaded_file:
+            upload_path = f"Data/Price_List/{uploaded_file.name}"
+            repo.create_file(
+                path=upload_path,
+                message=f"Uploaded {uploaded_file.name}",
+                content=uploaded_file.read(),
+                branch="main"
+            )
+            st.success(f"Uploaded {uploaded_file.name} to GitHub.")
 
-model = st.selectbox("🚘 Select Model", models, index=models.index(st.session_state.model))
-st.session_state.model = model
-
-fuel_df = data[data["Model"] == model]
-fuel_types = sorted(fuel_df["Fuel Type"].dropna().unique())
-if st.session_state.fuel_type not in fuel_types:
-    st.session_state.fuel_type = fuel_types[0]
-
-fuel_type = st.selectbox("⛽ Select Fuel Type", fuel_types, index=fuel_types.index(st.session_state.fuel_type))
-st.session_state.fuel_type = fuel_type
-
-variant_df = fuel_df[fuel_df["Fuel Type"] == fuel_type]
-variant_options = sorted(variant_df["Variant"].dropna().unique())
-if st.session_state.variant not in variant_options:
-    st.session_state.variant = variant_options[0]
-
-variant = st.selectbox("🎯 Select Variant", variant_options, index=variant_options.index(st.session_state.variant))
-st.session_state.variant = variant
-
-selected_row = variant_df[variant_df["Variant"] == variant]
-if selected_row.empty:
-    st.warning("⚠️ No data found for selected filters.")
-    st.stop()
-
-row = selected_row.iloc[0]
-
-# --- Pricing Display (reuse your same formatter and table logic) ---
-# Copy your format_indian_currency and render_combined_table functions here
-
-# Then finally:
-st.markdown(f"### 🚙 {model} - {fuel_type} - {variant}")
-st.subheader("📋 Vehicle Pricing Details")
-st.markdown(render_combined_table(row, shared_fields, grouped_fields, group_keys), unsafe_allow_html=True)
+if __name__ == "__main__":
+    main()
