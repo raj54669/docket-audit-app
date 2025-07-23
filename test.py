@@ -272,7 +272,7 @@ def format_indian_currency(value):
 def render_combined_table(row, shared_fields, grouped_fields, group_keys):
     html = """
     <div class="table-wrapper">
-    <table class='vtable'>
+    <table class='styled-table'>
         <tr><th>Description</th><th>Individual</th><th>Corporate</th></tr>
     """
 
@@ -286,7 +286,7 @@ def render_combined_table(row, shared_fields, grouped_fields, group_keys):
         corp_val = format_indian_currency(row.get(corp_key))
         html += f"<tr><td>{field}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
 
-    html += "</table>"
+    html += "</table></div>"
     return html
 
 # --- Output ---
