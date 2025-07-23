@@ -243,6 +243,7 @@ def format_indian_currency(value):
         return "<i style='color:red;'>Invalid</i>"
 
 # --- Table Renderer ---
+def render_combined_table(row, shared_fields, grouped_fields, group_keys):
 html = """
 <style>
 .vtable-wrapper {
@@ -285,6 +286,7 @@ html = """
 <table class='vtable'>
 <tr><th>Description</th><th>Individual</th><th>Corporate</th></tr>
 """
+
     for field in shared_fields:
         val = format_indian_currency(row.get(field))
         html += f"<tr><td>{field}</td><td>{val}</td><td>{val}</td></tr>"
@@ -295,8 +297,9 @@ html = """
         corp_val = format_indian_currency(row.get(corp_key))
         html += f"<tr><td>{field}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
 
-    html += "</table>"
+    html += "</table></div>"
     return html
+
 
 # --- Output ---
 st.markdown(f"### 🚙 {model} - {fuel_type} - {variant}")
