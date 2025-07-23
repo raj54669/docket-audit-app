@@ -1,189 +1,182 @@
+# --- Imports ---
 import streamlit as st
 import pandas as pd
 import os
 import re
+from datetime import datetime, timedelta
 import base64
 import requests
-from datetime import datetime, timedelta
 
-# --- Page Config ---
+# --- Configuration ---
 st.set_page_config(page_title="Mahindra Vehicle Pricing Viewer", layout="centered")
+GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
+ADMIN_PASSWORD = st.secrets["ADMIN_PASSWORD"]
+REPO = st.secrets["REPO"]
+DATA_DIR = st.secrets["DATA_DIR"]
+GITHUB_API = "https://api.github.com"
 
-# --- Constants ---
-REPO = "raj54669/docket-audit-app"
-UPLOAD_DIR = "Data/Price_List"
-DATA_DIR = "Data/Price_List"
-FILE_PATTERN = r"PV Price List Master D\. (\d{2})\.(\d{2})\.(\d{4})\.xlsx"
+# --- Styling ---
+st.markdown("""<style>
+    header {visibility: hidden;}
+    .block-container { padding-top: 0rem; }
+</style>""", unsafe_allow_html=True)
 
-# --- Styling (optional: paste your existing CSS here) ---
+# --- Helper Functions ---
+def extract_date_from_filename(name):
+    match = re.search(r'(\d{2}\.\d{2}\.\d{4})', name)
+    if match:
+        return datetime.strptime(match.group(1), "%d.%m.%Y")
+    return datetime.min
 
-# --- Admin Login & GitHub Upload ---
-def check_admin():
-    if "admin_authenticated" not in st.session_state:
-        st.session_state.admin_authenticated = False
+@st.cache_data(show_spinner=False)
+def list_files():
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+    url = f"{GITHUB_API}/repos/{REPO}/contents/{DATA_DIR}"
+    resp = requests.get(url, headers=headers)
+    files = resp.json()
+    valid_files = []
+    for f in files:
+        if f["name"].endswith(".xlsx"):
+            date = extract_date_from_filename(f["name"])
+            valid_files.append({"name": f["name"], "date": date})
+    sorted_files = sorted(valid_files, key=lambda x: x["date"], reverse=True)
+    return sorted_files[:5]
 
-    if not st.session_state.admin_authenticated:
-        with st.sidebar.expander("🔐 Admin Login", expanded=True):
-            pwd = st.text_input("Enter admin password:", type="password")
-            if st.button("Login"):
-                if pwd == st.secrets["auth"]["admin_password"]:
-                    st.session_state.admin_authenticated = True
-                    st.rerun()
-                else:
-                    st.error("❌ Incorrect password")
-    return st.session_state.admin_authenticated
+def get_download_url(filename):
+    return f"https://raw.githubusercontent.com/{REPO}/main/{DATA_DIR}/{filename}"
 
-def logout_admin():
-    if st.session_state.get("admin_authenticated", False):
-        if st.sidebar.button("🔓 Logout Admin"):
-            st.session_state.admin_authenticated = False
-            st.rerun()
+def upload_to_github(uploaded_file):
+    content = base64.b64encode(uploaded_file.read()).decode("utf-8")
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+    path = f"{DATA_DIR}/{uploaded_file.name}"
+    url = f"{GITHUB_API}/repos/{REPO}/contents/{path}"
 
-def upload_to_github(file_path, filename):
-    try:
-        token = st.secrets["github"]["token"]
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Accept": "application/vnd.github+json"
+    # Check if file exists
+    res = requests.get(url, headers=headers)
+    if res.status_code == 200:
+        sha = res.json()["sha"]
+        data = {
+            "message": f"Update {uploaded_file.name}",
+            "content": content,
+            "sha": sha,
         }
-        url = f"https://api.github.com/repos/{REPO}/contents/{UPLOAD_DIR}/{filename}"
+    else:
+        data = {
+            "message": f"Add {uploaded_file.name}",
+            "content": content,
+        }
 
-        with open(file_path, "rb") as f:
-            content = base64.b64encode(f.read()).decode()
+    resp = requests.put(url, headers=headers, json=data)
+    return resp.ok
 
-        check = requests.get(url, headers=headers)
-        sha = check.json().get("sha") if check.status_code == 200 else None
+def load_data(file_url):
+    return pd.read_excel(file_url)
 
-        payload = {"message": f"Upload file {filename}", "content": content, "branch": "main"}
-        if sha:
-            payload["sha"] = sha
-
-        put = requests.put(url, headers=headers, json=payload)
-        if put.status_code not in [200, 201]:
-            st.sidebar.error(f"GitHub upload failed: {put.json().get('message')}")
-        else:
-            st.sidebar.success(f"✅ Uploaded to GitHub: {filename}")
-
-    except Exception as e:
-        st.sidebar.error(f"GitHub Error: {e}")
-
-# --- Admin Upload Section ---
-if check_admin():
-    st.sidebar.header("📤 Upload Excel File")
-    up = st.sidebar.file_uploader("Upload new .xlsx file", type=["xlsx"])
-    if up:
-        tmp = os.path.join("/tmp", up.name)
-        with open(tmp, "wb") as f:
-            f.write(up.getbuffer())
-        upload_to_github(tmp, up.name)
-        st.rerun()
-logout_admin()
-
-# --- File Listing ---
-def extract_date(name):
-    m = re.search(FILE_PATTERN, name)
-    if m:
-        try:
-            return datetime.strptime(".".join(m.groups()), "%d.%m.%Y")
-        except:
-            return None
-    return None
-
-files = [(f, extract_date(f)) for f in os.listdir(DATA_DIR) if re.match(FILE_PATTERN, f)]
-files = sorted([fi for fi in files if fi[1]], key=lambda x: x[1], reverse=True)[:5]
-
-if not files:
-    st.error("❌ No valid Excel files found.")
-    st.stop()
-
-file_labels = [f"{fname} ({dt.strftime('%d-%b-%Y')})" for fname, dt in files]
-file_map = {label: fname for label, (fname, _) in zip(file_labels, files)}
-
-st.title("🚗 Mahindra Vehicle Pricing Viewer")
-selected_label = st.selectbox("📂 Select File", file_labels, key="selected_excel")
-selected_path = os.path.join(DATA_DIR, file_map[selected_label])
-
-# --- Load Excel ---
-@st.cache_data
-def load_data(path):
-    return pd.read_excel(path)
-
-df = load_data(selected_path)
-df.columns = [str(c).strip() for c in df.columns]
-
-# --- Dropdowns (Preserve State) ---
-def dropdown(col, key):
-    opts = sorted(df[col].dropna().unique())
-    prev = st.session_state.get(key)
-    if prev not in opts:
-        prev = opts[0] if opts else None
-    sel = st.selectbox(col, opts, index=opts.index(prev) if prev else 0, key=key)
-    st.session_state[key] = sel
-    return sel
-
-model = dropdown("Model", "sel_model")
-fuel_df = df[df["Model"] == model]
-fuel = dropdown("Fuel Type", "sel_fuel") if fuel_df.shape[0] else None
-var_df = fuel_df[fuel_df["Fuel Type"] == fuel] if fuel else fuel_df
-variant = dropdown("Variant", "sel_variant") if var_df.shape[0] else None
-
-row = var_df[var_df["Variant"] == variant].iloc[0] if variant else None
-
-# --- Table Renderer ---
 def format_indian_currency(value):
-    if pd.isnull(value): return "N/A"
+    if pd.isnull(value): return "<i style='color:gray;'>N/A</i>"
     try:
         value = float(value)
-        sign = "-" if value < 0 else ""
-        value = abs(int(value))
-        s = f"{value:,}".replace(",", "x").replace(".", ",").replace("x", ",")
-        if len(s) > 3:
-            parts = s.split(",")
-            s = ",".join([parts[0]] + [",".join(parts[1:])])
-        return f"{sign}₹{s}"
+        is_neg = value < 0
+        value = abs(value)
+        s = f"{int(value)}"
+        last3 = s[-3:]
+        other = s[:-3]
+        if other: other = re.sub(r'(\d)(?=(\d{2})+$)', r'\1,', other)
+        formatted = f"{other},{last3}" if other else last3
+        result = f"₹{formatted}"
+        return f"<b>{'-' if is_neg else ''}{result}</b>"
     except:
-        return "Invalid"
+        return "<i style='color:red;'>Invalid</i>"
 
-if row is not None:
-    st.subheader(f"📋 Vehicle Pricing: {model} - {fuel} - {variant}")
-    shared_fields = [
-        "Ex-Showroom Price", "TCS 1%", "Insurance 1 Yr OD + 3 Yr TP + Zero Dep.",
-        "Accessories Kit", "SMC", "Extended Warranty", "Maxi Care", "RSA (1 Year)", "Fastag"
-    ]
-    grouped_fields = [
-        "RTO (W/O HYPO)", "RTO (With HYPO)",
-        "On Road Price (W/O HYPO)", "On Road Price (With HYPO)"
-    ]
-    group_keys = {
-        "RTO (W/O HYPO)": ("RTO (W/O HYPO) - Individual", "RTO (W/O HYPO) - Corporate"),
-        "RTO (With HYPO)": ("RTO (With HYPO) - Individual", "RTO (With HYPO) - Corporate"),
-        "On Road Price (W/O HYPO)": ("On Road Price (W/O HYPO) - Individual", "On Road Price (W/O HYPO) - Corporate"),
-        "On Road Price (With HYPO)": ("On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"),
-    }
-
-    st.markdown("""
-    <style>
-    .styled-table {
-        width: 100%; border-collapse: collapse;
-        font-size: 14px; table-layout: fixed;
-    }
-    .styled-table th, .styled-table td {
-        border: 1px solid black; padding: 4px; text-align: center;
-    }
-    .styled-table th:first-child, .styled-table td:first-child {
-        text-align: left; background-color: #f0f0f0; font-weight: bold;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-    html = "<table class='styled-table'><tr><th>Description</th><th>Individual</th><th>Corporate</th></tr>"
+def render_combined_table(row, shared_fields, grouped_fields, group_keys):
+    html = """<div class="table-wrapper"><table class="styled-table">
+        <tr><th>Description</th><th>Individual</th><th>Corporate</th></tr>"""
     for field in shared_fields:
         val = format_indian_currency(row.get(field))
         html += f"<tr><td>{field}</td><td>{val}</td><td>{val}</td></tr>"
     for field in grouped_fields:
-        ind_key, corp_key = group_keys[field]
+        ind_key, corp_key = group_keys.get(field, ("", ""))
         ind_val = format_indian_currency(row.get(ind_key))
         corp_val = format_indian_currency(row.get(corp_key))
-        html += f"<tr><td>{field}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
-    html += "</table>"
-    st.markdown(html, unsafe_allow_html=True)
+        highlight = " style='background-color:#fff3cd;font-weight:bold;'" if field.startswith("On Road Price") else ""
+        html += f"<tr{highlight}><td>{field}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
+    html += "</table></div>"
+    return html
+
+# --- Sidebar: Admin Login & Upload ---
+with st.sidebar.expander("🔐 Admin Login", expanded=True):
+    pwd = st.text_input("Enter admin password:", type="password")
+    if st.button("Login"):
+        if pwd == ADMIN_PASSWORD:
+            st.session_state.admin = True
+            st.success("Logged in ✅")
+        else:
+            st.error("Incorrect password ❌")
+
+if st.session_state.get("admin"):
+    uploaded = st.sidebar.file_uploader("📤 Upload new pricing file", type="xlsx")
+    if uploaded and st.sidebar.button("Upload"):
+        if upload_to_github(uploaded):
+            st.sidebar.success("✅ File uploaded.")
+            st.cache_data.clear()
+        else:
+            st.sidebar.error("❌ Upload failed.")
+
+# --- Main Page Title ---
+st.title("🚗 Mahindra Vehicle Pricing Viewer")
+
+# --- File Selection Dropdown ---
+file_list = list_files()
+file_names = [f"{f['name']} ({f['date'].strftime('%d-%b-%Y')})" for f in file_list]
+file_lookup = {f"{f['name']} ({f['date'].strftime('%d-%b-%Y')})": f["name"] for f in file_list}
+default_file = file_names[0] if file_names else None
+
+sel_file = st.selectbox("📂 Select File", file_names, index=0, key="selected_file")
+file_url = get_download_url(file_lookup[sel_file])
+df = load_data(file_url)
+
+# --- Extract Dropdown Values ---
+models = sorted(df["Model"].dropna().unique())
+sel_model = st.selectbox("Model", models, key="sel_model")
+
+fuel_df = df[df["Model"] == sel_model]
+fuel_types = sorted(fuel_df["Fuel Type"].dropna().unique())
+if fuel_types:
+    if st.session_state.get("sel_fuel_type") not in fuel_types:
+        st.session_state["sel_fuel_type"] = fuel_types[0]
+    sel_fuel = st.selectbox("Fuel Type", fuel_types, key="sel_fuel_type")
+else:
+    st.error("❌ No fuel types for this model."); st.stop()
+
+variant_df = fuel_df[fuel_df["Fuel Type"] == sel_fuel]
+variants = sorted(variant_df["Variant"].dropna().unique())
+if variants:
+    if st.session_state.get("sel_variant") not in variants:
+        st.session_state["sel_variant"] = variants[0]
+    sel_variant = st.selectbox("Variant", variants, key="sel_variant")
+else:
+    st.error("❌ No variants for this fuel type."); st.stop()
+
+selected_row = variant_df[variant_df["Variant"] == sel_variant]
+if selected_row.empty:
+    st.warning("⚠️ No data found."); st.stop()
+row = selected_row.iloc[0]
+
+# --- Display Table ---
+st.markdown(f"### 🚙 {sel_model} - {sel_fuel} - {sel_variant}")
+st.subheader("📋 Vehicle Pricing Details")
+shared_fields = [
+    "Ex-Showroom Price", "TCS 1%", "Insurance 1 Yr OD + 3 Yr TP + Zero Dep.",
+    "Accessories Kit", "SMC", "Extended Warranty", "Maxi Care", "RSA (1 Year)", "Fastag"
+]
+grouped_fields = [
+    "RTO (W/O HYPO)", "RTO (With HYPO)",
+    "On Road Price (W/O HYPO)", "On Road Price (With HYPO)"
+]
+group_keys = {
+    "RTO (W/O HYPO)": ("RTO (W/O HYPO) - Individual", "RTO (W/O HYPO) - Corporate"),
+    "RTO (With HYPO)": ("RTO (With HYPO) - Individual", "RTO (With HYPO) - Corporate"),
+    "On Road Price (W/O HYPO)": ("On Road Price (W/O HYPO) - Individual", "On Road Price (W/O HYPO) - Corporate"),
+    "On Road Price (With HYPO)": ("On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"),
+}
+st.markdown(render_combined_table(row, shared_fields, grouped_fields, group_keys), unsafe_allow_html=True)
