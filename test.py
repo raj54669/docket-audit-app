@@ -1,9 +1,10 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime
 import os
 import re
 import requests
+import base64
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -72,7 +73,43 @@ def connect_github():
     headers = {"Authorization": f"token {access_token}"}
     return headers
 
-# --- Utility: Get recent pricing files ---
+# --- GitHub Upload ---
+def upload_to_github(file, filename):
+    token = st.secrets["github"]["access_token"]
+    repo = "raj54669/docket-audit-app"
+    github_dir = "Data/Price_List"
+    url = f"https://api.github.com/repos/{repo}/contents/{github_dir}/{filename}"
+
+    content = base64.b64encode(file.read()).decode()
+    message = f"Upload {filename}"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github+json"
+    }
+    data = {
+        "message": message,
+        "content": content,
+        "branch": "main"
+    }
+    response = requests.put(url, headers=headers, json=data)
+    if response.status_code in (200, 201):
+        st.success("✅ File uploaded successfully.")
+    else:
+        st.error(f"❌ Upload failed: {response.status_code}")
+
+# --- Sidebar: Admin Upload ---
+st.sidebar.subheader("🔒 Admin Upload")
+admin_pwd = st.sidebar.text_input("Enter Admin Password", type="password")
+if admin_pwd == st.secrets["auth"]["admin_password"]:
+    uploaded_file = st.sidebar.file_uploader("Upload Excel File", type=["xlsx"])
+    if uploaded_file:
+        filename = uploaded_file.name
+        if "PV Price List Master D. " in filename:
+            upload_to_github(uploaded_file, filename)
+        else:
+            st.sidebar.warning("⚠️ Filename must follow: PV Price List Master D. DD.MM.YYYY.xlsx")
+
+# --- Get recent pricing files ---
 def get_recent_files(headers, folder="Data/Price_List"):
     repo = "raj54669/docket-audit-app"
     url = f"https://api.github.com/repos/{repo}/contents/{folder}"
@@ -184,7 +221,6 @@ if not models:
     st.error("❌ No models found in data.")
     st.stop()
 
-# Restore previous selections if valid
 prev_model = st.session_state.get("selected_model")
 model = prev_model if prev_model in models else models[0]
 model = st.selectbox("🚘 Select Model", models, index=models.index(model), key="model_select")
