@@ -1,11 +1,11 @@
-# streamlit_app.py (Final Integrated - Fixed HTML Syntax Error)
+# streamlit_app.py (Final Full Version with Timestamp Removed)
 import streamlit as st
 import pandas as pd
 import os
 import re
 import base64
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -35,7 +35,7 @@ header {visibility: hidden;}
 h1 { font-size: var(--title-size) !important; }
 h2 { font-size: var(--subtitle-size) !important; }
 h3 { font-size: var(--variant-title-size) !important; }
-.stCaption { font-size: var(--caption-size) !important; }
+.stCaption { display: none !important; }
 .stSelectbox label { font-size: var(--label-size) !important; font-weight: 600 !important; }
 .stSelectbox div[data-baseweb="select"] > div {
     font-size: var(--select-font-size) !important;
@@ -86,82 +86,19 @@ h3 { font-size: var(--variant-title-size) !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- Admin Auth ---
-def check_admin():
-    if "admin_authenticated" not in st.session_state:
-        st.session_state["admin_authenticated"] = False
-    if not st.session_state["admin_authenticated"]:
-        with st.sidebar.expander("🔐 Admin Login", expanded=True):
-            pwd = st.text_input("Enter admin password", type="password")
-            if st.button("Login"):
-                if pwd == st.secrets["auth"]["admin_password"]:
-                    st.session_state["admin_authenticated"] = True
-                    st.rerun()
-                else:
-                    st.error("❌ Incorrect password")
-    return st.session_state["admin_authenticated"]
-
-# --- GitHub Upload Logic ---
-def upload_to_github(uploaded_file):
-    token = st.secrets["github"]["token"]
-    username = st.secrets["github"]["username"]
-    repo = st.secrets["github"]["repo"]
-    branch = st.secrets["github"].get("branch", "main")
-    github_dir = DATA_DIR
-
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Accept": "application/vnd.github+json"
-    }
-
-    github_path = f"{github_dir}/{uploaded_file.name}"
-    content = base64.b64encode(uploaded_file.getbuffer()).decode()
-
-    url = f"https://api.github.com/repos/{username}/{repo}/contents/{github_path}"
-    check = requests.get(url, headers=headers)
-    sha = check.json().get("sha") if check.status_code == 200 else None
-
-    payload = {
-        "message": f"Upload {uploaded_file.name}",
-        "content": content,
-        "branch": branch
-    }
-    if sha:
-        payload["sha"] = sha
-
-    r = requests.put(url, headers=headers, json=payload)
-    if r.status_code in [200, 201]:
-        st.sidebar.success("✅ Uploaded successfully")
-    else:
-        st.sidebar.error("❌ Upload failed")
-
-# --- Sidebar Upload ---
-if check_admin():
-    st.sidebar.header("📂 Upload Excel File")
-    file = st.sidebar.file_uploader("Upload Excel", type=["xlsx"])
-    if file:
-        upload_to_github(file)
-        st.rerun()
-
-# --- Title ---
-st.title("🚗 Mahindra Vehicle Pricing Viewer")
-
 # --- File Listing ---
 def extract_date_from_filename(filename):
     match = re.match(FILE_PATTERN, filename)
     if match:
-        try:
-            return datetime.strptime(".".join(match.groups()), "%d.%m.%Y")
-        except:
-            return None
+        return datetime.strptime(".".join(match.groups()), "%d.%m.%Y")
     return None
 
 def list_recent_files():
     if not os.path.exists(DATA_DIR):
         os.makedirs(DATA_DIR)
     all_files = os.listdir(DATA_DIR)
-    valid = [(f, extract_date_from_filename(f)) for f in all_files if re.match(FILE_PATTERN, f)]
-    return sorted([f for f in valid if f[1]], key=lambda x: x[1], reverse=True)[:5]
+    valid = [(f, extract_date_from_filename(f)) for f in all_files if extract_date_from_filename(f)]
+    return sorted(valid, key=lambda x: x[1], reverse=True)[:5]
 
 files = list_recent_files()
 if not files:
@@ -180,13 +117,6 @@ def load_data(file_path):
 
 df = load_data(selected_path)
 
-# --- Timestamp ---
-try:
-    ist_time = datetime.fromtimestamp(os.path.getmtime(selected_path)) + timedelta(hours=5, minutes=30)
-    st.caption(f"📅 Data last updated on: {ist_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
-except:
-    st.caption("📅 Last update timestamp not available")
-
 # --- Dropdown State Logic ---
 def safe_selectbox(label, options, session_key):
     selected = st.session_state.get(session_key)
@@ -194,7 +124,7 @@ def safe_selectbox(label, options, session_key):
         selected = options[0] if options else None
     return st.selectbox(label, options, index=options.index(selected) if selected in options else 0, key=session_key)
 
-# --- Dynamic Dropdowns ---
+# --- Dropdowns ---
 models = sorted(df["Model"].dropna().unique())
 if not models:
     st.error("❌ No models found")
@@ -205,24 +135,24 @@ with col1:
     model = safe_selectbox("🚘 Select Model", models, "selected_model")
 
 fuel_df = df[df["Model"] == model]
-fuels = sorted(fuel_df["Fuel Type"].dropna().unique())
-if not fuels:
+fuel_types = sorted(fuel_df["Fuel Type"].dropna().unique())
+if not fuel_types:
     st.error("❌ No fuel types found")
     st.stop()
 
 with col2:
-    fuel_type = safe_selectbox("⛽ Select Fuel Type", fuels, "selected_fuel")
+    fuel_type = safe_selectbox("⛽ Select Fuel Type", fuel_types, "selected_fuel")
 
 variant_df = fuel_df[fuel_df["Fuel Type"] == fuel_type]
 variants = sorted(variant_df["Variant"].dropna().unique())
 if not variants:
-    st.error("❌ No variants available")
+    st.error("❌ No variants found")
     st.stop()
 
 variant = safe_selectbox("🎯 Select Variant", variants, "selected_variant")
 row = variant_df[variant_df["Variant"] == variant].iloc[0]
 
-# --- Format Currency ---
+# --- Formatter ---
 def format_indian_currency(value):
     try:
         if pd.isnull(value): return "<i style='color:gray;'>N/A</i>"
@@ -261,7 +191,8 @@ def render_combined_table(row, shared_fields, grouped_fields, group_keys):
     html += "</table></div>"
     return html
 
-# --- Output ---
+# --- Render Output ---
+st.title("🚗 Mahindra Vehicle Pricing Viewer")
 st.markdown(f"### 🚙 {model} - {fuel_type} - {variant}")
 st.subheader("📋 Vehicle Pricing Details")
 
