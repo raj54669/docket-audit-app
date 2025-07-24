@@ -110,7 +110,6 @@ h3 { font-size: var(--variant-title-size) !important; }
         padding: 0.2rem !important;
         margin: 0.2rem 0 !important;
     }
-    </style>
 
 </style>
 """, unsafe_allow_html=True)
