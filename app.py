@@ -90,6 +90,7 @@ h3 { font-size: var(--variant-title-size) !important; }
 def check_admin():
     if "admin_authenticated" not in st.session_state:
         st.session_state["admin_authenticated"] = False
+
     if not st.session_state["admin_authenticated"]:
         with st.sidebar.expander("🔐 Admin Login", expanded=True):
             pwd = st.text_input("Enter admin password", type="password")
@@ -99,13 +100,18 @@ def check_admin():
                     st.rerun()
                 else:
                     st.error("❌ Incorrect password")
+    else:
+        logout_admin()  # Call logout function when the admin is authenticated
+
     return st.session_state["admin_authenticated"]
     
 def logout_admin():
+    # Provide logout button when the admin is authenticated
     if st.session_state.get("admin_authenticated", False):
-        if st.sidebar.button("🔓 Logout Admin"):
-            st.session_state["admin_authenticated"] = False
-            st.rerun()
+        with st.sidebar.expander("🔓 Admin Options", expanded=True):
+            if st.button("Logout Admin"):
+                st.session_state["admin_authenticated"] = False
+                st.rerun()
             
 # --- GitHub Upload Logic ---
 def upload_to_github(uploaded_file):
