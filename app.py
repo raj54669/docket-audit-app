@@ -23,7 +23,7 @@ st.markdown("""
 <style>
 :root {
     --title-size: 40px;
-    --subtitle-size: 24px;
+    --subtitle-size: 20px;
     --caption-size: 16px;
     --label-size: 14px;
     --select-font-size: 15px;
@@ -292,7 +292,7 @@ def render_combined_table(row, shared_fields, grouped_fields, group_keys):
     return html
 
 # --- Output ---
-st.markdown(f"### 🚙 {model} - {fuel_type} - {variant}")
+st.markdown(f"## 🚙 {model} - {fuel_type} - {variant}")
 st.markdown("<h3 style='color:#e65100;'>📝 Vehicle Pricing Details</h3>", unsafe_allow_html=True)
 
 shared_fields = [
