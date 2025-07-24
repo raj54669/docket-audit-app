@@ -28,7 +28,7 @@ st.markdown("""
     --label-size: 14px;
     --select-font-size: 15px;
     --table-font-size: 14px;
-    --variant-title-size: 20px;
+    --variant-title-size: 24px;
 }
 .block-container { padding-top: 0rem; }
 header {visibility: hidden;}
