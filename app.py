@@ -101,14 +101,13 @@ def check_admin():
                 else:
                     st.error("❌ Incorrect password")
     else:
-        # Once the admin is logged in, show logout button at the bottom of the sidebar
-        logout_admin()
+        logout_admin()  # Show logout button after login
 
     return st.session_state["admin_authenticated"]
-    
+
 def logout_admin():
-    # Place the logout button at the bottom of the sidebar
     if st.session_state.get("admin_authenticated", False):
+        # This logout button will appear below the login section
         if st.sidebar.button("🔓 Logout Admin"):
             st.session_state["admin_authenticated"] = False
             st.rerun()  # Rerun the app to reset the session
