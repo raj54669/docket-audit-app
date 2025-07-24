@@ -1,4 +1,4 @@
-# streamlit_app.py (Final Integrated - Fixed HTML Syntax Error)
+# streamlit_app.py (Updated Version)
 import streamlit as st
 import pandas as pd
 import os
@@ -17,74 +17,6 @@ st.set_page_config(
 # --- Constants ---
 DATA_DIR = "Data/Price_List"
 FILE_PATTERN = r"PV Price List Master D\. (\d{2})\.(\d{2})\.(\d{4})\.xlsx"
-
-# --- Global Styling ---
-st.markdown("""
-<style>
-:root {
-    --title-size: 40px;
-    --subtitle-size: 20px;
-    --caption-size: 16px;
-    --label-size: 14px;
-    --select-font-size: 15px;
-    --table-font-size: 14px;
-    --variant-title-size: 24px;
-}
-.block-container { padding-top: 0rem; }
-header {visibility: hidden;}
-h1 { font-size: var(--title-size) !important; }
-h2 { font-size: var(--subtitle-size) !important; }
-h3 { font-size: var(--variant-title-size) !important; }
-.stCaption { font-size: var(--caption-size) !important; }
-.stSelectbox label { font-size: var(--label-size) !important; font-weight: 600 !important; }
-.stSelectbox div[data-baseweb="select"] > div {
-    font-size: var(--select-font-size) !important;
-    font-weight: bold !important;
-    padding-top: 2px !important;
-    padding-bottom: 2px !important;
-    line-height: 1 !important;
-    min-height: 24px !important;
-}
-.stSelectbox div[data-baseweb="select"] { align-items: center !important; height: 28px !important; }
-.stSelectbox [data-baseweb="menu"] > div { padding-top: 2px !important; padding-bottom: 2px !important; }
-.stSelectbox [data-baseweb="option"] {
-    padding: 4px 10px !important;
-    font-size: var(--select-font-size) !important;
-    font-weight: 500 !important;
-    line-height: 1.2 !important;
-    min-height: 28px !important;
-}
-.stSelectbox [data-baseweb="option"]:hover {
-    background-color: #f0f0f0 !important;
-    font-weight: 600 !important;
-}
-.table-wrapper { margin-bottom: 15px; padding: 0; }
-.styled-table {
-    width: 100%; border-collapse: collapse; table-layout: fixed;
-    font-size: var(--table-font-size); line-height: 1.2; border: 2px solid black;
-}
-.styled-table th, .styled-table td {
-    border: 1px solid black; padding: 6px 8px; text-align: center; line-height: 1.2;
-}
-.styled-table th:nth-child(1), .styled-table td:nth-child(1) {
-    width: 60%;
-}
-.styled-table th:nth-child(2), .styled-table td:nth-child(2),
-.styled-table th:nth-child(3), .styled-table td:nth-child(3) {
-    width: 20%;
-}
-.styled-table th { background-color: #004d40; color: white; font-weight: bold; }
-.styled-table td:first-child {
-    text-align: left; font-weight: 600; background-color: #f7f7f7;
-}
-@media (prefers-color-scheme: dark) {
-    .styled-table { border: 2px solid white; }
-    .styled-table th, .styled-table td { border: 1px solid white; }
-    .styled-table td { background-color: #111; color: #eee; }
-    .styled-table td:first-child { background-color: #1e1e1e; color: white; }
-}
-</style>
-""", unsafe_allow_html=True)
 
 # --- Admin Auth ---
 def check_admin():
@@ -114,7 +46,6 @@ def logout_admin():
             st.session_state["admin_authenticated"] = False
             st.rerun()  # Reset the session and show the login screen again
 
-            
 # --- GitHub Upload Logic ---
 def upload_to_github(uploaded_file):
     token = st.secrets["github"]["token"]
@@ -151,7 +82,7 @@ def upload_to_github(uploaded_file):
 
 # --- Sidebar Upload ---
 if check_admin():
-    st.sidebar.header("📂 Upload Excel File")
+    st.sidebar.header("📂 File Upload (Admin Only)")
     file = st.sidebar.file_uploader("Upload Excel", type=["xlsx"])
     if file:
         upload_to_github(file)
@@ -193,13 +124,6 @@ def load_data(file_path):
     return pd.read_excel(file_path)
 
 df = load_data(selected_path)
-
-# --- Timestamp ---
-#try:
-#    ist_time = datetime.fromtimestamp(os.path.getmtime(selected_path)) + timedelta(hours=5, minutes=30)
-#    st.caption(f"📅 Data last updated on: {ist_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
-#except:
-#    st.caption("📅 Last update timestamp not available")
 
 # --- Dropdown State Logic ---
 def safe_selectbox(label, options, session_key):
@@ -297,7 +221,7 @@ def render_combined_table(row, shared_fields, grouped_fields, group_keys):
         html += f"<tr><td>{field}</td><td>{val}</td><td>{val}</td></tr>"
 
     for field in grouped_fields:
-        ind_key, corp_key = group_keys.get(field, ("", ""))
+        ind_key, corp_key = group_keys.get(field, ("", ""))  # Keys for individual/corp prices
         ind_val = format_indian_currency(row.get(ind_key))
         corp_val = format_indian_currency(row.get(corp_key))
         html += f"<tr><td>{field}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
