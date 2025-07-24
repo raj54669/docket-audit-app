@@ -303,8 +303,8 @@ def render_combined_table(row, shared_fields, grouped_fields, group_keys):
     return html
 
 # --- Output ---
-st.markdown(f"## 🚙 {model} - {fuel_type} - {variant}")
-st.markdown("<h3 style='color:#e65100; margin-top: -16px; margin-bottom: -8px;'>📝 Vehicle Pricing Details</h3>", unsafe_allow_html=True)
+st.markdown(f"<h2 style='margin-top: 0px; '> 🚙 {model} - {fuel_type} - {variant}</h2>", unsafe_allow_html=True)
+st.markdown("<h3 style='color:#e65100; margin-top: -14px; margin-bottom: -8px;'>📝 Vehicle Pricing Details</h3>", unsafe_allow_html=True)
 
 shared_fields = [
     "Ex-Showroom Price", "TCS 1%", "Insurance 1 Yr OD + 3 Yr TP + Zero Dep.",
