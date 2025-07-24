@@ -83,34 +83,32 @@ h3 { font-size: var(--variant-title-size) !important; }
     .styled-table td { background-color: #111; color: #eee; }
     .styled-table td:first-child { background-color: #1e1e1e; color: white; }
 }
-    /* Reduce top margin/padding for entire app */
-    .block-container {
-        padding-top: 1rem;
-        padding-bottom: 1rem;
-    }
+/* Reduce top margin/padding for entire app */
+.block-container {
+   padding-top: 1rem;
+   padding-bottom: 1rem;
+}
+/* Tighten spacing between widgets (dropdowns, etc.) */
+div[data-testid="stVerticalBlock"] > div {
+    margin-bottom: 0.3rem !important;
+}
 
-    /* Tighten spacing between widgets (dropdowns, etc.) */
-    div[data-testid="stVerticalBlock"] > div {
-        margin-bottom: 0.3rem !important;
-    }
+/* Reduce spacing below headings */
+h1, h2, h3, h4 {
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.3rem !important;
+}
 
-    /* Reduce spacing below headings */
-    h1, h2, h3, h4 {
-        margin-top: 0.5rem !important;
-        margin-bottom: 0.3rem !important;
-    }
+/* Remove margin around markdown blocks */
+.stMarkdown {
+    margin-bottom: 0.3rem !important;
+}
 
-    /* Remove margin around markdown blocks */
-    .stMarkdown {
-        margin-bottom: 0.3rem !important;
-    }
-
-    /* Compact the dropdowns/input widgets */
-    .stSelectbox, .stTextInput, .stFileUploader {
-        padding: 0.2rem !important;
-        margin: 0.2rem 0 !important;
-    }
-
+/* Compact the dropdowns/input widgets */
+.stSelectbox, .stTextInput, .stFileUploader {
+    padding: 0.2rem !important;
+    margin: 0.2rem 0 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
