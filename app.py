@@ -87,32 +87,28 @@ h3 { font-size: var(--variant-title-size) !important; }
 """, unsafe_allow_html=True)
 
 # --- Admin Auth ---
-def check_admin():
+def check_admin_password():
+    correct_password = st.secrets["auth"]["admin_password"]
     if "admin_authenticated" not in st.session_state:
         st.session_state["admin_authenticated"] = False
 
     if not st.session_state["admin_authenticated"]:
-        # Admin login section within an expander in the sidebar
         with st.sidebar.expander("🔐 Admin Login", expanded=True):
-            pwd = st.text_input("Enter admin password", type="password")
-            if st.button("Login"):
-                if pwd == st.secrets["auth"]["admin_password"]:
+            pwd = st.text_input("Enter admin password:", type="password", key="admin_pwd")
+            if st.button("Login", key="admin_login_btn"):
+                if pwd == correct_password:
                     st.session_state["admin_authenticated"] = True
-                    st.rerun()  # Rerun to reflect the authentication change
+                    st.rerun()
                 else:
-                    st.error("❌ Incorrect password")
-    else:
-        # Once authenticated, show the logout button at the bottom of the sidebar
-        logout_admin()
-
-    return st.session_state["admin_authenticated"]
+                    st.error("❌ Incorrect password.")
+        return False
+    return True
 
 def logout_admin():
     if st.session_state.get("admin_authenticated", False):
-        # Logout button appears only after authentication, and naturally sits at the bottom
         if st.sidebar.button("🔓 Logout Admin"):
             st.session_state["admin_authenticated"] = False
-            st.rerun()  # Reset the session and show the login screen again
+            st.rerun()
 
             
 # --- GitHub Upload Logic ---
@@ -150,12 +146,13 @@ def upload_to_github(uploaded_file):
         st.sidebar.error("❌ Upload failed")
 
 # --- Sidebar Upload ---
-if check_admin():
+if check_admin_password():
     st.sidebar.header("📂 Upload Excel File")
     file = st.sidebar.file_uploader("Upload Excel", type=["xlsx"])
     if file:
         upload_to_github(file)
         st.rerun()
+logout_admin()
 
 # --- Title ---
 st.title("🚗 Mahindra Vehicle Pricing Viewer")
