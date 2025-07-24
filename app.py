@@ -101,17 +101,17 @@ def check_admin():
                 else:
                     st.error("❌ Incorrect password")
     else:
-        logout_admin()  # Call logout function when the admin is authenticated
+        # Once the admin is logged in, show logout button at the bottom of the sidebar
+        logout_admin()
 
     return st.session_state["admin_authenticated"]
     
 def logout_admin():
-    # Provide logout button when the admin is authenticated
+    # Place the logout button at the bottom of the sidebar
     if st.session_state.get("admin_authenticated", False):
-        with st.sidebar.expander("🔓 Admin Options", expanded=True):
-            if st.button("Logout Admin"):
-                st.session_state["admin_authenticated"] = False
-                st.rerun()
+        if st.sidebar.button("🔓 Logout Admin"):
+            st.session_state["admin_authenticated"] = False
+            st.rerun()  # Rerun the app to reset the session
             
 # --- GitHub Upload Logic ---
 def upload_to_github(uploaded_file):
