@@ -27,7 +27,7 @@ st.markdown("""
     --caption-size: 16px;
     --label-size: 14px;
     --select-font-size: 15px;
-    --table-font-size: 15px;
+    --table-font-size: 14px;
     --variant-title-size: 20px;
 }
 .block-container { padding-top: 0rem; }
