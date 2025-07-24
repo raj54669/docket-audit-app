@@ -100,7 +100,13 @@ def check_admin():
                 else:
                     st.error("❌ Incorrect password")
     return st.session_state["admin_authenticated"]
-
+    
+def logout_admin():
+    if st.session_state.get("admin_authenticated", False):
+        if st.sidebar.button("🔓 Logout Admin"):
+            st.session_state["admin_authenticated"] = False
+            st.rerun()
+            
 # --- GitHub Upload Logic ---
 def upload_to_github(uploaded_file):
     token = st.secrets["github"]["token"]
