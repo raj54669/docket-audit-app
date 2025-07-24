@@ -64,7 +64,7 @@ h3 { font-size: var(--variant-title-size) !important; }
     font-size: var(--table-font-size); line-height: 1.2; border: 2px solid black;
 }
 .styled-table th, .styled-table td {
-    border: 1px solid black; padding: 6px 8px; text-align: center; line-height: 1.2;
+    border: 1px solid black; padding: 4px 6px; text-align: center; line-height: 1.2;
 }
 .styled-table th:nth-child(1), .styled-table td:nth-child(1) {
     width: 60%;
@@ -303,10 +303,7 @@ def render_combined_table(row, shared_fields, grouped_fields, group_keys):
     return html
 
 # --- Output ---
-st.markdown(
-    f"<div style='padding-bottom: 0rem;'><h2>🚙 {model} - {fuel_type} - {variant}</h2></div>",
-    unsafe_allow_html=True
-)
+st.markdown(f"## 🚙 {model} - {fuel_type} - {variant}")
 st.markdown("<h3 style='color:#e65100;'>📝 Vehicle Pricing Details</h3>", unsafe_allow_html=True)
 
 shared_fields = [
