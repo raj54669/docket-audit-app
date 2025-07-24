@@ -147,8 +147,8 @@ def upload_to_github(uploaded_file):
 
 # --- Sidebar Upload ---
 if check_admin_password():
-    st.sidebar.header("📂 Upload Excel File")
-    file = st.sidebar.file_uploader("Upload Excel", type=["xlsx"])
+    st.sidebar.header("📂 File Upload (Admin Only)")
+    file = st.sidebar.file_uploader("Upload New Excel File", type=["xlsx"])
     if file:
         upload_to_github(file)
         st.rerun()
