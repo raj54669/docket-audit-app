@@ -230,12 +230,19 @@ data.columns = [str(col).strip().replace("\n", " ").replace("  ", " ") for col i
 
 # --- Variant Dropdown with Reset ---
 current_variants = data["Variant"].dropna().drop_duplicates().tolist()
+if "selected_variant" not in st.session_state:
+    st.session_state.selected_variant = None
+
+if st.session_state.selected_variant not in current_variants:
+    st.session_state.selected_variant = current_variants[0] if current_variants else None
 
 selected_variant = st.selectbox(
     "🎯 Select Vehicle Variant",
-    options=current_variants,
+    current_variants,
+    index=current_variants.index(st.session_state.selected_variant),
     key="variant_selectbox"
 )
+st.session_state.selected_variant = selected_variant
 
 # --- Filter by Variant ---
 filtered = data[data["Variant"] == selected_variant]
