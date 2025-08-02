@@ -1,8 +1,4 @@
 # streamlit_app.py (Final Integrated - Fixed HTML Syntax Error)
-
-python
-Copy
-Edit
 import streamlit as st
 import pandas as pd
 import os
