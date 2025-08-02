@@ -27,6 +27,7 @@ else:
     st.sidebar.empty()  # This hides the sidebar content
 
 # Add a toggle button as an icon inside the sidebar (at the top left where the sidebar normally appears)
+# The toggle button will show/hide the sidebar
 st.sidebar.markdown("""
     <style>
         .sidebar .sidebar-content {
@@ -46,10 +47,12 @@ st.sidebar.markdown("""
             background-color: #f0f0f0;
         }
     </style>
-    <button class="toggle-btn" onclick="window.parent.streamlit.set_widget_value('toggle_sidebar', 'True');">
-        ☰  <!-- Icon to toggle sidebar -->
-    </button>
     """, unsafe_allow_html=True)
+
+# Create a button in the main content area to toggle the sidebar visibility
+# When clicked, it calls the toggle_sidebar function
+if st.button("☰", key="toggle_sidebar_button"):
+    toggle_sidebar()  # Toggle the sidebar visibility
 
 # --- Page Configuration ---
 st.set_page_config(
