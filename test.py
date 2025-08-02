@@ -15,19 +15,41 @@ if "sidebar_visible" not in st.session_state:
 def toggle_sidebar():
     st.session_state["sidebar_visible"] = not st.session_state["sidebar_visible"]
 
-# Place the icon-based button at the top of the app or wherever suitable
-icon = "☰"  # Hamburger icon (you can change this to any other Unicode icon or FontAwesome icon)
-st.button(icon, on_click=toggle_sidebar, key="toggle_sidebar", help="Toggle Sidebar", use_container_width=True)
-
-# --- Sidebar Content ---
+# --- Sidebar ---
 if st.session_state["sidebar_visible"]:
-    st.sidebar.header("📂 File Upload (Admin Only)")  # Sidebar content
+    # Display the sidebar content
+    st.sidebar.header("📂 File Upload (Admin Only)")
     file = st.sidebar.file_uploader("Upload New Excel File", type=["xlsx"])
     if file:
         upload_to_github(file)
         st.rerun()
 else:
     st.sidebar.empty()  # This hides the sidebar content
+
+# Add a toggle button as an icon inside the sidebar (at the top left where the sidebar normally appears)
+st.sidebar.markdown("""
+    <style>
+        .sidebar .sidebar-content {
+            padding-top: 0px; /* Remove default padding */
+        }
+        .toggle-btn {
+            font-size: 30px;
+            background: none;
+            border: none;
+            color: #333;
+            cursor: pointer;
+            padding: 10px;
+            text-align: center;
+            width: 100%;
+        }
+        .toggle-btn:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+    <button class="toggle-btn" onclick="window.parent.streamlit.set_widget_value('toggle_sidebar', 'True');">
+        ☰  <!-- Icon to toggle sidebar -->
+    </button>
+    """, unsafe_allow_html=True)
 
 # --- Page Configuration ---
 st.set_page_config(
