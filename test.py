@@ -23,12 +23,12 @@ st.markdown("""
 <style>
 :root {
     --title-size: 40px;
-    --subtitle-size: 24px;
+    --subtitle-size: 20px;
     --caption-size: 16px;
     --label-size: 14px;
     --select-font-size: 15px;
-    --table-font-size: 15px;
-    --variant-title-size: 20px;
+    --table-font-size: 14px;
+    --variant-title-size: 24px;
 }
 .block-container { padding-top: 0rem; }
 header {visibility: hidden;}
@@ -61,10 +61,10 @@ h3 { font-size: var(--variant-title-size) !important; }
 .table-wrapper { margin-bottom: 15px; padding: 0; }
 .styled-table {
     width: 100%; border-collapse: collapse; table-layout: fixed;
-    font-size: var(--table-font-size); line-height: 1; border: 2px solid black;
+    font-size: var(--table-font-size); line-height: 1.2; border: 2px solid black;
 }
 .styled-table th, .styled-table td {
-    border: 1px solid black; padding: 4px 10px; text-align: center; line-height: 1;
+    border: 1px solid black; padding: 4px 6px; text-align: center; line-height: 1.2;
 }
 .styled-table th:nth-child(1), .styled-table td:nth-child(1) {
     width: 60%;
@@ -83,50 +83,34 @@ h3 { font-size: var(--variant-title-size) !important; }
     .styled-table td { background-color: #111; color: #eee; }
     .styled-table td:first-child { background-color: #1e1e1e; color: white; }
 }
-.vtable {
-    border-collapse: collapse;
-    width: 100%;
-    font-weight: bold;
-    font-size: var(--table-font-size);
-}
-.vtable th {
-    background-color: #004080;
-    color: white;
-    padding: 4px 6px;
-    text-align: center;
-    font-weight: bold;
-}
-.vtable td {
-    background-color: #f0f4f8;
-    padding: 4px 6px;
-    text-align: center;
-    color: black;
-    font-weight: 600;
-}
-.vtable td:first-child, .vtable th:first-child {
-    text-align: left;
-}
-.vtable, .vtable th, .vtable td {
-    border: 1px solid #000;
-}
 </style>
 """, unsafe_allow_html=True)
 
 # --- Admin Auth ---
-def check_admin():
+def check_admin_password():
+    correct_password = st.secrets["auth"]["admin_password"]
     if "admin_authenticated" not in st.session_state:
         st.session_state["admin_authenticated"] = False
+
     if not st.session_state["admin_authenticated"]:
         with st.sidebar.expander("🔐 Admin Login", expanded=True):
-            pwd = st.text_input("Enter admin password", type="password")
-            if st.button("Login"):
-                if pwd == st.secrets["auth"]["admin_password"]:
+            pwd = st.text_input("Enter admin password:", type="password", key="admin_pwd")
+            if st.button("Login", key="admin_login_btn"):
+                if pwd == correct_password:
                     st.session_state["admin_authenticated"] = True
                     st.rerun()
                 else:
-                    st.error("❌ Incorrect password")
-    return st.session_state["admin_authenticated"]
+                    st.error("❌ Incorrect password.")
+        return False
+    return True
 
+def logout_admin():
+    if st.session_state.get("admin_authenticated", False):
+        if st.sidebar.button("🔓 Logout Admin"):
+            st.session_state["admin_authenticated"] = False
+            st.rerun()
+
+            
 # --- GitHub Upload Logic ---
 def upload_to_github(uploaded_file):
     token = st.secrets["github"]["token"]
@@ -162,12 +146,13 @@ def upload_to_github(uploaded_file):
         st.sidebar.error("❌ Upload failed")
 
 # --- Sidebar Upload ---
-if check_admin():
-    st.sidebar.header("📂 Upload Excel File")
-    file = st.sidebar.file_uploader("Upload Excel", type=["xlsx"])
+if check_admin_password():
+    st.sidebar.header("📂 File Upload (Admin Only)")
+    file = st.sidebar.file_uploader("Upload New Excel File", type=["xlsx"])
     if file:
         upload_to_github(file)
         st.rerun()
+logout_admin()
 
 # --- Title ---
 st.title("🚗 Mahindra Vehicle Pricing Viewer")
@@ -271,8 +256,36 @@ def format_indian_currency(value):
 # --- Table Renderer ---
 def render_combined_table(row, shared_fields, grouped_fields, group_keys):
     html = """
-    <div class="table-wrapper">
-    <table class='styled-table'>
+    <style>
+    .vtable {
+        border-collapse: collapse;
+        width: 100%;
+        font-weight: bold;
+        font-size: 14px;
+        font-family: Arial, sans-serif;
+    }
+    .vtable th {
+        background-color: #004080;
+        color: white;
+        padding: 4px 6px;
+        text-align: center;
+        font-weight: bold;
+    }
+    .vtable td {
+        background-color: #f0f4f8;
+        padding: 4px 6px;
+        text-align: center;
+        color: black;
+        font-weight: 600;
+    }
+    .vtable td:first-child, .vtable th:first-child {
+        text-align: left;
+    }
+    .vtable, .vtable th, .vtable td {
+        border: 1px solid #000;
+    }
+    </style>
+    <table class='vtable'>
         <tr><th>Description</th><th>Individual</th><th>Corporate</th></tr>
     """
 
@@ -286,12 +299,12 @@ def render_combined_table(row, shared_fields, grouped_fields, group_keys):
         corp_val = format_indian_currency(row.get(corp_key))
         html += f"<tr><td>{field}</td><td>{ind_val}</td><td>{corp_val}</td></tr>"
 
-    html += "</table></div>"
+    html += "</table>"
     return html
 
 # --- Output ---
-st.markdown(f"### 🚙 {model} - {fuel_type} - {variant}")
-st.subheader("📝 Vehicle Pricing Details")
+st.markdown(f"<h2 style='margin-top: -8px; '> 🚙 {model} - {fuel_type} - {variant}</h2>", unsafe_allow_html=True)
+st.markdown("<h3 style='color:#e65100; margin-top: -10px; margin-bottom: -8px;'>📝 Vehicle Pricing Details</h3>", unsafe_allow_html=True)
 
 shared_fields = [
     "Ex-Showroom Price", "TCS 1%", "Insurance 1 Yr OD + 3 Yr TP + Zero Dep.",
