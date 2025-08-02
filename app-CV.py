@@ -90,15 +90,17 @@ h3 { font-size: var(--variant-title-size) !important; }
 
 
 # --- Admin Authentication ---
-# --- Admin Authentication ---
 def check_admin_password():
     correct_password = st.secrets["auth"]["admin_password"]
-    
+
     if "admin_authenticated" not in st.session_state:
         st.session_state["admin_authenticated"] = False
 
+    # 🔑 Generate a unique key each time so Streamlit can't remember previous toggle
+    expander_key = f"admin_login_expander_{datetime.now().strftime('%H%M%S')}"
+
     if not st.session_state["admin_authenticated"]:
-        with st.sidebar.expander("🔐 Admin Login", expanded=True):  # Always open when logged out
+        with st.sidebar.expander("🔐 Admin Login", expanded=True, key=expander_key):
             pwd = st.text_input("Enter admin password:", type="password", key="admin_pwd")
             if st.button("Login", key="admin_login_btn"):
                 if pwd == correct_password:
