@@ -7,6 +7,28 @@ import base64
 import requests
 from datetime import datetime, timedelta
 
+# Check if the sidebar state exists in session_state, if not, set it to True (visible)
+if "sidebar_visible" not in st.session_state:
+    st.session_state["sidebar_visible"] = True
+
+# Function to toggle sidebar visibility
+def toggle_sidebar():
+    st.session_state["sidebar_visible"] = not st.session_state["sidebar_visible"]
+
+# Place the icon-based button at the top of the app or wherever suitable
+icon = "☰"  # Hamburger icon (you can change this to any other Unicode icon or FontAwesome icon)
+st.button(icon, on_click=toggle_sidebar, key="toggle_sidebar", help="Toggle Sidebar", use_container_width=True)
+
+# --- Sidebar Content ---
+if st.session_state["sidebar_visible"]:
+    st.sidebar.header("📂 File Upload (Admin Only)")  # Sidebar content
+    file = st.sidebar.file_uploader("Upload New Excel File", type=["xlsx"])
+    if file:
+        upload_to_github(file)
+        st.rerun()
+else:
+    st.sidebar.empty()  # This hides the sidebar content
+
 # --- Page Configuration ---
 st.set_page_config(
     page_title="🚗 Mahindra Vehicle Pricing Viewer",
