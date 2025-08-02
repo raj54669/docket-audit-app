@@ -42,6 +42,8 @@ st.sidebar.markdown("""
             padding: 10px;
             text-align: center;
             width: 100%;
+            display: flex;
+            justify-content: flex-end;
         }
         .toggle-btn:hover {
             background-color: #f0f0f0;
@@ -49,9 +51,8 @@ st.sidebar.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Create a button in the main content area to toggle the sidebar visibility
-# When clicked, it calls the toggle_sidebar function
-if st.button("☰", key="toggle_sidebar_button"):
+# Sidebar Toggle Button - placed in the sidebar at the top-right corner
+if st.sidebar.button("☰", key="toggle_sidebar_button"):
     toggle_sidebar()  # Toggle the sidebar visibility
 
 # --- Page Configuration ---
