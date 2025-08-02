@@ -298,25 +298,32 @@ st.markdown(pricing_html, unsafe_allow_html=True)
 # --- Cartel Table ---
 st.markdown("<h3 style='color:#e65100;'>🎁 Cartel Offer</h3>", unsafe_allow_html=True)
 
-cartel_cols = [
-    "M&M Scheme with GST",
-    "Dealer Offer ( Without Exchange Case)",
-    "Dealer Offer ( If Exchange Case)"
-]
-cartel_html = """
-<style>
-.ctable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: 14px; }
-.ctable th { background-color: #2e7d32; color: white; padding: 4px 6px; text-align: right; }
-.ctable td { background-color: #e8f5e9; padding: 4px 6px; text-align: right; color: black; }
-.ctable td:first-child, .ctable th:first-child { text-align: left; }
-.ctable, .ctable th, .ctable td { border: 1px solid #000; }
-</style>
-<table class='ctable'><tr><th>Description</th><th>Offer</th></tr>
-"""
-for col in cartel_cols:
-    val = row[col]
-    if "scheme" in col.lower():
-        val = format_indian_currency(val)
-    cartel_html += f"<tr><td>{col}</td><td>{val}</td></tr>"
-cartel_html += "</table>"
-st.markdown(cartel_html, unsafe_allow_html=True)
+# ✅ Automatically find columns after the pricing section
+pricing_end_col = "ON ROAD PRICE Without SMC Road Tax"
+if pricing_end_col in data.columns:
+    start_idx = data.columns.get_loc(pricing_end_col) + 1
+    cartel_cols = data.columns[start_idx:]
+else:
+    cartel_cols = []
+
+if cartel_cols.empty:
+    st.warning("⚠️ No additional cartel offer columns found.")
+else:
+    cartel_html = """
+    <style>
+    .ctable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: 14px; }
+    .ctable th { background-color: #2e7d32; color: white; padding: 4px 6px; text-align: right; }
+    .ctable td { background-color: #e8f5e9; padding: 4px 6px; text-align: right; color: black; }
+    .ctable td:first-child, .ctable th:first-child { text-align: left; }
+    .ctable, .ctable th, .ctable td { border: 1px solid #000; }
+    </style>
+    <table class='ctable'><tr><th>Description</th><th>Offer</th></tr>
+    """
+    for col in cartel_cols:
+        val = row[col]
+        # ✅ Auto-format if numeric
+        if pd.api.types.is_numeric_dtype(type(val)):
+            val = format_indian_currency(val)
+        cartel_html += f"<tr><td>{col}</td><td>{val}</td></tr>"
+    cartel_html += "</table>"
+    st.markdown(cartel_html, unsafe_allow_html=True)
