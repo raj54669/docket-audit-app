@@ -7,7 +7,7 @@ import requests
 from datetime import datetime
 
 # --- Page Config ---
-st.set_page_config(page_title="🚛 Mahindra Docket Audit Tool - CV", layout="centered")
+st.set_page_config(page_title="🚛 Mahindra Docket Audit Tool - CV", layout="centered" )
 
 # --- Constants ---
 DATA_DIR = "Data/Discount_Cheker"
@@ -28,7 +28,7 @@ st.markdown("""
     --variant-title-size: 24px;
 }
 .block-container { padding-top: 0rem; }
-header { visibility: hidden; }
+header {visibility: hidden;}
 h1 { font-size: var(--title-size) !important; }
 h2 { font-size: var(--subtitle-size) !important; }
 h3 { font-size: var(--variant-title-size) !important; }
@@ -38,14 +38,17 @@ h3 { font-size: var(--variant-title-size) !important; }
     font-weight: 600 !important;
 }
 
-/* ✅ Dropdown Styling */
+/* ✅ MINIMAL DROPDOWN STYLING */
 .stSelectbox div[data-baseweb="select"] > div {
     font-size: 15px !important;
     font-weight: bold !important;
-    padding: 2px !important;
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
     line-height: 1 !important;
     min-height: 24px !important;
 }
+
+/* Adaptive color based on theme */
 [data-theme="light"] .stSelectbox div[data-baseweb="select"] > div {
     color: black !important;
     background-color: #f3f4f6 !important;
@@ -58,36 +61,46 @@ h3 { font-size: var(--variant-title-size) !important; }
     align-items: center !important;
     height: 28px !important;
 }
+
+.stSelectbox [data-baseweb="option"]:hover {
+    background-color: #f0f0f0 !important;
+    font-weight: 600 !important;
+}
+/* Light mode styling */
+[data-theme="light"] .stSelectbox div[data-baseweb="select"] > div {
+    color: black !important;
+    background-color: #f3f4f6 !important; /* Light background */
+    font-weight: bold !important;
+}
+
+/* Dark mode styling */
+[data-theme="dark"] .stSelectbox div[data-baseweb="select"] > div {
+    color: white !important;
+    background-color: #333 !important; /* Dark background */
+    font-weight: bold !important;
+}
+
+/* Hover styling for options (common to both) */
 .stSelectbox [data-baseweb="option"]:hover {
     background-color: #e0e0e0 !important;
     font-weight: 600 !important;
 }
-
-/* 🔒 Force sidebar expanded & hide toggle */
-section[data-testid="stSidebar"] {
-    transform: translateX(0%) !important;
-    visibility: visible !important;
-    width: 350px !important;
-}
-button[kind="secondary"] { display: none !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- Auto-Expand Sidebar (Option 2) ---
-if "sidebar_expanded" not in st.session_state:
-    st.session_state.sidebar_expanded = True
-    st.rerun()
 
+# --- Admin Authentication ---
 # --- Admin Authentication ---
 def check_admin_password():
     correct_password = st.secrets["auth"]["admin_password"]
+    
     if "admin_authenticated" not in st.session_state:
         st.session_state["admin_authenticated"] = False
 
     if not st.session_state["admin_authenticated"]:
-        with st.sidebar.expander("🔐 Admin Login", expanded=True):
-            pwd = st.text_input("Enter admin password:", type="password")
-            if st.button("Login"):
+        with st.sidebar.expander("🔐 Admin Login", expanded=True):  # Always open when logged out
+            pwd = st.text_input("Enter admin password:", type="password", key="admin_pwd")
+            if st.button("Login", key="admin_login_btn"):
                 if pwd == correct_password:
                     st.session_state["admin_authenticated"] = True
                     st.rerun()
@@ -153,7 +166,8 @@ def upload_to_github(file_path, filename):
             match = re.match(FILE_PATTERN, fname)
             if match:
                 try:
-                    fdate = datetime.strptime(".".join(match.groups()), "%d.%m.%Y")
+                    day, month, year = match.groups()
+                    fdate = datetime.strptime(f"{day}.{month}.{year}", "%d.%m.%Y")
                     excel_files.append((fname, fdate, item["sha"]))
                 except:
                     continue
@@ -189,7 +203,8 @@ def extract_date_from_filename(filename):
     match = re.search(FILE_PATTERN, filename)
     if match:
         try:
-            return datetime.strptime(".".join(match.groups()), "%d.%m.%Y")
+            day, month, year = match.groups()
+            return datetime.strptime(f"{day}.{month}.{year}", "%d.%m.%Y")
         except:
             return None
     return None
@@ -207,7 +222,7 @@ file_map = {label: fname for label, (fname, _) in zip(file_labels, files)}
 st.markdown("<h1>🚛 Mahindra Docket Audit Tool - CV</h1>", unsafe_allow_html=True)
 
 # --- Excel File Selection ---
-selected_file_label = st.selectbox("📅 Select Excel File", file_labels)
+selected_file_label = st.selectbox("📅 Select Excel File", file_labels, key="main_excel_select")
 selected_filepath = os.path.join(DATA_DIR, file_map[selected_file_label])
 
 # --- Load Data ---
@@ -215,22 +230,23 @@ data = pd.read_excel(selected_filepath, sheet_name=SHEET_NAME, header=HEADER_ROW
 data.drop(data.columns[0], axis=1, inplace=True)
 data.columns = [str(col).strip().replace("\n", " ").replace("  ", " ") for col in data.columns]
 
-# --- Variant Dropdown ---
+# --- Variant Dropdown with Reset ---
 current_variants = data["Variant"].dropna().drop_duplicates().tolist()
 if "selected_variant" not in st.session_state:
-    st.session_state.selected_variant = current_variants[0] if current_variants else None
+    st.session_state.selected_variant = None
 
 if st.session_state.selected_variant not in current_variants:
-    st.session_state.selected_variant = current_variants[0]
+    st.session_state.selected_variant = current_variants[0] if current_variants else None
 
 selected_variant = st.selectbox(
     "🎯 Select Vehicle Variant",
     current_variants,
-    index=current_variants.index(st.session_state.selected_variant)
+    index=current_variants.index(st.session_state.selected_variant),
+    key="variant_selectbox"
 )
 st.session_state.selected_variant = selected_variant
 
-# --- Filter ---
+# --- Filter by Variant ---
 filtered = data[data["Variant"] == selected_variant]
 if filtered.empty:
     st.warning("⚠️ No data found for selected variant.")
@@ -248,7 +264,11 @@ def format_indian_currency(value):
         s = f"{int(value)}"
         last_three = s[-3:]
         other = s[:-3]
-        formatted = f"{re.sub(r'(\d)(?=(\d{2})+$)', r'\\1,', other)},{last_three}" if other else last_three
+        if other:
+            other = re.sub(r'(\d)(?=(\d{2})+$)', r'\1,', other)
+            formatted = f"{other},{last_three}"
+        else:
+            formatted = last_three
         result = f"₹{formatted}"
         return f"-{result}" if is_negative else result
     except:
@@ -279,6 +299,7 @@ st.markdown(pricing_html, unsafe_allow_html=True)
 
 # --- Cartel Table ---
 st.markdown("<h3 style='color:#e65100;'>🎁 Cartel Offer</h3>", unsafe_allow_html=True)
+
 cartel_cols = [
     "M&M Scheme with GST",
     "Dealer Offer ( Without Exchange Case)",
