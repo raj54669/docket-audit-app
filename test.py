@@ -1,4 +1,3 @@
-# streamlit_app.py (Final Integrated - Fixed HTML Syntax Error)
 import streamlit as st
 import pandas as pd
 import os
@@ -25,13 +24,6 @@ if st.session_state["sidebar_visible"]:
         st.rerun()
 else:
     st.sidebar.empty()  # This hides the sidebar content
-
-# Add a toggle button inside the main content (at the top-right of the screen)
-# When clicked, the button toggles the sidebar visibility
-col1, col2 = st.columns([8, 1])  # Divide the screen into two columns
-with col2:
-    if st.button("☰", key="toggle_sidebar_button"):
-        toggle_sidebar()  # Toggle the sidebar visibility
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -112,7 +104,7 @@ h3 { font-size: var(--variant-title-size) !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- Admin Auth ---
+# --- Admin Auth --- 
 def check_admin_password():
     correct_password = st.secrets["auth"]["admin_password"]
     if "admin_authenticated" not in st.session_state:
@@ -136,7 +128,6 @@ def logout_admin():
             st.session_state["admin_authenticated"] = False
             st.rerun()
 
-            
 # --- GitHub Upload Logic ---
 def upload_to_github(uploaded_file):
     token = st.secrets["github"]["token"]
@@ -216,13 +207,6 @@ def load_data(file_path):
     return pd.read_excel(file_path)
 
 df = load_data(selected_path)
-
-# --- Timestamp ---
-#try:
-#    ist_time = datetime.fromtimestamp(os.path.getmtime(selected_path)) + timedelta(hours=5, minutes=30)
-#    st.caption(f"📅 Data last updated on: {ist_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
-#except:
-#    st.caption("📅 Last update timestamp not available")
 
 # --- Dropdown State Logic ---
 def safe_selectbox(label, options, session_key):
