@@ -25,6 +25,13 @@ if st.session_state["sidebar_visible"]:
 else:
     st.sidebar.empty()  # This hides the sidebar content
 
+# --- Main Content: Toggle Button ---
+# The button is outside the sidebar in the main content area
+col1, col2 = st.columns([8, 1])  # Divide the screen into two columns
+with col2:
+    if st.button("☰", key="toggle_sidebar_button"):
+        toggle_sidebar()  # Toggle the sidebar visibility
+
 # --- Page Configuration ---
 st.set_page_config(
     page_title="🚗 Mahindra Vehicle Pricing Viewer",
