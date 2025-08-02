@@ -38,6 +38,16 @@ h3 { font-size: var(--variant-title-size) !important; }
     font-weight: 600 !important;
 }
 
+/* ✅ Force sidebar expanded and hide toggle */
+section[data-testid="stSidebar"] {
+    transform: translateX(0%) !important;
+    visibility: visible !important;
+    width: 350px !important;
+}
+button[kind="secondary"] {
+    display: none !important;
+}
+
 /* ✅ MINIMAL DROPDOWN STYLING */
 .stSelectbox div[data-baseweb="select"] > div {
     font-size: 15px !important;
