@@ -7,7 +7,7 @@ import requests
 from datetime import datetime
 
 # --- Page Config ---
-st.set_page_config(page_title="🚛 Mahindra Docket Audit Tool - CV", layout="centered")
+st.set_page_config(page_title="🚛 Mahindra Docket Audit Tool - CV", layout="centered", initial_sidebar_state="expanded" )
 
 # --- Constants ---
 DATA_DIR = "Data/Discount_Cheker"
