@@ -1,4 +1,8 @@
 # streamlit_app.py (Final Integrated - Fixed HTML Syntax Error)
+
+python
+Copy
+Edit
 import streamlit as st
 import pandas as pd
 import os
@@ -26,34 +30,9 @@ if st.session_state["sidebar_visible"]:
 else:
     st.sidebar.empty()  # This hides the sidebar content
 
-# Add a toggle button as an icon inside the sidebar (at the top left where the sidebar normally appears)
-# The toggle button will show/hide the sidebar
-st.sidebar.markdown("""
-    <style>
-        .sidebar .sidebar-content {
-            padding-top: 0px; /* Remove default padding */
-        }
-        .toggle-btn {
-            font-size: 30px;
-            background: none;
-            border: none;
-            color: #333;
-            cursor: pointer;
-            padding: 10px;
-            text-align: center;
-            width: 100%;
-            display: flex;
-            justify-content: flex-end;
-        }
-        .toggle-btn:hover {
-            background-color: #f0f0f0;
-        }
-    </style>
-    """, unsafe_allow_html=True)
-
-# Sidebar Toggle Button - placed in the sidebar at the top-right corner
-if st.sidebar.button("☰", key="toggle_sidebar_button"):
-    toggle_sidebar()  # Toggle the sidebar visibility
+# Add a toggle button inside the sidebar (top right)
+# The button will show/hide the sidebar
+st.sidebar.button("☰", key="toggle_sidebar_button", on_click=toggle_sidebar)
 
 # --- Page Configuration ---
 st.set_page_config(
