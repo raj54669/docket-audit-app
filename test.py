@@ -26,9 +26,12 @@ if st.session_state["sidebar_visible"]:
 else:
     st.sidebar.empty()  # This hides the sidebar content
 
-# Add a toggle button inside the sidebar (top right)
-# The button will show/hide the sidebar
-st.sidebar.button("☰", key="toggle_sidebar_button", on_click=toggle_sidebar)
+# Add a toggle button inside the main content (at the top-right of the screen)
+# When clicked, the button toggles the sidebar visibility
+col1, col2 = st.columns([8, 1])  # Divide the screen into two columns
+with col2:
+    if st.button("☰", key="toggle_sidebar_button"):
+        toggle_sidebar()  # Toggle the sidebar visibility
 
 # --- Page Configuration ---
 st.set_page_config(
