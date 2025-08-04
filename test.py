@@ -191,13 +191,6 @@ def load_data(file_path):
 
 df = load_data(selected_path)
 
-# --- Timestamp ---
-#try:
-#    ist_time = datetime.fromtimestamp(os.path.getmtime(selected_path)) + timedelta(hours=5, minutes=30)
-#    st.caption(f"📅 Data last updated on: {ist_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
-#except:
-#    st.caption("📅 Last update timestamp not available")
-
 # --- Dropdown State Logic ---
 def safe_selectbox(label, options, session_key):
     selected = st.session_state.get(session_key)
@@ -211,9 +204,7 @@ if not models:
     st.error("❌ No models found")
     st.stop()
 
-col1, col2 = st.columns([2, 1])
-with col1:
-    model = safe_selectbox("🚘 Select Model", models, "selected_model")
+model = safe_selectbox("🚘 Select Model", models, "selected_model")
 
 # Removed Fuel Type logic
 
