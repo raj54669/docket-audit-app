@@ -219,7 +219,8 @@ if not variants:
 # Adjust variant selection without fuel type
 variant = safe_selectbox("🎯 Select Variant", variants, "selected_variant")
 row = variant_df[variant_df["Variant"] == variant].iloc[0]
-
+st.write("Row columns:", row.index.tolist())
+st.write("Row values:", row.to_dict())
 
 # --- Format Currency ---
 def format_indian_currency(value):
@@ -317,4 +318,7 @@ for field, (ind_col, corp_col) in group_keys_master.items():
         grouped_fields.append(field)
         group_keys[field] = (ind_col, corp_col)
 
-st.markdown(render_combined_table(row, shared_fields, grouped_fields, group_keys), unsafe_allow_html=True)
+if not any(col in row for col in shared_fields + [v for pair in group_keys.values() for v in pair]):
+    st.warning("⚠️ No pricing details available for this variant.")
+else:
+    st.markdown(render_combined_table(row, shared_fields, grouped_fields, group_keys), unsafe_allow_html=True)
