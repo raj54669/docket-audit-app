@@ -218,7 +218,13 @@ if not variants:
 
 # Adjust variant selection without fuel type
 variant = safe_selectbox("🎯 Select Variant", variants, "selected_variant")
-row = variant_df[variant_df["Variant"] == variant].iloc[0]
+filtered_rows = variant_df[variant_df["Variant"] == variant]
+
+if filtered_rows.empty:
+    st.warning("⚠️ No data available for this variant.")
+    st.stop()
+
+row = filtered_rows.iloc[0]
 st.write("Row columns:", row.index.tolist())
 st.write("Row values:", row.to_dict())
 
@@ -280,8 +286,9 @@ def render_combined_table(row, shared_fields, grouped_fields, group_keys):
 
     for field in shared_fields:
         val = format_indian_currency(row.get(field))
-        html += f"<tr><td>{field}</td><td>{val}</td><td>{val}</td></tr>"
-
+        if "N/A" not in val and "Invalid" not in val:
+            html += f"<tr><td>{field}</td><td>{val}</td><td>{val}</td></tr>"
+            
     for field in grouped_fields:
         ind_key, corp_key = group_keys.get(field, ("", ""))
         ind_val = format_indian_currency(row.get(ind_key))
