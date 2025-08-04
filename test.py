@@ -184,7 +184,7 @@ file_map = {label: name for label, (name, _) in zip(file_labels, files)}
 
 selected_label = st.selectbox("📅 Select Excel File", file_labels, key="main_excel_file")
 selected_path = os.path.join(DATA_DIR, file_map[selected_label])
-category = st.radio("🔍 Select Category", ["PV", "EV"], horizontal=True)
+category = st.selectbox("🔍 Select Category", options=["PV", "EV"])
 
 @st.cache_data(show_spinner=False)
 def load_data(file_path, sheet_name):
