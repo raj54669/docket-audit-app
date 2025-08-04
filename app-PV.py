@@ -258,7 +258,6 @@ def render_combined_table(row, shared_fields, grouped_fields, group_keys):
         width: 100%;
         font-weight: bold;
         font-size: 14px;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     .vtable th {
         background-color: #004080;
