@@ -63,7 +63,7 @@ h3 { font-size: var(--variant-title-size) !important; }
     font-size: var(--table-font-size); line-height: 1.2; border: 2px solid black;
 }
 .styled-table th, .styled-table td {
-    border: 1px solid black; padding: 4px 6px; text-align: center; line-height: 1.2;
+    border: 1px solid black; padding: 2px 6px; text-align: center; line-height: 1.1;
 }
 .styled-table th:nth-child(1), .styled-table td:nth-child(1) {
     width: 60%;
