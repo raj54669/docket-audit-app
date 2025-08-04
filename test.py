@@ -227,8 +227,8 @@ if filtered_rows.empty:
     st.stop()
 
 row = filtered_rows.iloc[0]
-st.write("Row columns:", row.index.tolist())
-st.write("Row values:", row.to_dict())
+#st.write("Row columns:", row.index.tolist())
+#st.write("Row values:", row.to_dict())
 
 # --- Format Currency ---
 def format_indian_currency(value):
