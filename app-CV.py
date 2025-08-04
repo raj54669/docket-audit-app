@@ -308,7 +308,7 @@ st.markdown(pricing_html, unsafe_allow_html=True)
 
 
 # --- Cartel Table ---
-st.markdown("<h3 style='color:#e65100; padding-top: -40px;'>🎁 Cartel Offer</h3>", unsafe_allow_html=True)
+st.markdown("<h3 style='color:#e65100;'>🎁 Cartel Offer</h3>", unsafe_allow_html=True)
 
 # ✅ Automatically find columns after the pricing section
 pricing_end_col = "ON ROAD PRICE Without SMC Road Tax"
