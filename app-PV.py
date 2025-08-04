@@ -232,7 +232,8 @@ row = filtered_rows.iloc[0]
 # --- Format Currency ---
 def format_indian_currency(value):
     try:
-        if pd.isnull(value): return "<i style='color:gray;'>N/A</i>"
+        if pd.isnull(value) or value == 0:
+            return "₹0"
         value = float(value)
         is_negative = value < 0
         value = abs(value)
@@ -245,9 +246,9 @@ def format_indian_currency(value):
         else:
             formatted = last_three
         result = f"₹{formatted}"
-        return f"<b>{'-' if is_negative else ''}{result}</b>"
+        return f"-{result}" if is_negative else result
     except:
-        return "<i style='color:red;'>Invalid</i>"
+        return "Invalid"
 
 # --- Table Renderer ---
 def render_combined_table(row, shared_fields, grouped_fields, group_keys):
