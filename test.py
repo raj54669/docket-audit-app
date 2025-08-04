@@ -184,12 +184,13 @@ file_map = {label: name for label, (name, _) in zip(file_labels, files)}
 
 selected_label = st.selectbox("📅 Select Excel File", file_labels, key="main_excel_file")
 selected_path = os.path.join(DATA_DIR, file_map[selected_label])
+category = st.radio("🔍 Select Category", ["PV", "EV"], horizontal=True)
 
 @st.cache_data(show_spinner=False)
-def load_data(file_path):
-    return pd.read_excel(file_path)
+def load_data(file_path, sheet_name):
+    return pd.read_excel(file_path, sheet_name=sheet_name)
 
-df = load_data(selected_path)
+df = load_data(selected_path, sheet_name=category)
 
 # --- Dropdown State Logic ---
 def safe_selectbox(label, options, session_key):
