@@ -18,8 +18,70 @@ DATA_DIR = "Data/Price_List"
 FILE_PATTERN = r"PV Price List Master D\. (\d{2})\.(\d{2})\.(\d{4})\.xlsx"
 
 # --- Global Styling ---
-st.markdown("""<style>
-/* [STYLE TRUNCATED HERE FOR BREVITY — retain your full CSS from earlier] */
+st.markdown("""
+<style>
+:root {
+    --title-size: 40px;
+    --subtitle-size: 20px;
+    --caption-size: 16px;
+    --label-size: 14px;
+    --select-font-size: 15px;
+    --table-font-size: 14px;
+    --variant-title-size: 24px;
+}
+.block-container { padding-top: 0rem; }
+header {visibility: hidden;}
+h1 { font-size: var(--title-size) !important; }
+h2 { font-size: var(--subtitle-size) !important; }
+h3 { font-size: var(--variant-title-size) !important; }
+.stCaption { font-size: var(--caption-size) !important; }
+.stSelectbox label { font-size: var(--label-size) !important; font-weight: 600 !important; }
+.stSelectbox div[data-baseweb="select"] > div {
+    font-size: var(--select-font-size) !important;
+    font-weight: bold !important;
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+    line-height: 1 !important;
+    min-height: 24px !important;
+}
+.stSelectbox div[data-baseweb="select"] { align-items: center !important; height: 28px !important; }
+.stSelectbox [data-baseweb="menu"] > div { padding-top: 2px !important; padding-bottom: 2px !important; }
+.stSelectbox [data-baseweb="option"] {
+    padding: 4px 10px !important;
+    font-size: var(--select-font-size) !important;
+    font-weight: 500 !important;
+    line-height: 1.2 !important;
+    min-height: 28px !important;
+}
+.stSelectbox [data-baseweb="option"]:hover {
+    background-color: #f0f0f0 !important;
+    font-weight: 600 !important;
+}
+.table-wrapper { margin-bottom: 15px; padding: 0; }
+.styled-table {
+    width: 100%; border-collapse: collapse; table-layout: fixed;
+    font-size: var(--table-font-size); line-height: 1.2; border: 2px solid black;
+}
+.styled-table th, .styled-table td {
+    border: 1px solid black; padding: 4px 6px; text-align: center; line-height: 1.2;
+}
+.styled-table th:nth-child(1), .styled-table td:nth-child(1) {
+    width: 60%;
+}
+.styled-table th:nth-child(2), .styled-table td:nth-child(2),
+.styled-table th:nth-child(3), .styled-table td:nth-child(3) {
+    width: 20%;
+}
+.styled-table th { background-color: #004d40; color: white; font-weight: bold; }
+.styled-table td:first-child {
+    text-align: left; font-weight: 600; background-color: #f7f7f7;
+}
+@media (prefers-color-scheme: dark) {
+    .styled-table { border: 2px solid white; }
+    .styled-table th, .styled-table td { border: 1px solid white; }
+    .styled-table td { background-color: #111; color: #eee; }
+    .styled-table td:first-child { background-color: #1e1e1e; color: white; }
+}
 </style>
 """, unsafe_allow_html=True)
 
