@@ -299,7 +299,7 @@ def render_combined_table(row, shared_fields, grouped_fields, group_keys):
     return html
 
 # --- Output ---
-st.markdown(f"<h2 style='margin-top: -8px; '> 🚙 {model} - {fuel_type} - {variant}</h2>", unsafe_allow_html=True)
+st.markdown(f"<h2 style='margin-top: -8px; '> 🚙 {model} - {variant}</h2>", unsafe_allow_html=True)
 st.markdown("<h3 style='color:#e65100; margin-top: -10px; margin-bottom: -8px;'>📝 Vehicle Pricing Details</h3>", unsafe_allow_html=True)
 
 shared_fields = [
