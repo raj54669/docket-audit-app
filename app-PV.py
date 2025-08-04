@@ -1,11 +1,10 @@
-# streamlit_app.py (Final Integrated - Fixed HTML Syntax Error)
 import streamlit as st
 import pandas as pd
 import os
 import re
 import base64
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -110,7 +109,6 @@ def logout_admin():
             st.session_state["admin_authenticated"] = False
             st.rerun()
 
-            
 # --- GitHub Upload Logic ---
 def upload_to_github(uploaded_file):
     token = st.secrets["github"]["token"]
@@ -185,18 +183,19 @@ file_map = {label: name for label, (name, _) in zip(file_labels, files)}
 selected_label = st.selectbox("📅 Select Excel File", file_labels, key="main_excel_file")
 selected_path = os.path.join(DATA_DIR, file_map[selected_label])
 
+# --- Category Selection FIRST ---
+col1, col2 = st.columns([1, 3])
+with col1:
+    category = st.selectbox("🔍 Category", ["PV", "EV"], index=0)
+
+# --- Data Loader ---
 @st.cache_data(show_spinner=False)
-def load_data(file_path):
-    return pd.read_excel(file_path)
+def load_data(file_path, sheet_name):
+    df = pd.read_excel(file_path, sheet_name=sheet_name)
+    df.columns = df.columns.str.strip()
+    return df
 
-df = load_data(selected_path)
-
-# --- Timestamp ---
-#try:
-#    ist_time = datetime.fromtimestamp(os.path.getmtime(selected_path)) + timedelta(hours=5, minutes=30)
-#    st.caption(f"📅 Data last updated on: {ist_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
-#except:
-#    st.caption("📅 Last update timestamp not available")
+df = load_data(selected_path, sheet_name=category)
 
 # --- Dropdown State Logic ---
 def safe_selectbox(label, options, session_key):
@@ -211,27 +210,24 @@ if not models:
     st.error("❌ No models found")
     st.stop()
 
-col1, col2 = st.columns([2, 1])
-with col1:
-    model = safe_selectbox("🚘 Select Model", models, "selected_model")
-
-fuel_df = df[df["Model"] == model]
-fuels = sorted(fuel_df["Fuel Type"].dropna().unique())
-if not fuels:
-    st.error("❌ No fuel types found")
-    st.stop()
-
 with col2:
-    fuel_type = safe_selectbox("⛽ Select Fuel Type", fuels, "selected_fuel")
+    model = safe_selectbox("🚘 Model", models, "selected_model")
 
-variant_df = fuel_df[fuel_df["Fuel Type"] == fuel_type]
-variants = sorted(variant_df["Variant"].dropna().unique())
-if not variants:
-    st.error("❌ No variants available")
+variant_df = df[df["Model"] == model]
+
+if "Variant" not in variant_df.columns:
+    st.error("❌ 'Variant' column is missing in the selected category sheet.")
     st.stop()
+variants = sorted(variant_df["Variant"].dropna().unique())
 
 variant = safe_selectbox("🎯 Select Variant", variants, "selected_variant")
-row = variant_df[variant_df["Variant"] == variant].iloc[0]
+filtered_rows = variant_df[variant_df["Variant"] == variant]
+
+if filtered_rows.empty:
+    st.warning("⚠️ No data available for this variant.")
+    st.stop()
+
+row = filtered_rows.iloc[0]
 
 # --- Format Currency ---
 def format_indian_currency(value):
@@ -291,8 +287,9 @@ def render_combined_table(row, shared_fields, grouped_fields, group_keys):
 
     for field in shared_fields:
         val = format_indian_currency(row.get(field))
-        html += f"<tr><td>{field}</td><td>{val}</td><td>{val}</td></tr>"
-
+        if "N/A" not in val and "Invalid" not in val:
+            html += f"<tr><td>{field}</td><td>{val}</td><td>{val}</td></tr>"
+            
     for field in grouped_fields:
         ind_key, corp_key = group_keys.get(field, ("", ""))
         ind_val = format_indian_currency(row.get(ind_key))
@@ -303,24 +300,32 @@ def render_combined_table(row, shared_fields, grouped_fields, group_keys):
     return html
 
 # --- Output ---
-st.markdown(f"<h2 style='margin-top: -8px; '> 🚙 {model} - {fuel_type} - {variant}</h2>", unsafe_allow_html=True)
+st.markdown(f"<h2 style='margin-top: -8px; '> 🚙 {model} - {variant}</h2>", unsafe_allow_html=True)
 st.markdown("<h3 style='color:#e65100; margin-top: -10px; margin-bottom: -8px;'>📝 Vehicle Pricing Details</h3>", unsafe_allow_html=True)
 
-shared_fields = [
+available_columns = df.columns
+
+shared_fields_all = [
     "Ex-Showroom Price", "TCS 1%", "Insurance 1 Yr OD + 3 Yr TP + Zero Dep.",
     "Accessories Kit", "SMC", "Extended Warranty", "Maxi Care", "RSA (1 Year)", "Fastag"
 ]
+shared_fields = [f for f in shared_fields_all if f in available_columns]
 
-grouped_fields = [
-    "RTO (W/O HYPO)", "RTO (With HYPO)",
-    "On Road Price (W/O HYPO)", "On Road Price (With HYPO)"
-]
-
-group_keys = {
+group_keys_master = {
     "RTO (W/O HYPO)": ("RTO (W/O HYPO) - Individual", "RTO (W/O HYPO) - Corporate"),
     "RTO (With HYPO)": ("RTO (With HYPO) - Individual", "RTO (With HYPO) - Corporate"),
     "On Road Price (W/O HYPO)": ("On Road Price (W/O HYPO) - Individual", "On Road Price (W/O HYPO) - Corporate"),
     "On Road Price (With HYPO)": ("On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"),
 }
 
-st.markdown(render_combined_table(row, shared_fields, grouped_fields, group_keys), unsafe_allow_html=True)
+grouped_fields = []
+group_keys = {}
+for field, (ind_col, corp_col) in group_keys_master.items():
+    if ind_col in available_columns and corp_col in available_columns:
+        grouped_fields.append(field)
+        group_keys[field] = (ind_col, corp_col)
+
+if not any(col in row for col in shared_fields + [v for pair in group_keys.values() for v in pair]):
+    st.warning("⚠️ No pricing details available for this variant.")
+else:
+    st.markdown(render_combined_table(row, shared_fields, grouped_fields, group_keys), unsafe_allow_html=True)
