@@ -1,3 +1,4 @@
+# streamlit_app.py (Final Integrated - Fixed HTML Syntax Error)
 import streamlit as st
 import pandas as pd
 import os
@@ -5,32 +6,6 @@ import re
 import base64
 import requests
 from datetime import datetime, timedelta
-
-# Check if the sidebar state exists in session_state, if not, set it to True (visible)
-if "sidebar_visible" not in st.session_state:
-    st.session_state["sidebar_visible"] = True
-
-# Function to toggle sidebar visibility
-def toggle_sidebar():
-    st.session_state["sidebar_visible"] = not st.session_state["sidebar_visible"]
-
-# --- Sidebar ---
-if st.session_state["sidebar_visible"]:
-    # Display the sidebar content
-    st.sidebar.header("📂 File Upload (Admin Only)")
-    file = st.sidebar.file_uploader("Upload New Excel File", type=["xlsx"])
-    if file:
-        upload_to_github(file)
-        st.rerun()
-else:
-    st.sidebar.empty()  # This hides the sidebar content
-
-# --- Main Content: Toggle Button ---
-# The button is outside the sidebar in the main content area
-col1, col2 = st.columns([8, 1])  # Divide the screen into two columns
-with col2:
-    if st.button("☰", key="toggle_sidebar_button"):
-        toggle_sidebar()  # Toggle the sidebar visibility
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -111,7 +86,7 @@ h3 { font-size: var(--variant-title-size) !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- Admin Auth --- 
+# --- Admin Auth ---
 def check_admin_password():
     correct_password = st.secrets["auth"]["admin_password"]
     if "admin_authenticated" not in st.session_state:
@@ -135,6 +110,7 @@ def logout_admin():
             st.session_state["admin_authenticated"] = False
             st.rerun()
 
+            
 # --- GitHub Upload Logic ---
 def upload_to_github(uploaded_file):
     token = st.secrets["github"]["token"]
@@ -214,6 +190,13 @@ def load_data(file_path):
     return pd.read_excel(file_path)
 
 df = load_data(selected_path)
+
+# --- Timestamp ---
+#try:
+#    ist_time = datetime.fromtimestamp(os.path.getmtime(selected_path)) + timedelta(hours=5, minutes=30)
+#    st.caption(f"📅 Data last updated on: {ist_time.strftime('%d-%b-%Y %I:%M %p')} (IST)")
+#except:
+#    st.caption("📅 Last update timestamp not available")
 
 # --- Dropdown State Logic ---
 def safe_selectbox(label, options, session_key):
