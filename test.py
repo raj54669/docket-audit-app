@@ -188,8 +188,9 @@ category = st.radio("🔍 Select Category", ["PV", "EV"], horizontal=True)
 
 @st.cache_data(show_spinner=False)
 def load_data(file_path, sheet_name):
-    return pd.read_excel(file_path, sheet_name=sheet_name)
-
+    df = pd.read_excel(file_path, sheet_name=sheet_name)
+    df.columns = df.columns.str.strip()  # ✅ Clean up column names
+    return df
 df = load_data(selected_path, sheet_name=category)
 
 # --- Dropdown State Logic ---
@@ -211,10 +212,11 @@ model = safe_selectbox("🚘 Select Model", models, "selected_model")
 
 # Now directly filter variants based on the selected model
 variant_df = df[df["Model"] == model]
-variants = sorted(variant_df["Variant"].dropna().unique())
-if not variants:
-    st.error("❌ No variants available")
+
+if "Variant" not in variant_df.columns:
+    st.error("❌ 'Variant' column is missing in the selected category sheet.")
     st.stop()
+variants = sorted(variant_df["Variant"].dropna().unique())
 
 # Adjust variant selection without fuel type
 variant = safe_selectbox("🎯 Select Variant", variants, "selected_variant")
