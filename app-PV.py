@@ -253,32 +253,11 @@ def format_indian_currency(value):
 def render_combined_table(row, shared_fields, grouped_fields, group_keys):
     html = """
     <style>
-    .vtable {
-        border-collapse: collapse;
-        width: 100%;
-        font-weight: bold;
-        font-size: 14px;
-    }
-    .vtable th {
-        background-color: #004080;
-        color: white;
-        padding: 4px 6px;
-        text-align: center;
-        font-weight: bold;
-    }
-    .vtable td {
-        background-color: #f0f4f8;
-        padding: 4px 6px;
-        text-align: center;
-        color: black;
-        font-weight: 600;
-    }
-    .vtable td:first-child, .vtable th:first-child {
-        text-align: left;
-    }
-    .vtable, .vtable th, .vtable td {
-        border: 1px solid #000;
-    }
+    .vtable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: 14px; }
+    .vtable th { background-color: #004080; color: white; padding: 4px 6px; text-align: right; }
+    .vtable td { background-color: #f0f4f8; padding: 4px 6px; text-align: center; color: black; }
+    .vtable td:first-child, .vtable th:first-child { text-align: left; }
+    .vtable, .vtable th, .vtable td { border: 1px solid #000; }
     </style>
     <table class='vtable'>
         <tr><th>Description</th><th>Individual</th><th>Corporate</th></tr>
