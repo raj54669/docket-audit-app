@@ -208,7 +208,7 @@ if not models:
 
 col1, col2 = st.columns([1, 2])
 with col1:
-    category = st.selectbox("🔍 Category", ["PV", "EV"], index=0
+    category = st.selectbox("🔍 Category", ["PV", "EV"], index=0)
 with col2:
     model = safe_selectbox("🚘 Model", models, "selected_model")
 
