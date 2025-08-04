@@ -208,9 +208,9 @@ if not models:
 
 col1, col2 = st.columns([1, 2])
 with col1:
-    category = st.selectbox("🔍 Select Category", options=["PV", "EV"])
+    category = st.selectbox("🔍 Category", ["PV", "EV"], label_visibility="collapsed")
 with col2:
-    model = safe_selectbox("🚘 Select Model", models, "selected_model")
+    model = safe_selectbox("🚘 Model", models, "selected_model")
 
 # Now directly filter variants based on the selected model
 variant_df = df[df["Model"] == model]
