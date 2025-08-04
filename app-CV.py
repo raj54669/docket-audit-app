@@ -294,8 +294,8 @@ if pd.notnull(maxi_care_value):
 pricing_html = """
 <style>
 .vtable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: 14px; }
-.vtable th { background-color: #004080; color: white; padding: 4px 6px; text-align: right; }
-.vtable td { background-color: #f0f4f8; padding: 4px 6px; text-align: right; color: black; }
+.vtable th { background-color: #004080; color: white; padding: 4px 6px; text-align: center; }
+.vtable td { background-color: #f0f4f8; padding: 4px 6px; text-align: center; color: black; }
 .vtable td:first-child, .vtable th:first-child { text-align: left; }
 .vtable, .vtable th, .vtable td { border: 1px solid #000; }
 </style>
@@ -324,8 +324,8 @@ else:
     cartel_html = """
     <style>
     .ctable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: 14px; }
-    .ctable th { background-color: #2e7d32; color: white; padding: 4px 6px; text-align: right; }
-    .ctable td { background-color: #e8f5e9; padding: 4px 6px; text-align: right; color: black; }
+    .ctable th { background-color: #2e7d32; color: white; padding: 4px 6px; text-align: center; }
+    .ctable td { background-color: #e8f5e9; padding: 4px 6px; text-align: center; color: black; }
     .ctable td:first-child, .ctable th:first-child { text-align: left; }
     .ctable, .ctable th, .ctable td { border: 1px solid #000; }
     </style>
