@@ -215,23 +215,19 @@ col1, col2 = st.columns([2, 1])
 with col1:
     model = safe_selectbox("🚘 Select Model", models, "selected_model")
 
-fuel_df = df[df["Model"] == model]
-fuels = sorted(fuel_df["Fuel Type"].dropna().unique())
-if not fuels:
-    st.error("❌ No fuel types found")
-    st.stop()
+# Removed Fuel Type logic
 
-with col2:
-    fuel_type = safe_selectbox("⛽ Select Fuel Type", fuels, "selected_fuel")
-
-variant_df = fuel_df[fuel_df["Fuel Type"] == fuel_type]
+# Now directly filter variants based on the selected model
+variant_df = df[df["Model"] == model]
 variants = sorted(variant_df["Variant"].dropna().unique())
 if not variants:
     st.error("❌ No variants available")
     st.stop()
 
+# Adjust variant selection without fuel type
 variant = safe_selectbox("🎯 Select Variant", variants, "selected_variant")
 row = variant_df[variant_df["Variant"] == variant].iloc[0]
+
 
 # --- Format Currency ---
 def format_indian_currency(value):
