@@ -184,7 +184,7 @@ file_map = {label: name for label, (name, _) in zip(file_labels, files)}
 
 selected_label = st.selectbox("📅 Select Excel File", file_labels, key="main_excel_file")
 selected_path = os.path.join(DATA_DIR, file_map[selected_label])
-category = st.selectbox("🔍 Select Category", options=["PV", "EV"])
+
 
 @st.cache_data(show_spinner=False)
 def load_data(file_path, sheet_name):
@@ -206,9 +206,11 @@ if not models:
     st.error("❌ No models found")
     st.stop()
 
-model = safe_selectbox("🚘 Select Model", models, "selected_model")
-
-# Removed Fuel Type logic
+col1, col2 = st.columns([1, 2])
+with col1:
+    category = st.selectbox("🔍 Select Category", options=["PV", "EV"])
+with col2:
+    model = safe_selectbox("🚘 Select Model", models, "selected_model")
 
 # Now directly filter variants based on the selected model
 variant_df = df[df["Model"] == model]
