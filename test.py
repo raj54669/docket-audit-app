@@ -184,7 +184,7 @@ selected_label = st.selectbox("📅 Select Excel File", file_labels, key="main_e
 selected_path = os.path.join(DATA_DIR, file_map[selected_label])
 
 # --- Category Selection FIRST ---
-col1, col2 = st.columns([1, 2])
+col1, col2 = st.columns([1, 3])
 with col1:
     category = st.selectbox("🔍 Category", ["PV", "EV"], index=0)
 
