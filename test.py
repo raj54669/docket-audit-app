@@ -294,21 +294,27 @@ def render_combined_table(row, shared_fields, grouped_fields, group_keys):
 st.markdown(f"<h2 style='margin-top: -8px; '> 🚙 {model} - {variant}</h2>", unsafe_allow_html=True)
 st.markdown("<h3 style='color:#e65100; margin-top: -10px; margin-bottom: -8px;'>📝 Vehicle Pricing Details</h3>", unsafe_allow_html=True)
 
-shared_fields = [
+# Dynamically adjust fields based on sheet content
+available_columns = df.columns
+
+shared_fields_all = [
     "Ex-Showroom Price", "TCS 1%", "Insurance 1 Yr OD + 3 Yr TP + Zero Dep.",
     "Accessories Kit", "SMC", "Extended Warranty", "Maxi Care", "RSA (1 Year)", "Fastag"
 ]
+shared_fields = [f for f in shared_fields_all if f in available_columns]
 
-grouped_fields = [
-    "RTO (W/O HYPO)", "RTO (With HYPO)",
-    "On Road Price (W/O HYPO)", "On Road Price (With HYPO)"
-]
-
-group_keys = {
+group_keys_master = {
     "RTO (W/O HYPO)": ("RTO (W/O HYPO) - Individual", "RTO (W/O HYPO) - Corporate"),
     "RTO (With HYPO)": ("RTO (With HYPO) - Individual", "RTO (With HYPO) - Corporate"),
     "On Road Price (W/O HYPO)": ("On Road Price (W/O HYPO) - Individual", "On Road Price (W/O HYPO) - Corporate"),
     "On Road Price (With HYPO)": ("On Road Price (With HYPO) - Individual", "On Road Price (With HYPO) - Corporate"),
 }
+
+grouped_fields = []
+group_keys = {}
+for field, (ind_col, corp_col) in group_keys_master.items():
+    if ind_col in available_columns and corp_col in available_columns:
+        grouped_fields.append(field)
+        group_keys[field] = (ind_col, corp_col)
 
 st.markdown(render_combined_table(row, shared_fields, grouped_fields, group_keys), unsafe_allow_html=True)
