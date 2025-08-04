@@ -274,12 +274,23 @@ def format_indian_currency(value):
 
 # --- Pricing Table ---
 st.markdown("<h3 style='color:#e65100;'>📝 Vehicle Pricing Details</h3>", unsafe_allow_html=True)
+
+# Modify columns: Remove "MAXI CARE"
 vehicle_cols = [
     "Ex-Showroom Price", "TCS", "Comprehensive + Zero Dep. Insurance",
     "R.T.O. Charges With Hypo.", "RSA (Road Side Assistance) For 1 Year",
-    "SMC Road - Tax (If Applicable)", "MAXI CARE", "Accessories",
+    "SMC Road - Tax (If Applicable)", "Accessories",
     "ON ROAD PRICE With SMC Road Tax", "ON ROAD PRICE Without SMC Road Tax"
 ]
+
+# Adjust ON ROAD PRICE values by subtracting MAXI CARE
+adjusted_row = row.copy()
+maxi_care_value = row.get("MAXI CARE", 0)
+if pd.notnull(maxi_care_value):
+    adjusted_row["ON ROAD PRICE With SMC Road Tax"] -= maxi_care_value
+    adjusted_row["ON ROAD PRICE Without SMC Road Tax"] -= maxi_care_value
+
+# Render pricing table
 pricing_html = """
 <style>
 .vtable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: 14px; }
@@ -291,9 +302,10 @@ pricing_html = """
 <table class='vtable'><tr><th>Description</th><th>Amount</th></tr>
 """
 for col in vehicle_cols:
-    pricing_html += f"<tr><td>{col}</td><td>{format_indian_currency(row[col])}</td></tr>"
+    pricing_html += f"<tr><td>{col}</td><td>{format_indian_currency(adjusted_row[col])}</td></tr>"
 pricing_html += "</table>"
 st.markdown(pricing_html, unsafe_allow_html=True)
+
 
 # --- Cartel Table ---
 st.markdown("<h3 style='color:#e65100;'>🎁 Cartel Offer</h3>", unsafe_allow_html=True)
