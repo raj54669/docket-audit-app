@@ -276,7 +276,7 @@ def format_indian_currency(value):
 #st.markdown(f"<h2 style='margin-top: -8px; '> 🚚 {selected_variant}", unsafe_allow_html=True)
 
 # --- Pricing Table ---
-st.markdown("<h3 style='color:#e65100; margin-top: -10px; margin-bottom: -8px;'>📝 Vehicle Pricing Details</h3>", unsafe_allow_html=True)
+st.markdown("<h3 style='color:#e65100; margin-bottom: -8px;'>📝 Vehicle Pricing Details</h3>", unsafe_allow_html=True)
 
 # Modify columns: Remove "MAXI CARE"
 vehicle_cols = [
