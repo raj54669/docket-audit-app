@@ -20,7 +20,7 @@ st.markdown("""
 <style>
 :root {
     --title-size: 40px;
-    --subtitle-size: 24px;
+    --subtitle-size: 20px;
     --caption-size: 16px;
     --label-size: 14px;
     --select-font-size: 15px;
@@ -30,7 +30,7 @@ st.markdown("""
 .block-container { padding-top: 0rem; }
 header {visibility: hidden;}
 h1 { font-size: var(--title-size) !important; }
-h2 { font-size: var(--caption-size) !important; }
+h2 { font-size: var(--subtitle-size) !important; }
 h3 { font-size: var(--variant-title-size) !important; }
 .stCaption { font-size: var(--caption-size) !important; }
 .stSelectbox label {
@@ -311,7 +311,7 @@ st.markdown(pricing_html, unsafe_allow_html=True)
 
 
 # --- Cartel Table ---
-st.markdown("<h3 style='color:#e65100;'>🎁 Cartel Offer</h3>", unsafe_allow_html=True)
+st.markdown("<h3 style='color:#e65100; margin-top: -10px; margin-bottom: -8px;'>🎁 Cartel Offer</h3>", unsafe_allow_html=True)
 
 # ✅ Automatically find columns after the pricing section
 pricing_end_col = "ON ROAD PRICE Without SMC Road Tax"
