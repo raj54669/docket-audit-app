@@ -228,7 +228,8 @@ file_map = {label: fname for label, (fname, _) in zip(file_labels, files)}
 st.markdown(
     "<h1>🚛 Mahindra Docket Audit Tool - CV</h1>",
     "<p style='font-size:16px; font-weight:600; color:black; margin-top:-10px; margin-left:4px;'>by Nishal Modi</p>", 
-    unsafe_allow_html=True)
+    unsafe_allow_html=True
+)
 
 # --- Excel File Selection ---
 selected_file_label = st.selectbox("📅 Select Excel File", file_labels, key="main_excel_select")
