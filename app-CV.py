@@ -227,7 +227,7 @@ file_map = {label: fname for label, (fname, _) in zip(file_labels, files)}
 # --- Title ---
 st.markdown(
     "<h1>🚛 Mahindra Docket Audit Tool - CV</h1>"
-    "<p style='font-size:18px; font-style:italic; color:black; margin-top:-12px; margin-left:4px;'>by Nishal Modi</p>"
+    "<p style='font-size:18px; font-style:italic; color:black; margin-top:-12px; margin-left:4px; margin-left:40px;'>by Nishal Modi</p>"
     ,
     unsafe_allow_html=True
 )
