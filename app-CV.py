@@ -357,15 +357,15 @@ try:
         selected_filepath,
         sheet_name="Report",
         header=None,
-        usecols="F:G",   # Sr. + Points
-        skiprows=5,
-        nrows=20
+        usecols="F:G",   # Columns F and G
+        skiprows=5,      # ✅ Skip first 5 rows so we start at row 6
+        nrows=15         # ✅ Read rows 6 to 20 (15 rows)
     ).dropna(how="all")
 
     # Subtitle
     st.markdown("<h3 style='color:#e65100; margin-top: -10px; margin-bottom: -8px;'>⭐ Important Points</h3>", unsafe_allow_html=True)
 
-    # Table
+    # Table HTML
     points_html = "<table class='iptable'><tr><th>Sr.</th><th>Points</th></tr>"
     for _, row in points_df.iterrows():
         sr = str(row[0]).strip()
@@ -375,6 +375,9 @@ try:
     points_html += "</table>"
 
     st.markdown(points_html, unsafe_allow_html=True)
+
+except Exception as e:
+    st.warning(f"⚠️ Could not load Important Points: {e}")
 
 except Exception as e:
     st.warning(f"⚠️ Could not load Important Points: {e}")
