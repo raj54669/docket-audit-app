@@ -351,31 +351,33 @@ else:
     cartel_html += "</table>"
     st.markdown(cartel_html, unsafe_allow_html=True)
 
-# --- Extra Section: Important Points ---
+# --- Important Points Table ---
 try:
-    important_points_df = pd.read_excel(
-        selected_filepath,   # ✅ use same variable as Pricing Data
+    points_df = pd.read_excel(
+        selected_filepath,
         sheet_name="Report",
-        usecols="F:G",
-        skiprows=5,   # Skip first 5 rows → start at row 6
-        nrows=15,     # Max till row 20
-        header=None
-    )
+        header=None,
+        usecols="F:G",   # ✅ F = Sr. , G = Points
+        skiprows=5,      # ✅ Skip first 5 rows (start from row 6)
+        nrows=20         # ✅ Max till row 25
+    ).dropna()
 
-    # Drop empty rows
-    important_points_df = important_points_df.dropna().reset_index(drop=True)
-
-    # Add headers
-    important_points_df.columns = ["Sr.", "Points"]
+    # Rename columns
+    points_df.columns = ["Sr.", "Points"]
 
     # Subtitle
-    st.markdown("<h3 style='color:#e65100; margin-top:15px;'>⭐ Important Points</h3>", unsafe_allow_html=True)
-
-    # Render as styled table
     st.markdown(
-        important_points_df.to_html(index=False, classes="itable", escape=False),
+        "<h3 style='color:#e65100; margin-top: -10px; margin-bottom: -8px;'>⭐ Important Points</h3>",
         unsafe_allow_html=True
     )
+
+    # Build HTML table (use global styling)
+    points_html = "<table class='iptable'><tr><th>Sr.</th><th>Points</th></tr>"
+    for _, row in points_df.iterrows():
+        points_html += f"<tr><td style='text-align:center'>{int(row['Sr.'])}</td><td>{row['Points']}</td></tr>"
+    points_html += "</table>"
+
+    st.markdown(points_html, unsafe_allow_html=True)
 
 except Exception as e:
     st.warning(f"⚠️ Could not load Important Points: {e}")
