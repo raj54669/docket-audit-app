@@ -357,22 +357,27 @@ try:
         selected_filepath,
         sheet_name="Report",
         header=None,
-        usecols="G",
-        skiprows=4,   # Start from row 5
-        nrows=20      # Capture max till row 24
-    ).dropna()
+        usecols="F:G",   # Sr. + Points
+        skiprows=4,
+        nrows=20
+    ).dropna(how="all")
 
     # Subtitle
     st.markdown("<h3 style='color:#e65100; margin-top: -10px; margin-bottom: -8px;'>⭐ Important Points</h3>", unsafe_allow_html=True)
 
-    # Table with Sr. No
+    # Table
     points_html = "<table class='iptable'><tr><th>Sr.</th><th>Points</th></tr>"
-    for idx, point in enumerate(points_df[0].tolist(), start=1):
-        points_html += f"<tr><td>{idx}</td><td>{point}</td></tr>"
+    for _, row in points_df.iterrows():
+        sr = str(row[0]).strip()
+        point = str(row[1]).strip()
+        if sr and point:
+            points_html += f"<tr><td>{sr}</td><td>{point}</td></tr>"
     points_html += "</table>"
 
     st.markdown(points_html, unsafe_allow_html=True)
 
 except Exception as e:
+    st.warning(f"⚠️ Could not load Important Points: {e}")
+
     st.warning(f"⚠️ Could not load Important Points: {e}")
 
