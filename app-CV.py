@@ -358,7 +358,7 @@ try:
         sheet_name="Report",
         header=None,
         usecols="F:G",   # Sr. + Points
-        skiprows=4,
+        skiprows=5,
         nrows=20
     ).dropna(how="all")
 
@@ -379,5 +379,4 @@ try:
 except Exception as e:
     st.warning(f"⚠️ Could not load Important Points: {e}")
 
-    st.warning(f"⚠️ Could not load Important Points: {e}")
 
