@@ -353,9 +353,8 @@ else:
 
 # --- Extra Section: Important Points ---
 try:
-    # Read Important Points from Excel
     important_points_df = pd.read_excel(
-        uploaded_file,
+        selected_filepath,   # ✅ use same variable as Pricing Data
         sheet_name="Report",
         usecols="F:G",
         skiprows=5,   # Skip first 5 rows → start at row 6
