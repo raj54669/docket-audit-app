@@ -351,31 +351,32 @@ else:
     cartel_html += "</table>"
     st.markdown(cartel_html, unsafe_allow_html=True)
 
-# --- Important Points Table ---
+# --- Extra Section: Important Points ---
 try:
-    df = pd.read_excel(
-        selected_filepath,
+    # Read Important Points from Excel
+    important_points_df = pd.read_excel(
+        uploaded_file,
         sheet_name="Report",
-        header=None,
-        usecols="F:G"   # Sr. + Points
+        usecols="F:G",
+        skiprows=5,   # Skip first 5 rows → start at row 6
+        nrows=15,     # Max till row 20
+        header=None
     )
 
-    # ✅ Slice rows 6–20 (Excel rows are 1-based, Pandas is 0-based → so index 5–19)
-    points_df = df.iloc[5:20].dropna(how="all")
+    # Drop empty rows
+    important_points_df = important_points_df.dropna().reset_index(drop=True)
+
+    # Add headers
+    important_points_df.columns = ["Sr.", "Points"]
 
     # Subtitle
-    st.markdown("<h3 style='color:#e65100; margin-top: -10px; margin-bottom: -8px;'>⭐ Important Points</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color:#e65100; margin-top:15px;'>⭐ Important Points</h3>", unsafe_allow_html=True)
 
-    # Table HTML
-    points_html = "<table class='iptable'><tr><th>Sr.</th><th>Points</th></tr>"
-    for _, row in points_df.iterrows():
-        sr = str(row[0]).strip()
-        point = str(row[1]).strip()
-        if sr and point:
-            points_html += f"<tr><td>{sr}</td><td>{point}</td></tr>"
-    points_html += "</table>"
-
-    st.markdown(points_html, unsafe_allow_html=True)
+    # Render as styled table
+    st.markdown(
+        important_points_df.to_html(index=False, classes="itable", escape=False),
+        unsafe_allow_html=True
+    )
 
 except Exception as e:
     st.warning(f"⚠️ Could not load Important Points: {e}")
