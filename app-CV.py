@@ -85,6 +85,14 @@ h3 { font-size: var(--variant-title-size) !important; }
     background-color: #e0e0e0 !important;
     font-weight: 600 !important;
 }
+
+/* Important Points Table  */
+/* ----------------------- */
+.iptable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: 14px; }
+.iptable th { background-color: #e65100; color: white; padding: 4px 6px; text-align: left; }
+.iptable td { background-color: #fff3e0; padding: 4px 6px; text-align: left; color: black; }
+.iptable, .iptable th, .iptable td { border: 1px solid #000; }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -342,3 +350,29 @@ else:
         cartel_html += f"<tr><td>{col}</td><td>{val}</td></tr>"
     cartel_html += "</table>"
     st.markdown(cartel_html, unsafe_allow_html=True)
+
+# --- Important Points Table ---
+try:
+    points_df = pd.read_excel(
+        selected_filepath,
+        sheet_name="Report",
+        header=None,
+        usecols="G",
+        skiprows=4,   # Start from row 5
+        nrows=20      # Capture max till row 24
+    ).dropna()
+
+    # Subtitle
+    st.markdown("<h3 style='color:#e65100; margin-top: -10px; margin-bottom: -8px;'>⭐ Important Points</h3>", unsafe_allow_html=True)
+
+    # Table with Sr. No
+    points_html = "<table class='iptable'><tr><th>Sr.</th><th>Points</th></tr>"
+    for idx, point in enumerate(points_df[0].tolist(), start=1):
+        points_html += f"<tr><td>{idx}</td><td>{point}</td></tr>"
+    points_html += "</table>"
+
+    st.markdown(points_html, unsafe_allow_html=True)
+
+except Exception as e:
+    st.warning(f"⚠️ Could not load Important Points: {e}")
+
