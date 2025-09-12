@@ -153,8 +153,12 @@ if check_admin_password():
 logout_admin()
 
 # --- Title ---
-st.title("🚗 Mahindra Vehicle Pricing Viewer")
-
+st.markdown(
+    "<h1>🚗 Mahindra Vehicle Pricing Viewer</h1>"
+    "<p style='font-size:18px; font-style:italic; font-weight:700; color:inherit; margin-top:-12px; margin-left:4px; '>by Nishal Modi</p>"
+    ,
+    unsafe_allow_html=True
+)
 # --- File Listing ---
 def extract_date_from_filename(filename):
     match = re.match(FILE_PATTERN, filename)
