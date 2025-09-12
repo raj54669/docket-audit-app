@@ -353,14 +353,15 @@ else:
 
 # --- Important Points Table ---
 try:
-    points_df = pd.read_excel(
+    df = pd.read_excel(
         selected_filepath,
         sheet_name="Report",
         header=None,
-        usecols="F:G",   # Columns F and G
-        skiprows=5,      # ✅ Skip first 5 rows so we start at row 6
-        nrows=15         # ✅ Read rows 6 to 20 (15 rows)
-    ).dropna(how="all")
+        usecols="F:G"   # Sr. + Points
+    )
+
+    # ✅ Slice rows 6–20 (Excel rows are 1-based, Pandas is 0-based → so index 5–19)
+    points_df = df.iloc[5:20].dropna(how="all")
 
     # Subtitle
     st.markdown("<h3 style='color:#e65100; margin-top: -10px; margin-bottom: -8px;'>⭐ Important Points</h3>", unsafe_allow_html=True)
@@ -378,8 +379,3 @@ try:
 
 except Exception as e:
     st.warning(f"⚠️ Could not load Important Points: {e}")
-
-except Exception as e:
-    st.warning(f"⚠️ Could not load Important Points: {e}")
-
-
