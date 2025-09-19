@@ -187,15 +187,6 @@ file_map = {label: name for label, (name, _) in zip(file_labels, files)}
 selected_label = st.selectbox("📅 Select Excel File", file_labels, key="main_excel_file")
 selected_path = os.path.join(DATA_DIR, file_map[selected_label])
 
-# Reset dependent dropdowns when file changes
-if "last_selected_file" not in st.session_state:
-    st.session_state["last_selected_file"] = selected_label
-
-if st.session_state["last_selected_file"] != selected_label:
-    st.session_state.pop("selected_model", None)
-    st.session_state.pop("selected_variant", None)
-    st.session_state["last_selected_file"] = selected_label
-
 # --- Category Selection FIRST ---
 col1, col2 = st.columns([1, 3])
 with col1:
