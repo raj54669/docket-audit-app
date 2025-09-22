@@ -5,7 +5,6 @@ import re
 import base64
 import requests
 from datetime import datetime
-import time
 
 # --- Page Config ---
 st.set_page_config(page_title="🚛 Mahindra Docket Audit Tool - CV", layout="centered" )
@@ -29,7 +28,7 @@ st.markdown("""
     --variant-title-size: 24px;
 }
 .block-container { padding-top: 0rem; }
-header {visibility: hidden;}
+#header {visibility: hidden;}
 h1 { font-size: var(--title-size) !important; }
 h2 { font-size: var(--subtitle-size) !important; }
 h3 { font-size: var(--variant-title-size) !important; }
@@ -192,38 +191,17 @@ def upload_to_github(file_path, filename):
     except Exception as e:
         st.sidebar.error(f"❌ GitHub Error: {str(e)}")
 
-
 # --- Upload Section (Admin Only) ---
 if check_admin_password():
     st.sidebar.header("📂 File Upload (Admin Only)")
     uploaded_file = st.sidebar.file_uploader("Upload New Excel File", type=["xlsx"])
-
     if uploaded_file:
         os.makedirs(DATA_DIR, exist_ok=True)
         save_path = os.path.join(DATA_DIR, uploaded_file.name)
         with open(save_path, "wb") as f:
             f.write(uploaded_file.getbuffer())
-
         upload_to_github(save_path, uploaded_file.name)
-
-        # ✅ Mark upload done
-        st.session_state.upload_done = True
-        st.session_state.countdown = 5
-        st.sidebar.success(f"✅ Uploaded to GitHub: {uploaded_file.name}")
-
-    # ✅ Show countdown only if upload just happened
-    if st.session_state.get("upload_done", False):
-        if st.session_state.countdown > 0:
-            st.sidebar.info(f"🔄 Refreshing in {st.session_state.countdown} sec...")
-            time.sleep(1)
-            st.session_state.countdown -= 1
-            st.rerun()   # ✅ modern rerun
-        else:
-            # Reset flags and rerun cleanly once
-            st.session_state.upload_done = False
-            del st.session_state["countdown"]
-            st.rerun()   # ✅ modern rerun
-
+        st.rerun()
 logout_admin()
 
 # --- File Listing ---
