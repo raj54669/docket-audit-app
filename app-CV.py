@@ -28,7 +28,7 @@ st.markdown("""
     --variant-title-size: 24px;
 }
 .block-container { padding-top: 0rem; }
-#header {visibility: hidden;}
+header {visibility: hidden;}
 h1 { font-size: var(--title-size) !important; }
 h2 { font-size: var(--subtitle-size) !important; }
 h3 { font-size: var(--variant-title-size) !important; }
