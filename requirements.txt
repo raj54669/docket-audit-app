@@ -4,4 +4,4 @@ openpyxl
 reportlab
 xlsxwriter
 requests
-streamlit-autorefresh
+
