@@ -6,6 +6,7 @@ import base64
 import requests
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
+import time
 
 # --- Page Config ---
 st.set_page_config(page_title="🚛 Mahindra Docket Audit Tool - CV", layout="centered" )
@@ -197,6 +198,7 @@ def upload_to_github(file_path, filename):
 if check_admin_password():
     st.sidebar.header("📂 File Upload (Admin Only)")
     uploaded_file = st.sidebar.file_uploader("Upload New Excel File", type=["xlsx"])
+
     if uploaded_file:
         os.makedirs(DATA_DIR, exist_ok=True)
         save_path = os.path.join(DATA_DIR, uploaded_file.name)
@@ -205,20 +207,25 @@ if check_admin_password():
 
         upload_to_github(save_path, uploaded_file.name)
 
-        # ✅ Countdown before rerun
-        if "countdown" not in st.session_state:
-            st.session_state.countdown = 5
+        # ✅ Mark upload done
+        st.session_state.upload_done = True
+        st.session_state.countdown = 5
+        st.sidebar.success(f"✅ Uploaded to GitHub: {uploaded_file.name}")
 
+    # ✅ Show countdown only if upload just happened
+    if st.session_state.get("upload_done", False):
         if st.session_state.countdown > 0:
-            st.success(f"✅ File uploaded successfully! 🔄 Refreshing in {st.session_state.countdown} sec...")
-            st_autorefresh(interval=1000, key="countdown_refresh")  # refresh every second
+            st.sidebar.info(f"🔄 Refreshing in {st.session_state.countdown} sec...")
+            time.sleep(1)
             st.session_state.countdown -= 1
+            st.rerun()   # ✅ modern rerun
         else:
-            # Once countdown ends → reset state and rerun
+            # Reset flags and rerun cleanly once
+            st.session_state.upload_done = False
             del st.session_state["countdown"]
-            st.experimental_rerun()
-logout_admin()
+            st.rerun()   # ✅ modern rerun
 
+logout_admin()
 
 # --- File Listing ---
 def extract_date_from_filename(filename):
