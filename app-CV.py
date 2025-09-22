@@ -5,6 +5,7 @@ import re
 import base64
 import requests
 from datetime import datetime
+from streamlit_autorefresh import st_autorefresh
 
 # --- Page Config ---
 st.set_page_config(page_title="🚛 Mahindra Docket Audit Tool - CV", layout="centered" )
@@ -191,6 +192,7 @@ def upload_to_github(file_path, filename):
     except Exception as e:
         st.sidebar.error(f"❌ GitHub Error: {str(e)}")
 
+
 # --- Upload Section (Admin Only) ---
 if check_admin_password():
     st.sidebar.header("📂 File Upload (Admin Only)")
@@ -200,9 +202,23 @@ if check_admin_password():
         save_path = os.path.join(DATA_DIR, uploaded_file.name)
         with open(save_path, "wb") as f:
             f.write(uploaded_file.getbuffer())
+
         upload_to_github(save_path, uploaded_file.name)
-        st.rerun()
+
+        # ✅ Countdown before rerun
+        if "countdown" not in st.session_state:
+            st.session_state.countdown = 5
+
+        if st.session_state.countdown > 0:
+            st.success(f"✅ File uploaded successfully! 🔄 Refreshing in {st.session_state.countdown} sec...")
+            st_autorefresh(interval=1000, key="countdown_refresh")  # refresh every second
+            st.session_state.countdown -= 1
+        else:
+            # Once countdown ends → reset state and rerun
+            del st.session_state["countdown"]
+            st.experimental_rerun()
 logout_admin()
+
 
 # --- File Listing ---
 def extract_date_from_filename(filename):
