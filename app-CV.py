@@ -5,7 +5,6 @@ import re
 import base64
 import requests
 from datetime import datetime
-from streamlit_autorefresh import st_autorefresh
 import time
 
 # --- Page Config ---
