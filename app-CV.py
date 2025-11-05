@@ -204,6 +204,16 @@ if check_admin_password():
         st.rerun()
 logout_admin()
 
+
+# --- Government Services (Sidebar Shortcuts) ---
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 🗂️ Government Services")
+
+with st.sidebar:
+    st.link_button("🏦 BLP Gujarat - Application Status", "https://blp.gujarat.gov.in/appstatussearch.php")
+    st.link_button("🏢 Udyam Registration Verification", "https://udyamregistration.gov.in/Udyam_Verify.aspx")
+    st.link_button("🧾 Aadhaar–PAN Link Status", "https://eportal.incometax.gov.in/iec/foservices/#/pre-login/link-aadhaar-status")
+
 # --- File Listing ---
 def extract_date_from_filename(filename):
     match = re.search(FILE_PATTERN, filename)
