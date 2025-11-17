@@ -104,7 +104,7 @@ def check_admin_password():
         st.session_state["admin_authenticated"] = False
 
     if not st.session_state["admin_authenticated"]:
-        with st.sidebar.expander("🔐 Admin Login", expanded=True):
+        with st.sidebar.expander("🔐 Admin Login", expanded=False):
             pwd = st.text_input("Enter admin password:", type="password", key="admin_pwd")
             if st.button("Login", key="admin_login_btn"):
                 if pwd == correct_password:
