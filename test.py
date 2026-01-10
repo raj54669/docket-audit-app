@@ -301,14 +301,14 @@ def extract_cartel_groups(excel_path, sheet_name, header_row_idx):
     wb = load_workbook(excel_path, data_only=True)
     ws = wb[sheet_name]
 
-    START_COL = 13  # 🔒 Column M (Fixed)
+    START_COL = 13  # Column M is fixed
     cartel_groups = []
     current_group = None
     current_rows = []
 
-    # Start reading AFTER header
+    # Start reading AFTER header row
     for r in range(header_row_idx + 1, ws.max_row + 1):
-        # Read entire cartel zone for this row
+        # Read cartel data row from Column M onwards
         row_cells = [
             ws.cell(row=r, column=c).value
             for c in range(START_COL, ws.max_column + 1)
@@ -320,9 +320,12 @@ def extract_cartel_groups(excel_path, sheet_name, header_row_idx):
         if not non_empty:
             continue
 
-        # -----------------------------------------
-        # 3. Detect GROUP HEADER (Only 1 non-empty cell in the row)
-        # -----------------------------------------
+        # Debug: Check the non-empty values being processed
+        print(f"Row {r}: {non_empty}")
+
+        # --------------------------------------------------
+        # Check if it's a group header (only one non-empty value in the row)
+        # --------------------------------------------------
         if len(non_empty) == 1:
             if current_group and current_rows:
                 cartel_groups.append((current_group, current_rows))
@@ -331,12 +334,12 @@ def extract_cartel_groups(excel_path, sheet_name, header_row_idx):
             current_rows = []
             continue
 
-        # -----------------------------------------
-        # 4. Normal cartel row (Description + Value)
-        # -----------------------------------------
+        # --------------------------------------------------
+        # Normal row (Description + Offer Value)
+        # --------------------------------------------------
         desc = ws.cell(row=r, column=START_COL).value
 
-        # 🔥 FIND FIRST NON-EMPTY CELL IN ROW AFTER START_COL
+        # Find the first valid offer value to the right of the description
         val = None
         for c in range(START_COL + 1, ws.max_column + 1):
             v = ws.cell(row=r, column=c).value
@@ -347,11 +350,15 @@ def extract_cartel_groups(excel_path, sheet_name, header_row_idx):
         if desc:
             current_rows.append((str(desc).strip(), val))
 
-    # Push last group
+    # Add the last group if exists
     if current_group and current_rows:
         cartel_groups.append((current_group, current_rows))
 
+    # Debug: Show final extracted groups
+    print(f"Extracted Cartel Groups: {cartel_groups}")
+
     return cartel_groups
+
 
 
 # --- Selected Variant Title ---
