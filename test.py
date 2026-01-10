@@ -336,18 +336,28 @@ st.markdown(pricing_html, unsafe_allow_html=True)
 # --- Cartel Table ---
 st.markdown("<h3 style='color:#e65100; margin-top: -10px; margin-bottom: -8px;'>🎁 Cartel Offer</h3>", unsafe_allow_html=True)
 
-# ✅ Automatically find columns after the pricing section
-pricing_end_col = "ON ROAD PRICE Without SMC Road Tax"
-if pricing_end_col in data.columns:
-    start_idx = data.columns.get_loc(pricing_end_col) + 1
-    cartel_cols = data.columns[start_idx:]
-else:
-    cartel_cols = []
+# Load Cartel Offer data (from Sheet1)
+cartel_data = pd.read_excel(selected_filepath, sheet_name="Sheet1", header=None)
 
-if cartel_cols.empty:
-    st.warning("⚠️ No additional cartel offer columns found.")
-else:
-    cartel_html = """
+# --- Identify the Column M and Data Range ---
+# Locate the column with data starting from column M (index 12)
+start_col_index = 12
+cartel_offer_data = cartel_data.iloc[5:, start_col_index:]  # Start reading from row 6
+
+# --- Identify Group Names (Row 1) ---
+# For merged cells in row 1, extract group names from the merged ranges
+group_names = []
+col = start_col_index
+while col < cartel_data.shape[1]:
+    merged_cells = cartel_data.iloc[0, col]  # Group name in row 1
+    group_names.append(merged_cells)
+    # Move to the next merged block (skip merged columns)
+    while col < cartel_data.shape[1] and pd.isna(cartel_data.iloc[0, col + 1]):
+        col += 1
+    col += 1
+
+# --- Create the Cartel Offer Table ---
+cartel_html = """
     <style>
     .ctable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: 14px; }
     .ctable th { background-color: #2e7d32; color: white; padding: 4px 6px; text-align: right; }
@@ -355,16 +365,30 @@ else:
     .ctable td:first-child, .ctable th:first-child { text-align: left; }
     .ctable, .ctable th, .ctable td { border: 1px solid #000; }
     </style>
-    <table class='ctable'><tr><th>Description</th><th>Offer</th></tr>
-    """
-    for col in cartel_cols:
-        val = row[col]
-        # ✅ Auto-format if numeric
-        if pd.api.types.is_numeric_dtype(type(val)):
-            val = format_indian_currency(val)
-        cartel_html += f"<tr><td>{col}</td><td>{val}</td></tr>"
-    cartel_html += "</table>"
-    st.markdown(cartel_html, unsafe_allow_html=True)
+    <table class='ctable'><tr><th>Group</th><th>Description</th><th>Offer</th></tr>
+"""
+
+# Loop through each group name and its corresponding columns in cartel_offer_data
+group_start_col = start_col_index
+for group in group_names:
+    group_end_col = group_start_col + len(cartel_offer_data.columns) // len(group_names) - 1
+    group_data = cartel_offer_data.iloc[:, group_start_col:group_end_col + 1]
+    
+    # Add group header row
+    cartel_html += f"<tr><td colspan='3' style='font-weight: bold; background-color: #388e3c;'>{group}</td></tr>"
+    
+    # Loop through each row of data for the group
+    for idx in range(len(group_data)):
+        row_data = group_data.iloc[idx]
+        for val in row_data:
+            if pd.notna(val):
+                cartel_html += f"<tr><td></td><td>{val}</td><td>{format_indian_currency(row_data[0])}</td></tr>"
+
+    # Move to the next group block
+    group_start_col = group_end_col + 1
+
+cartel_html += "</table>"
+st.markdown(cartel_html, unsafe_allow_html=True)
 
 # --- Important Points Table ---
 try:
