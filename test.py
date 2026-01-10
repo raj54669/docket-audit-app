@@ -297,56 +297,64 @@ def format_indian_currency(value):
         return "Invalid"
 
 
-def extract_cartel_groups(excel_path, sheet_name):
+def extract_cartel_groups(excel_path, sheet_name, header_row_idx):
     wb = load_workbook(excel_path, data_only=True)
     ws = wb[sheet_name]
 
-    CARTEL_START_COL = 13   # 🔒 Column M (Excel)
-    HEADER_ROW = 2          # Column headers
-    GROUP_ROW = 1           # Group titles (merged)
+    START_COL = 13  # 🔒 Column M (FIXED as per requirement)
 
-    # ---------------------------------------
-    # 1️⃣ Read column headers from Row 2
-    # ---------------------------------------
-    headers = {}
-    for col in range(CARTEL_START_COL, ws.max_column + 1):
-        val = ws.cell(row=HEADER_ROW, column=col).value
-        if val:
-            headers[col] = str(val).strip()
-
-    if not headers:
-        return []
-
-    # ---------------------------------------
-    # 2️⃣ Read merged group headers (Row 1)
-    # ---------------------------------------
     cartel_groups = []
+    current_group = None
+    current_rows = []
 
-    merged_ranges = sorted(
-        ws.merged_cells.ranges,
-        key=lambda r: r.bounds[0]   # left → right
-    )
+    # Start reading AFTER header
+    for r in range(header_row_idx + 1, ws.max_row + 1):
 
-    for merged in merged_ranges:
-        min_col, min_row, max_col, _ = merged.bounds
+        # Read entire cartel zone for this row
+        row_cells = [
+            ws.cell(row=r, column=c).value
+            for c in range(START_COL, ws.max_column + 1)
+        ]
 
-        # Only group headers in Row 1 & after Column M
-        if min_row != GROUP_ROW or max_col < CARTEL_START_COL:
+        non_empty = [c for c in row_cells if c not in (None, "")]
+
+        # Skip empty rows
+        if not non_empty:
             continue
 
-        group_name = ws.cell(row=GROUP_ROW, column=min_col).value
-        if not group_name:
+        # --------------------------------------------------
+        # GROUP HEADER (only one non-empty cell)
+        # --------------------------------------------------
+        if len(non_empty) == 1:
+            if current_group and current_rows:
+                cartel_groups.append((current_group, current_rows))
+
+            current_group = str(non_empty[0]).strip()
+            current_rows = []
             continue
 
-        cols = []
-        for c in range(max(min_col, CARTEL_START_COL), max_col + 1):
-            if c in headers:
-                cols.append(headers[c])
+        # --------------------------------------------------
+        # NORMAL ROW (Description + Value)
+        # --------------------------------------------------
+        desc = ws.cell(row=r, column=START_COL).value
 
-        if cols:
-            cartel_groups.append((str(group_name).strip(), cols))
+        # 🔥 FIND FIRST NUMERIC / TEXT VALUE TO THE RIGHT
+        val = None
+        for c in range(START_COL + 1, ws.max_column + 1):
+            v = ws.cell(row=r, column=c).value
+            if v not in (None, ""):
+                val = v
+                break
+
+        if desc:
+            current_rows.append((str(desc).strip(), val))
+
+    # Push last group
+    if current_group and current_rows:
+        cartel_groups.append((current_group, current_rows))
 
     return cartel_groups
+
 
 
 
@@ -438,7 +446,7 @@ else:
     background-color: transparent !important;
     color: #0b3c5d;
     font-weight: 700;
-    font-size: 16px;   /* Bigger font */
+    font-size: 16px;
     text-align: left !important;
     border-left: 1px solid #000;
     border-right: 1px solid #000;
@@ -451,6 +459,8 @@ else:
 """
 
     for group_name, cols in cartel_groups:
+
+        # Group Header
         cartel_html += f"""
 <tr class="group-title">
     <td colspan="2">{group_name}</td>
@@ -464,10 +474,20 @@ else:
         for col in cols:
             val = row.get(col)
 
-            if isinstance(val, (int, float)):
-                val = format_indian_currency(val)
-            elif pd.isna(val):
+            # ✅ RESTORED ORIGINAL LOGIC (ENHANCED, NO NEW FUNCTION)
+            if pd.isna(val) or val in ("", None):
                 val = "₹0"
+
+            elif isinstance(val, (int, float)):
+                val = format_indian_currency(val)
+
+            elif isinstance(val, str):
+                cleaned = val.replace(",", "").strip()
+                if cleaned.isdigit():
+                    val = format_indian_currency(float(cleaned))
+                else:
+                    val = val  # keep text values as-is
+
             else:
                 val = str(val)
 
@@ -480,6 +500,7 @@ else:
 
     cartel_html += "</table>"
     st.markdown(cartel_html, unsafe_allow_html=True)
+
 
 
 # --- Important Points Table ---
