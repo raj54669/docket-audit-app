@@ -349,7 +349,7 @@ try:
     )
 
     # Excel Column M = 13 (1-based) → Pandas index = 12
-    cartel_start_col = 13 - 1  
+    cartel_start_col = 13 - 1
 
     # Row 1 → Group headers (merged cells, forward-filled)
     group_headers = header_df.iloc[0, cartel_start_col:].ffill()
@@ -372,27 +372,35 @@ try:
     """
 
     current_group = None
+    group_has_rows = False
 
-    for col, grp, sub in zip(cartel_values.index, group_headers, sub_headers):
-        val = cartel_values[col]
+    for grp, sub, val in zip(group_headers, sub_headers, cartel_values):
 
-        # Print group name once
+        # Detect new group
         if grp != current_group:
+            group_has_rows = False
+            pending_group = grp
+            current_group = grp
+
+        # Skip empty / NaN / zero values
+        if pd.isnull(val) or val == 0 or str(val).strip() == "":
+            continue
+
+        # Print group header only once when first valid row appears
+        if not group_has_rows:
             cartel_html += f"""
             <tr>
                 <th colspan="2" style="background:#ffffff; color:#004080; text-align:left;">
-                    {grp}
+                    {pending_group}
                 </th>
             </tr>
             <tr><th>Description</th><th>Offer</th></tr>
             """
-            current_group = grp
+            group_has_rows = True
 
-        # Format numeric values only
-        if pd.notnull(val) and isinstance(val, (int, float)):
+        # Format numeric values
+        if isinstance(val, (int, float)):
             val = format_indian_currency(val)
-        elif pd.isnull(val):
-            val = ""
 
         cartel_html += f"<tr><td>{sub}</td><td>{val}</td></tr>"
 
@@ -401,6 +409,7 @@ try:
 
 except Exception as e:
     st.warning(f"⚠️ Could not load Cartel Offer data: {e}")
+
 
 
 # --- Important Points Table ---
