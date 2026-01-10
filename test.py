@@ -297,20 +297,18 @@ def format_indian_currency(value):
         return "Invalid"
 
 
-def extract_cartel_groups(excel_path, sheet_name, header_row_idx):
+def extract_cartel_groups(excel_path, sheet_name):
     wb = load_workbook(excel_path, data_only=True)
     ws = wb[sheet_name]
 
-    START_COL = 13  # 🔒 Column M (FIXED as per requirement)
+    START_COL = 13  # 🔒 Column M (Fixed across all Excel files)
 
     cartel_groups = []
     current_group = None
     current_rows = []
 
-    # Start reading AFTER header
-    for r in range(header_row_idx + 1, ws.max_row + 1):
+    for r in range(1, ws.max_row + 1):
 
-        # Read entire cartel zone for this row
         row_cells = [
             ws.cell(row=r, column=c).value
             for c in range(START_COL, ws.max_column + 1)
@@ -318,13 +316,13 @@ def extract_cartel_groups(excel_path, sheet_name, header_row_idx):
 
         non_empty = [c for c in row_cells if c not in (None, "")]
 
-        # Skip empty rows
+        # Skip fully empty rows
         if not non_empty:
             continue
 
-        # --------------------------------------------------
-        # GROUP HEADER (only one non-empty cell)
-        # --------------------------------------------------
+        # -------------------------------
+        # 🟦 GROUP HEADER
+        # -------------------------------
         if len(non_empty) == 1:
             if current_group and current_rows:
                 cartel_groups.append((current_group, current_rows))
@@ -333,12 +331,13 @@ def extract_cartel_groups(excel_path, sheet_name, header_row_idx):
             current_rows = []
             continue
 
-        # --------------------------------------------------
-        # NORMAL ROW (Description + Value)
-        # --------------------------------------------------
+        # -------------------------------
+        # 🟩 NORMAL ROW
+        # -------------------------------
         desc = ws.cell(row=r, column=START_COL).value
+        if not desc:
+            continue
 
-        # 🔥 FIND FIRST NUMERIC / TEXT VALUE TO THE RIGHT
         val = None
         for c in range(START_COL + 1, ws.max_column + 1):
             v = ws.cell(row=r, column=c).value
@@ -346,17 +345,13 @@ def extract_cartel_groups(excel_path, sheet_name, header_row_idx):
                 val = v
                 break
 
-        if desc:
-            current_rows.append((str(desc).strip(), val))
+        current_rows.append((str(desc).strip(), val))
 
     # Push last group
     if current_group and current_rows:
         cartel_groups.append((current_group, current_rows))
 
     return cartel_groups
-
-
-
 
 # --- Selected Variant Title ---
 #st.markdown(f"<h2 style='margin-top: -8px; '> 🚚 {selected_variant}", unsafe_allow_html=True)
@@ -458,9 +453,7 @@ else:
 <table class="ctable">
 """
 
-    for group_name, cols in cartel_groups:
-
-        # Group Header
+    for group_name, rows in cartel_groups:
         cartel_html += f"""
 <tr class="group-title">
     <td colspan="2">{group_name}</td>
@@ -471,34 +464,24 @@ else:
 </tr>
 """
 
-        for col in cols:
-            val = row.get(col)
+        for desc, val in rows:
 
-            # ✅ RESTORED ORIGINAL LOGIC (ENHANCED, NO NEW FUNCTION)
-            if pd.isna(val) or val in ("", None):
-                val = "₹0"
-
-            elif isinstance(val, (int, float)):
+            if isinstance(val, (int, float)):
                 val = format_indian_currency(val)
-
-            elif isinstance(val, str):
-                cleaned = val.replace(",", "").strip()
-                if cleaned.isdigit():
-                    val = format_indian_currency(float(cleaned))
-                else:
-                    val = val  # keep text values as-is
-
+            elif pd.isna(val) or val is None:
+                val = "₹0"
             else:
                 val = str(val)
 
             cartel_html += f"""
 <tr>
-    <td>{col}</td>
+    <td>{desc}</td>
     <td>{val}</td>
 </tr>
 """
 
     cartel_html += "</table>"
+
     st.markdown(cartel_html, unsafe_allow_html=True)
 
 
