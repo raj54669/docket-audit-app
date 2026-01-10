@@ -297,32 +297,32 @@ def format_indian_currency(value):
         return "Invalid"
 
 
-def extract_cartel_groups(excel_path, sheet_name):
+def extract_cartel_groups(excel_path, sheet_name, header_row_idx):
     wb = load_workbook(excel_path, data_only=True)
     ws = wb[sheet_name]
 
-    START_COL = 13  # 🔒 Column M (Fixed across all Excel files)
-
+    START_COL = 13  # 🔒 Column M (Fixed)
     cartel_groups = []
     current_group = None
     current_rows = []
 
-    for r in range(1, ws.max_row + 1):
-
+    # Start reading AFTER header
+    for r in range(header_row_idx + 1, ws.max_row + 1):
+        # Read entire cartel zone for this row
         row_cells = [
             ws.cell(row=r, column=c).value
             for c in range(START_COL, ws.max_column + 1)
         ]
-
+        
         non_empty = [c for c in row_cells if c not in (None, "")]
 
-        # Skip fully empty rows
+        # Skip empty rows
         if not non_empty:
             continue
 
-        # -------------------------------
-        # 🟦 GROUP HEADER
-        # -------------------------------
+        # -----------------------------------------
+        # 3. Detect GROUP HEADER (Only 1 non-empty cell in the row)
+        # -----------------------------------------
         if len(non_empty) == 1:
             if current_group and current_rows:
                 cartel_groups.append((current_group, current_rows))
@@ -331,13 +331,12 @@ def extract_cartel_groups(excel_path, sheet_name):
             current_rows = []
             continue
 
-        # -------------------------------
-        # 🟩 NORMAL ROW
-        # -------------------------------
+        # -----------------------------------------
+        # 4. Normal cartel row (Description + Value)
+        # -----------------------------------------
         desc = ws.cell(row=r, column=START_COL).value
-        if not desc:
-            continue
 
+        # 🔥 FIND FIRST NON-EMPTY CELL IN ROW AFTER START_COL
         val = None
         for c in range(START_COL + 1, ws.max_column + 1):
             v = ws.cell(row=r, column=c).value
@@ -345,13 +344,15 @@ def extract_cartel_groups(excel_path, sheet_name):
                 val = v
                 break
 
-        current_rows.append((str(desc).strip(), val))
+        if desc:
+            current_rows.append((str(desc).strip(), val))
 
     # Push last group
     if current_group and current_rows:
         cartel_groups.append((current_group, current_rows))
 
     return cartel_groups
+
 
 # --- Selected Variant Title ---
 #st.markdown(f"<h2 style='margin-top: -8px; '> 🚚 {selected_variant}", unsafe_allow_html=True)
@@ -395,7 +396,8 @@ st.markdown(pricing_html, unsafe_allow_html=True)
 
 cartel_groups = extract_cartel_groups(
     selected_filepath,
-    SHEET_NAME
+    SHEET_NAME,
+    HEADER_ROW
 )
 
 st.markdown(
@@ -407,82 +409,81 @@ if not cartel_groups:
     st.warning("⚠️ No cartel offer data found.")
 else:
     cartel_html = """
-<style>
-.ctable {
-    border-collapse: collapse;
-    width: 100%;
-    font-weight: bold;
-    font-size: 14px;
-    border: 1px solid #000;
-}
-.ctable th {
-    background-color: #2e7d32;
-    color: white;
-    padding: 6px 8px;
-    border: 1px solid #000;
-}
-.ctable td {
-    background-color: #e8f5e9;
-    padding: 6px 8px;
-    border: 1px solid #000;
-    color: black;
-}
-.ctable th:first-child,
-.ctable td:first-child {
-    text-align: left;
-}
-.ctable th:last-child,
-.ctable td:last-child {
-    text-align: right;
-}
+    <style>
+    .ctable {
+        border-collapse: collapse;
+        width: 100%;
+        font-weight: bold;
+        font-size: 14px;
+        border: 1px solid #000;
+    }
+    .ctable th {
+        background-color: #2e7d32;
+        color: white;
+        padding: 6px 8px;
+        border: 1px solid #000;
+    }
+    .ctable td {
+        background-color: #e8f5e9;
+        padding: 6px 8px;
+        border: 1px solid #000;
+        color: black;
+    }
+    .ctable th:first-child,
+    .ctable td:first-child {
+        text-align: left;
+    }
+    .ctable th:last-child,
+    .ctable td:last-child {
+        text-align: right;
+    }
+    /* ✅ GROUP HEADER */
+    .group-title td {
+        background-color: transparent !important;
+        color: #0b3c5d;
+        font-weight: 700;
+        font-size: 16px;   /* Bigger font */
+        text-align: left !important;
+        border-left: 1px solid #000;
+        border-right: 1px solid #000;
+        border-top: 1px solid #000;
+        border-bottom: none;
+    }
+    </style>
 
-/* ✅ GROUP HEADER */
-.group-title td {
-    background-color: transparent !important;
-    color: #0b3c5d;
-    font-weight: 700;
-    font-size: 16px;
-    text-align: left !important;
-    border-left: 1px solid #000;
-    border-right: 1px solid #000;
-    border-top: 1px solid #000;
-    border-bottom: none;
-}
-</style>
+    <table class="ctable">
+    """
 
-<table class="ctable">
-"""
-
-    for group_name, rows in cartel_groups:
+    for group_name, cols in cartel_groups:
         cartel_html += f"""
-<tr class="group-title">
-    <td colspan="2">{group_name}</td>
-</tr>
-<tr>
-    <th>Description</th>
-    <th>Offer</th>
-</tr>
-"""
+    <tr class="group-title">
+        <td colspan="2">{group_name}</td>
+    </tr>
+    <tr>
+        <th>Description</th>
+        <th>Offer</th>
+    </tr>
+    """
 
-        for desc, val in rows:
-
+        for desc, val in cols:
+            # Format the value
             if isinstance(val, (int, float)):
                 val = format_indian_currency(val)
-            elif pd.isna(val) or val is None:
+            elif pd.isna(val):
                 val = "₹0"
             else:
                 val = str(val)
 
             cartel_html += f"""
-<tr>
-    <td>{desc}</td>
-    <td>{val}</td>
-</tr>
-"""
+    <tr>
+        <td>{desc}</td>
+        <td>{val}</td>
+    </tr>
+    """
 
     cartel_html += "</table>"
-
     st.markdown(cartel_html, unsafe_allow_html=True)
+
 
 
 
