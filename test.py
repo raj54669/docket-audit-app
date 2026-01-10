@@ -435,7 +435,7 @@ table.ctable th:first-child {
 }
 table.ctable tr.group-header td {
     background-color: transparent !important;
-    color: #0b3c5d; /* Navy Blue */
+    color: #0b3c5d;
     font-weight: bold;
     text-align: left;
     border-top: 2px solid #000;
