@@ -303,9 +303,7 @@ def extract_cartel_groups(excel_path, sheet_name, header_row_idx):
     header_row = header_row_idx
     data_start_row = header_row + 1
 
-    # --------------------------------------------------
-    # 1. Find anchor column (ALWAYS EXISTS as per you)
-    # --------------------------------------------------
+    # 1️⃣ Find anchor column (guaranteed in all files)
     start_col = None
     for col in range(1, ws.max_column + 1):
         if ws.cell(row=header_row, column=col).value == "ON ROAD PRICE Without SMC Road Tax":
@@ -321,44 +319,37 @@ def extract_cartel_groups(excel_path, sheet_name, header_row_idx):
     current_group = None
     current_rows = []
 
-    # --------------------------------------------------
-    # 2. Iterate rows below header
-    # --------------------------------------------------
-    for row in range(data_start_row, ws.max_row + 1):
+    # 2️⃣ Scan rows below header
+    for r in range(data_start_row, ws.max_row + 1):
         row_cells = [
-            ws.cell(row=row, column=col).value
-            for col in range(start_col, end_col + 1)
+            ws.cell(row=r, column=c).value
+            for c in range(start_col, end_col + 1)
         ]
 
-        non_empty = [c for c in row_cells if c not in (None, "")]
+        # Remove blanks
+        non_empty = [str(c).strip() for c in row_cells if c not in (None, "")]
 
-        # Skip fully empty rows
         if not non_empty:
             continue
 
-        # --------------------------------------------------
-        # 3. Detect GROUP HEADER
-        # Rule: only ONE non-empty cell across cartel area
-        # --------------------------------------------------
-        if len(non_empty) == 1:
-            # Save previous group
+        # 3️⃣ GROUP HEADER DETECTION (FIXED)
+        # All values same → merged header row
+        if len(set(non_empty)) == 1:
             if current_group and current_rows:
                 cartel_groups.append((current_group, current_rows))
 
-            current_group = str(non_empty[0]).strip()
+            current_group = non_empty[0]
             current_rows = []
             continue
 
-        # --------------------------------------------------
-        # 4. Normal cartel row (Description | Offer)
-        # --------------------------------------------------
-        desc = ws.cell(row=row, column=start_col).value
-        val = ws.cell(row=row, column=start_col + 1).value
+        # 4️⃣ Normal cartel row
+        desc = ws.cell(row=r, column=start_col).value
+        val = ws.cell(row=r, column=start_col + 1).value
 
         if desc:
             current_rows.append((str(desc).strip(), val))
 
-    # Append last group
+    # 5️⃣ Append last group
     if current_group and current_rows:
         cartel_groups.append((current_group, current_rows))
 
