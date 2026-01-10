@@ -301,17 +301,15 @@ def extract_cartel_groups(excel_path, sheet_name, header_row_idx):
     wb = load_workbook(excel_path, data_only=True)
     ws = wb[sheet_name]
 
-    # Pandas header row -> Excel row index
     column_header_row = header_row_idx + 1
     group_header_row = column_header_row - 1
 
-    # Read column headers
     headers = {
         col: ws.cell(row=column_header_row, column=col).value
         for col in range(1, ws.max_column + 1)
     }
 
-    # Find Cartel start column
+    # Find cartel start column
     start_col = None
     for col_idx, val in headers.items():
         if val == "ON ROAD PRICE Without SMC Road Tax":
@@ -319,19 +317,23 @@ def extract_cartel_groups(excel_path, sheet_name, header_row_idx):
             break
 
     if not start_col:
-        return {}
+        return []
 
     end_col = ws.max_column
-    cartel_groups = {}
+    cartel_groups = []
 
-    for merged in ws.merged_cells.ranges:
+    # ✅ Sort merged cells left → right
+    merged_ranges = sorted(
+        ws.merged_cells.ranges,
+        key=lambda r: r.bounds[0]
+    )
+
+    for merged in merged_ranges:
         min_col, min_row, max_col, max_row = merged.bounds
 
-        # Only group header row
         if min_row != group_header_row:
             continue
 
-        # Skip non-overlapping cartel columns
         if max_col < start_col or min_col > end_col:
             continue
 
@@ -346,9 +348,10 @@ def extract_cartel_groups(excel_path, sheet_name, header_row_idx):
                 cols.append(header)
 
         if cols:
-            cartel_groups[group_name] = cols
+            cartel_groups.append((group_name, cols))
 
     return cartel_groups
+
 
 # --- Selected Variant Title ---
 #st.markdown(f"<h2 style='margin-top: -8px; '> 🚚 {selected_variant}", unsafe_allow_html=True)
@@ -387,7 +390,7 @@ for col in vehicle_cols:
 pricing_html += "</table>"
 st.markdown(pricing_html, unsafe_allow_html=True)
 
-# --- Cartel Offer (Dynamic Grouping from Excel) ---
+# --- Cartel Offer (Single Table with Group Headers) ---
 cartel_groups = extract_cartel_groups(
     selected_filepath,
     SHEET_NAME,
@@ -395,23 +398,35 @@ cartel_groups = extract_cartel_groups(
 )
 
 st.markdown(
-    "<h3 style='color:#e65100; margin-top: -10px; margin-bottom: -8px;'>🎁 Cartel Offer</h3>",
+    "<h3 style='color:#e65100; margin-top:-10px; margin-bottom:-8px;'>🎁 Cartel Offer</h3>",
     unsafe_allow_html=True
 )
 
 if not cartel_groups:
     st.warning("⚠️ No cartel offer data found.")
 else:
-    for group_name, cols in cartel_groups.items():
+    cartel_html = """
+    <table class='ctable'>
+        <tr>
+            <th>Description</th>
+            <th>Offer</th>
+        </tr>
+    """
 
-        st.markdown(
-            f"<h4 style='color:#2e7d32; margin-top:10px; margin-bottom:4px;'>{group_name}</h4>",
-            unsafe_allow_html=True
-        )
+    for group_name, cols in cartel_groups:
 
-        cartel_html = """
-        <table class='ctable'>
-            <tr><th>Description</th><th>Offer</th></tr>
+        # 🔶 Group header row (highlighted)
+        cartel_html += f"""
+        <tr>
+            <td colspan="2" style="
+                background-color:#c8e6c9;
+                font-weight:bold;
+                text-align:left;
+                border-top:2px solid #000;
+            ">
+                {group_name}
+            </td>
+        </tr>
         """
 
         for col in cols:
@@ -422,11 +437,15 @@ else:
             elif pd.isna(val):
                 val = "₹0"
 
-            cartel_html += f"<tr><td>{col}</td><td>{val}</td></tr>"
+            cartel_html += f"""
+            <tr>
+                <td>{col}</td>
+                <td>{val}</td>
+            </tr>
+            """
 
-        cartel_html += "</table>"
-        st.markdown(cartel_html, unsafe_allow_html=True)
-
+    cartel_html += "</table>"
+    st.markdown(cartel_html, unsafe_allow_html=True)
 
 # --- Important Points Table ---
 try:
