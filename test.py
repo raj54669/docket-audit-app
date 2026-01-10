@@ -360,16 +360,16 @@ try:
     # Data row already filtered by Variant
     cartel_values = row.iloc[cartel_start_col:]
 
-    cartel_html = """
-    <style>
-    .ctable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: 14px; }
-    .ctable th { background-color: #2e7d32; color: white; padding: 4px 6px; text-align: right; }
-    .ctable td { background-color: #e8f5e9; padding: 4px 6px; text-align: right; color: black; }
-    .ctable td:first-child, .ctable th:first-child { text-align: left; }
-    .ctable, .ctable th, .ctable td { border: 1px solid #000; }
-    </style>
-    <table class='ctable'>
-    """
+    cartel_html = (
+"<style>"
+".ctable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: 14px; }"
+".ctable th { background-color: #2e7d32; color: white; padding: 4px 6px; text-align: right; }"
+".ctable td { background-color: #e8f5e9; padding: 4px 6px; text-align: right; color: black; }"
+".ctable td:first-child, .ctable th:first-child { text-align: left; }"
+".ctable, .ctable th, .ctable td { border: 1px solid #000; }"
+"</style>"
+"<table class='ctable'>"
+    )
 
     current_group = None
     group_has_rows = False
@@ -388,14 +388,12 @@ try:
 
         # Print group header only once when first valid row appears
         if not group_has_rows:
-            cartel_html += f"""
-            <tr>
-                <th colspan="2" style="background:#ffffff; color:#004080; text-align:left;">
-                    {pending_group}
-                </th>
-            </tr>
-            <tr><th>Description</th><th>Offer</th></tr>
-            """
+            cartel_html += (
+                "<tr>"
+                f"<th colspan='2' style='background:#ffffff; color:#004080; text-align:left;'>{pending_group}</th>"
+                "</tr>"
+                "<tr><th>Description</th><th>Offer</th></tr>"
+            )
             group_has_rows = True
 
         # Format numeric values
@@ -405,6 +403,7 @@ try:
         cartel_html += f"<tr><td>{sub}</td><td>{val}</td></tr>"
 
     cartel_html += "</table>"
+
     st.markdown(cartel_html, unsafe_allow_html=True)
 
 except Exception as e:
