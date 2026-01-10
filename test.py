@@ -332,6 +332,7 @@ for col in vehicle_cols:
 pricing_html += "</table>"
 st.markdown(pricing_html, unsafe_allow_html=True)
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # --- Cartel Table (Grouped, Dynamic from Column M) ---
 st.markdown(
@@ -340,7 +341,7 @@ st.markdown(
 )
 
 try:
-    # Read first two rows for group headers & sub-headers from Sheet1
+    # Read first two rows for group headers & sub-headers
     header_df = pd.read_excel(
         selected_filepath,
         sheet_name=SHEET_NAME,
@@ -351,30 +352,34 @@ try:
     # Excel Column M = 13 (1-based) → Pandas index = 12
     cartel_start_col = 13 - 1
 
-    # Row 1 → Group headers (merged cells, forward-filled)
     group_headers = header_df.iloc[0, cartel_start_col:].ffill()
-
-    # Row 2 → Sub-headers
     sub_headers = header_df.iloc[1, cartel_start_col:]
 
-    # Data row already filtered by Variant
-    cartel_values = row.iloc[cartel_start_col:]
+    # Use full data row (position-safe)
+    cartel_values = row
 
     cartel_html = (
-"<style>"
-".ctable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: 14px; }"
-".ctable th { background-color: #2e7d32; color: white; padding: 4px 6px; text-align: right; }"
-".ctable td { background-color: #e8f5e9; padding: 4px 6px; text-align: right; color: black; }"
-".ctable td:first-child, .ctable th:first-child { text-align: left; }"
-".ctable, .ctable th, .ctable td { border: 1px solid #000; }"
-"</style>"
-"<table class='ctable'>"
+        "<style>"
+        ".ctable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: 14px; }"
+        ".ctable th { background-color: #2e7d32; color: white; padding: 4px 6px; text-align: right; }"
+        ".ctable td { background-color: #e8f5e9; padding: 4px 6px; text-align: right; color: black; }"
+        ".ctable td:first-child, .ctable th:first-child { text-align: left; }"
+        ".ctable, .ctable th, .ctable td { border: 1px solid #000; }"
+        "</style>"
+        "<table class='ctable'>"
     )
 
     current_group = None
     group_has_rows = False
 
-    for grp, sub, val in zip(group_headers, sub_headers, cartel_values):
+    for offset, grp in enumerate(group_headers):
+        col_idx = cartel_start_col + offset
+
+        if col_idx >= len(cartel_values):
+            continue
+
+        sub = sub_headers.iloc[offset]
+        val = cartel_values.iloc[col_idx]
 
         # Detect new group
         if grp != current_group:
@@ -382,11 +387,11 @@ try:
             pending_group = grp
             current_group = grp
 
-        # Skip empty / NaN / zero values
+        # Skip empty values
         if pd.isnull(val) or val == 0 or str(val).strip() == "":
             continue
 
-        # Print group header only once when first valid row appears
+        # Print group header once
         if not group_has_rows:
             cartel_html += (
                 "<tr>"
@@ -396,19 +401,17 @@ try:
             )
             group_has_rows = True
 
-        # Format numeric values
-        if isinstance(val, (int, float)):
+        # ✅ Proper Indian currency formatting
+        if pd.api.types.is_number(val):
             val = format_indian_currency(val)
 
         cartel_html += f"<tr><td>{sub}</td><td>{val}</td></tr>"
 
     cartel_html += "</table>"
-
     st.markdown(cartel_html, unsafe_allow_html=True)
 
 except Exception as e:
     st.warning(f"⚠️ Could not load Cartel Offer data: {e}")
-
 
 
 # --- Important Points Table ---
