@@ -341,7 +341,7 @@ st.markdown(
 )
 
 try:
-    # Read first two rows for group headers & sub-headers
+    # Read header rows directly from Excel (no column drop here)
     header_df = pd.read_excel(
         selected_filepath,
         sheet_name=SHEET_NAME,
@@ -349,14 +349,14 @@ try:
         nrows=2
     )
 
-    # Excel Column M = 13 (1-based) → Pandas index = 12
-    cartel_start_col = 13 - 1
+    # Excel Column M = 13
+    # BUT main data has first column dropped → shift by -1
+    cartel_start_col = (13 - 1) - 1  # = 11
 
-    group_headers = header_df.iloc[0, cartel_start_col:].ffill()
-    sub_headers = header_df.iloc[1, cartel_start_col:]
+    group_headers = header_df.iloc[0, 13 - 1:].ffill()
+    sub_headers = header_df.iloc[1, 13 - 1:]
 
-    # Use full data row (position-safe)
-    cartel_values = row
+    cartel_values = row  # already shifted row
 
     cartel_html = (
         "<style>"
@@ -381,27 +381,22 @@ try:
         sub = sub_headers.iloc[offset]
         val = cartel_values.iloc[col_idx]
 
-        # Detect new group
         if grp != current_group:
             group_has_rows = False
-            pending_group = grp
             current_group = grp
 
-        # Skip empty values
         if pd.isnull(val) or val == 0 or str(val).strip() == "":
             continue
 
-        # Print group header once
         if not group_has_rows:
             cartel_html += (
                 "<tr>"
-                f"<th colspan='2' style='background:#ffffff; color:#004080; text-align:left;'>{pending_group}</th>"
+                f"<th colspan='2' style='background:#ffffff; color:#004080; text-align:left;'>{grp}</th>"
                 "</tr>"
                 "<tr><th>Description</th><th>Offer</th></tr>"
             )
             group_has_rows = True
 
-        # ✅ Proper Indian currency formatting
         if pd.api.types.is_number(val):
             val = format_indian_currency(val)
 
@@ -413,6 +408,7 @@ try:
 except Exception as e:
     st.warning(f"⚠️ Could not load Cartel Offer data: {e}")
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # --- Important Points Table ---
 try:
