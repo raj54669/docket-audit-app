@@ -390,7 +390,8 @@ for col in vehicle_cols:
 pricing_html += "</table>"
 st.markdown(pricing_html, unsafe_allow_html=True)
 
-# --- Cartel Offer (Single Table with Group Headers) ---
+# --- Cartel Offer (Single Unified Table with Group Headers) ---
+
 cartel_groups = extract_cartel_groups(
     selected_filepath,
     SHEET_NAME,
@@ -398,7 +399,7 @@ cartel_groups = extract_cartel_groups(
 )
 
 st.markdown(
-    "<h3 style='color:#e65100; margin-top:-10px; margin-bottom:-8px;'>🎁 Cartel Offer</h3>",
+    "<h3 style='color:#e65100; margin-top:8px;'>🎁 Cartel Offer</h3>",
     unsafe_allow_html=True
 )
 
@@ -406,43 +407,68 @@ if not cartel_groups:
     st.warning("⚠️ No cartel offer data found.")
 else:
     cartel_html = """
-<table class='ctable'>
-    <tr>
-        <th>Description</th>
-        <th>Offer</th>
-    </tr>
-"""
+    <style>
+        table.cartel-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        table.cartel-table th {
+            background-color: #2e7d32;
+            color: white;
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #000;
+        }
+        table.cartel-table td {
+            padding: 6px 8px;
+            border: 1px solid #000;
+            background-color: #eef7ee;
+        }
+        tr.group-header td {
+            background-color: #c8e6c9 !important;
+            font-weight: bold;
+            border-top: 2px solid #000;
+        }
+        td.offer {
+            text-align: right;
+            font-weight: bold;
+        }
+    </style>
 
+    <table class="cartel-table">
+        <tr>
+            <th>Description</th>
+            <th style="text-align:right;">Offer</th>
+        </tr>
+    """
+
+    # 🔁 IMPORTANT: Order preserved as returned from Excel
     for group_name, cols in cartel_groups:
 
-        # 🔶 Group header row (highlighted)
+        # Group header row
         cartel_html += f"""
-<tr>
-    <td colspan="2" style="
-        background-color:#c8e6c9;
-        font-weight:bold;
-        text-align:left;
-        border-top:2px solid #000;
-    ">
-        {group_name}
-    </td>
-</tr>
-"""
+        <tr class="group-header">
+            <td colspan="2">{group_name}</td>
+        </tr>
+        """
 
         for col in cols:
-            val = row[col]
+            val = row.get(col)
 
             if isinstance(val, (int, float)):
                 val = format_indian_currency(val)
             elif pd.isna(val):
                 val = "₹0"
+            else:
+                val = str(val)
 
             cartel_html += f"""
-<tr>
-    <td>{col}</td>
-    <td>{val}</td>
-</tr>
-"""
+            <tr>
+                <td>{col}</td>
+                <td class="offer">{val}</td>
+            </tr>
+            """
 
     cartel_html += "</table>"
 
