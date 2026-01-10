@@ -390,7 +390,8 @@ for col in vehicle_cols:
 pricing_html += "</table>"
 st.markdown(pricing_html, unsafe_allow_html=True)
 
-# --- Cartel Offer (Single Unified Table with Group Headers) ---
+
+# --- Cartel Offer (Single Table with Navy Group Headers) ---
 
 cartel_groups = extract_cartel_groups(
     selected_filepath,
@@ -408,45 +409,49 @@ if not cartel_groups:
 else:
     cartel_html = """
     <style>
-        table.cartel-table {
-            width: 100%;
+        table.ctable {
             border-collapse: collapse;
+            width: 100%;
+            font-weight: bold;
             font-size: 14px;
         }
-        table.cartel-table th {
+        table.ctable th {
             background-color: #2e7d32;
             color: white;
-            padding: 8px;
-            text-align: left;
-            border: 1px solid #000;
-        }
-        table.cartel-table td {
-            padding: 6px 8px;
-            border: 1px solid #000;
-            background-color: #eef7ee;
-        }
-        tr.group-header td {
-            background-color: #c8e6c9 !important;
-            font-weight: bold;
-            border-top: 2px solid #000;
-        }
-        td.offer {
+            padding: 4px 6px;
             text-align: right;
+            border: 1px solid #000;
+        }
+        table.ctable td {
+            background-color: #e8f5e9;
+            padding: 4px 6px;
+            text-align: right;
+            color: black;
+            border: 1px solid #000;
+        }
+        table.ctable td:first-child,
+        table.ctable th:first-child {
+            text-align: left;
+        }
+        table.ctable tr.group-header td {
+            background-color: transparent !important;
+            color: #0b3c5d;  /* Navy Blue */
             font-weight: bold;
+            text-align: left;
+            border-top: 2px solid #000;
         }
     </style>
 
-    <table class="cartel-table">
+    <table class="ctable">
         <tr>
             <th>Description</th>
-            <th style="text-align:right;">Offer</th>
+            <th>Offer</th>
         </tr>
     """
 
-    # 🔁 IMPORTANT: Order preserved as returned from Excel
     for group_name, cols in cartel_groups:
 
-        # Group header row
+        # Group Header
         cartel_html += f"""
         <tr class="group-header">
             <td colspan="2">{group_name}</td>
@@ -466,12 +471,13 @@ else:
             cartel_html += f"""
             <tr>
                 <td>{col}</td>
-                <td class="offer">{val}</td>
+                <td>{val}</td>
             </tr>
             """
 
     cartel_html += "</table>"
 
+    # ⚠️ THIS LINE IS CRITICAL
     st.markdown(cartel_html, unsafe_allow_html=True)
 
 
