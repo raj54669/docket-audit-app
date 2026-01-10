@@ -348,7 +348,7 @@ st.markdown(
 )
 
 try:
-    # Read first two rows for group headers & sub-headers
+    # Read first two rows (Group + Sub headers)
     header_df = pd.read_excel(
         selected_filepath,
         sheet_name=SHEET_NAME,
@@ -356,14 +356,11 @@ try:
         nrows=2
     )
 
-    # Excel Column M = 13 (1-based) → Pandas index = 12
-    cartel_start_col = 13 - 1
+    # Excel Column M = 13 (1-based) → pandas index = 12
+    cartel_start_col = 12
 
-    group_headers = header_df.iloc[0, cartel_start_col:].ffill()
-    sub_headers = header_df.iloc[1, cartel_start_col:]
-
-    # Use full data row (position-safe)
-    cartel_values = row
+    group_headers = header_df.iloc[0]
+    sub_headers = header_df.iloc[1]
 
     cartel_html = (
         "<style>"
@@ -379,19 +376,20 @@ try:
     current_group = None
     group_has_rows = False
 
-    for offset, grp in enumerate(group_headers):
-        col_idx = cartel_start_col + offset
+    # 🔑 Iterate over ACTUAL Excel columns from M till last column with data
+    for col_idx in range(cartel_start_col, header_df.shape[1]):
 
-        if col_idx >= len(cartel_values):
+        grp = group_headers.iloc[col_idx]
+        sub = normalize_header_text(sub_headers.iloc[col_idx])
+        val = row.iloc[col_idx] if col_idx < len(row) else None
+
+        # Skip fully empty columns
+        if pd.isna(grp) and pd.isna(sub):
             continue
-
-        sub = normalize_header_text(sub_headers.iloc[offset])
-        val = cartel_values.iloc[col_idx]
 
         # Detect new group
         if grp != current_group:
             group_has_rows = False
-            pending_group = grp
             current_group = grp
 
         # Skip empty values
@@ -402,13 +400,13 @@ try:
         if not group_has_rows:
             cartel_html += (
                 "<tr>"
-                f"<th colspan='2' style='background:#ffffff; color:#004080; text-align:left;'>{pending_group}</th>"
+                f"<th colspan='2' style='background:#ffffff; color:#004080; text-align:left;'>{grp}</th>"
                 "</tr>"
                 "<tr><th>Description</th><th>Offer</th></tr>"
             )
             group_has_rows = True
 
-        # ✅ Proper Indian currency formatting
+        # Currency formatting
         if pd.api.types.is_number(val):
             val = format_indian_currency(val)
 
@@ -420,6 +418,8 @@ try:
 except Exception as e:
     st.warning(f"⚠️ Could not load Cartel Offer data: {e}")
 
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # --- Important Points Table ---
 try:
