@@ -296,62 +296,62 @@ def format_indian_currency(value):
     except:
         return "Invalid"
 
-def extract_cartel_groups(excel_path, sheet_name, header_row_idx):
+def extract_cartel_groups(excel_path, sheet_name, header_row_idx, data_df):
+    """
+    Returns:
+    [
+        ("GROUP NAME", ["Column A", "Column B"]),
+        ...
+    ]
+    """
+
+    # 1️⃣ ORIGINAL, WORKING LOGIC — find cartel columns
+    pricing_end_col = "ON ROAD PRICE Without SMC Road Tax"
+
+    if pricing_end_col not in data_df.columns:
+        return []
+
+    start_idx = data_df.columns.get_loc(pricing_end_col) + 1
+    cartel_cols = list(data_df.columns[start_idx:])
+
+    if not cartel_cols:
+        return []
+
+    # 2️⃣ Read merged group headers using openpyxl
     wb = load_workbook(excel_path, data_only=True)
     ws = wb[sheet_name]
 
     header_row = header_row_idx
-    data_start_row = header_row + 1
-
-    # 1️⃣ Find anchor column (guaranteed in all files)
-    start_col = None
-    for col in range(1, ws.max_column + 1):
-        if ws.cell(row=header_row, column=col).value == "ON ROAD PRICE Without SMC Road Tax":
-            start_col = col + 1
-            break
-
-    if not start_col:
-        return []
-
-    end_col = ws.max_column
+    group_header_row = header_row - 1
 
     cartel_groups = []
-    current_group = None
-    current_rows = []
 
-    # 2️⃣ Scan rows below header
-    for r in range(data_start_row, ws.max_row + 1):
-        row_cells = [
-            ws.cell(row=r, column=c).value
-            for c in range(start_col, end_col + 1)
-        ]
+    merged_ranges = sorted(
+        ws.merged_cells.ranges,
+        key=lambda r: r.bounds[0]
+    )
 
-        # Remove blanks
-        non_empty = [str(c).strip() for c in row_cells if c not in (None, "")]
+    for merged in merged_ranges:
+        min_col, min_row, max_col, max_row = merged.bounds
 
-        if not non_empty:
+        # Only group header row
+        if min_row != group_header_row:
             continue
 
-        # 3️⃣ GROUP HEADER DETECTION (FIXED)
-        # All values same → merged header row
-        if len(set(non_empty)) == 1:
-            if current_group and current_rows:
-                cartel_groups.append((current_group, current_rows))
-
-            current_group = non_empty[0]
-            current_rows = []
+        group_name = ws.cell(row=group_header_row, column=min_col).value
+        if not group_name:
             continue
 
-        # 4️⃣ Normal cartel row
-        desc = ws.cell(row=r, column=start_col).value
-        val = ws.cell(row=r, column=start_col + 1).value
+        group_columns = []
 
-        if desc:
-            current_rows.append((str(desc).strip(), val))
+        for col_idx in range(min_col, max_col + 1):
+            if col_idx - 1 < len(data_df.columns):
+                col_name = data_df.columns[col_idx - 1]
+                if col_name in cartel_cols:
+                    group_columns.append(col_name)
 
-    # 5️⃣ Append last group
-    if current_group and current_rows:
-        cartel_groups.append((current_group, current_rows))
+        if group_columns:
+            cartel_groups.append((str(group_name).strip(), group_columns))
 
     return cartel_groups
 
@@ -399,8 +399,10 @@ st.markdown(pricing_html, unsafe_allow_html=True)
 cartel_groups = extract_cartel_groups(
     selected_filepath,
     SHEET_NAME,
-    HEADER_ROW
+    HEADER_ROW,
+    data
 )
+
 
 st.markdown(
     "<h3 style='color:#e65100; margin-top:8px;'>🎁 Cartel Offer</h3>",
