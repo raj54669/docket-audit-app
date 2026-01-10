@@ -333,31 +333,34 @@ pricing_html += "</table>"
 st.markdown(pricing_html, unsafe_allow_html=True)
 
 
-# --- Cartel Table ---
-st.markdown("<h3 style='color:#e65100; margin-top: -10px; margin-bottom: -8px;'>🎁 Cartel Offer</h3>", unsafe_allow_html=True)
+# --- Cartel Table (Grouped, Dynamic from Column M) ---
+st.markdown(
+    "<h3 style='color:#e65100; margin-top: -10px; margin-bottom: -8px;'>🎁 Cartel Offer</h3>",
+    unsafe_allow_html=True
+)
 
-# Load Cartel Offer data (from Sheet1)
-cartel_data = pd.read_excel(selected_filepath, sheet_name="Sheet1", header=None)
+try:
+    # Read first two rows for group headers & sub-headers from Sheet1
+    header_df = pd.read_excel(
+        selected_filepath,
+        sheet_name=SHEET_NAME,
+        header=None,
+        nrows=2
+    )
 
-# --- Identify the Column M and Data Range ---
-# Locate the column with data starting from column M (index 12)
-start_col_index = 12
-cartel_offer_data = cartel_data.iloc[5:, start_col_index:]  # Start reading from row 6
+    # Excel Column M = 13 (1-based) → Pandas index = 12
+    cartel_start_col = 13 - 1  
 
-# --- Identify Group Names (Row 1) ---
-# For merged cells in row 1, extract group names from the merged ranges
-group_names = []
-col = start_col_index
-while col < cartel_data.shape[1]:
-    merged_cells = cartel_data.iloc[0, col]  # Group name in row 1
-    group_names.append(merged_cells)
-    # Move to the next merged block (skip merged columns)
-    while col < cartel_data.shape[1] and pd.isna(cartel_data.iloc[0, col + 1]):
-        col += 1
-    col += 1
+    # Row 1 → Group headers (merged cells, forward-filled)
+    group_headers = header_df.iloc[0, cartel_start_col:].ffill()
 
-# --- Create the Cartel Offer Table ---
-cartel_html = """
+    # Row 2 → Sub-headers
+    sub_headers = header_df.iloc[1, cartel_start_col:]
+
+    # Data row already filtered by Variant
+    cartel_values = row.iloc[cartel_start_col:]
+
+    cartel_html = """
     <style>
     .ctable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: 14px; }
     .ctable th { background-color: #2e7d32; color: white; padding: 4px 6px; text-align: right; }
@@ -365,30 +368,40 @@ cartel_html = """
     .ctable td:first-child, .ctable th:first-child { text-align: left; }
     .ctable, .ctable th, .ctable td { border: 1px solid #000; }
     </style>
-    <table class='ctable'><tr><th>Group</th><th>Description</th><th>Offer</th></tr>
-"""
+    <table class='ctable'>
+    """
 
-# Loop through each group name and its corresponding columns in cartel_offer_data
-group_start_col = start_col_index
-for group in group_names:
-    group_end_col = group_start_col + len(cartel_offer_data.columns) // len(group_names) - 1
-    group_data = cartel_offer_data.iloc[:, group_start_col:group_end_col + 1]
-    
-    # Add group header row
-    cartel_html += f"<tr><td colspan='3' style='font-weight: bold; background-color: #388e3c;'>{group}</td></tr>"
-    
-    # Loop through each row of data for the group
-    for idx in range(len(group_data)):
-        row_data = group_data.iloc[idx]
-        for val in row_data:
-            if pd.notna(val):
-                cartel_html += f"<tr><td></td><td>{val}</td><td>{format_indian_currency(row_data[0])}</td></tr>"
+    current_group = None
 
-    # Move to the next group block
-    group_start_col = group_end_col + 1
+    for col, grp, sub in zip(cartel_values.index, group_headers, sub_headers):
+        val = cartel_values[col]
 
-cartel_html += "</table>"
-st.markdown(cartel_html, unsafe_allow_html=True)
+        # Print group name once
+        if grp != current_group:
+            cartel_html += f"""
+            <tr>
+                <th colspan="2" style="background:#ffffff; color:#004080; text-align:left;">
+                    {grp}
+                </th>
+            </tr>
+            <tr><th>Description</th><th>Offer</th></tr>
+            """
+            current_group = grp
+
+        # Format numeric values only
+        if pd.notnull(val) and isinstance(val, (int, float)):
+            val = format_indian_currency(val)
+        elif pd.isnull(val):
+            val = ""
+
+        cartel_html += f"<tr><td>{sub}</td><td>{val}</td></tr>"
+
+    cartel_html += "</table>"
+    st.markdown(cartel_html, unsafe_allow_html=True)
+
+except Exception as e:
+    st.warning(f"⚠️ Could not load Cartel Offer data: {e}")
+
 
 # --- Important Points Table ---
 try:
