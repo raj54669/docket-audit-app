@@ -408,55 +408,53 @@ if not cartel_groups:
     st.warning("⚠️ No cartel offer data found.")
 else:
     cartel_html = """
-    <style>
-        table.ctable {
-            border-collapse: collapse;
-            width: 100%;
-            font-weight: bold;
-            font-size: 14px;
-        }
-        table.ctable th {
-            background-color: #2e7d32;
-            color: white;
-            padding: 4px 6px;
-            text-align: right;
-            border: 1px solid #000;
-        }
-        table.ctable td {
-            background-color: #e8f5e9;
-            padding: 4px 6px;
-            text-align: right;
-            color: black;
-            border: 1px solid #000;
-        }
-        table.ctable td:first-child,
-        table.ctable th:first-child {
-            text-align: left;
-        }
-        table.ctable tr.group-header td {
-            background-color: transparent !important;
-            color: #0b3c5d;  /* Navy Blue */
-            font-weight: bold;
-            text-align: left;
-            border-top: 2px solid #000;
-        }
-    </style>
+<style>
+table.ctable {
+    border-collapse: collapse;
+    width: 100%;
+    font-weight: bold;
+    font-size: 14px;
+}
+table.ctable th {
+    background-color: #2e7d32;
+    color: white;
+    padding: 4px 6px;
+    text-align: right;
+    border: 1px solid #000;
+}
+table.ctable td {
+    background-color: #e8f5e9;
+    padding: 4px 6px;
+    text-align: right;
+    color: black;
+    border: 1px solid #000;
+}
+table.ctable td:first-child,
+table.ctable th:first-child {
+    text-align: left;
+}
+table.ctable tr.group-header td {
+    background-color: transparent !important;
+    color: #0b3c5d; /* Navy Blue */
+    font-weight: bold;
+    text-align: left;
+    border-top: 2px solid #000;
+}
+</style>
 
-    <table class="ctable">
-        <tr>
-            <th>Description</th>
-            <th>Offer</th>
-        </tr>
-    """
+<table class="ctable">
+<tr>
+    <th>Description</th>
+    <th>Offer</th>
+</tr>
+"""
 
     for group_name, cols in cartel_groups:
-
-        # Group Header
         cartel_html += f"""
-        <tr class="group-header">
-            <td colspan="2">{group_name}</td>
-        </tr>
-        """
+<tr class="group-header">
+    <td colspan="2">{group_name}</td>
+</tr>
+"""
 
         for col in cols:
             val = row.get(col)
@@ -469,15 +467,14 @@ else:
                 val = str(val)
 
             cartel_html += f"""
-            <tr>
-                <td>{col}</td>
-                <td>{val}</td>
-            </tr>
-            """
+<tr>
+    <td>{col}</td>
+    <td>{val}</td>
+</tr>
+"""
 
     cartel_html += "</table>"
 
-    # ⚠️ THIS LINE IS CRITICAL
     st.markdown(cartel_html, unsafe_allow_html=True)
 
 
