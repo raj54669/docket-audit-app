@@ -390,8 +390,7 @@ for col in vehicle_cols:
 pricing_html += "</table>"
 st.markdown(pricing_html, unsafe_allow_html=True)
 
-
-# --- Cartel Offer (Single Table with Navy Group Headers) ---
+# --- Cartel Offer (Single Table – Original Logic + Fixes) ---
 
 cartel_groups = extract_cartel_groups(
     selected_filepath,
@@ -408,70 +407,75 @@ if not cartel_groups:
     st.warning("⚠️ No cartel offer data found.")
 else:
     cartel_html = """
-<style>
-table.ctable {
-    border-collapse: collapse;
-    width: 100%;
-    font-weight: bold;
-    font-size: 14px;
-}
-table.ctable th {
-    background-color: #2e7d32;
-    color: white;
-    padding: 4px 6px;
-    text-align: right;
-    border: 1px solid #000;
-}
-table.ctable td {
-    background-color: #e8f5e9;
-    padding: 4px 6px;
-    text-align: right;
-    color: black;
-    border: 1px solid #000;
-}
-table.ctable td:first-child,
-table.ctable th:first-child {
-    text-align: left;
-}
-table.ctable tr.group-header td {
-    background-color: transparent !important;
-    color: #0b3c5d;
-    font-weight: bold;
-    text-align: left;
-    border-top: 2px solid #000;
-}
-</style>
+    <style>
+    .ctable {
+        border-collapse: collapse;
+        width: 100%;
+        font-weight: bold;
+        font-size: 14px;
+    }
+    .ctable th {
+        background-color: #2e7d32;
+        color: white;
+        padding: 4px 6px;
+        text-align: right;
+        border: 1px solid #000;
+    }
+    .ctable td {
+        background-color: #e8f5e9;
+        padding: 4px 6px;
+        text-align: right;
+        color: black;
+        border: 1px solid #000;
+    }
+    .ctable td:first-child,
+    .ctable th:first-child {
+        text-align: left;
+    }
+    .ctable tr.group-header td {
+        background-color: transparent !important;
+        color: #0b3c5d;   /* Navy Blue */
+        font-weight: bold;
+        text-align: left;
+        border-top: 2px solid #000;
+    }
+    </style>
 
-<table class="ctable">
-<tr>
-    <th>Description</th>
-    <th>Offer</th>
-</tr>
-"""
+    <table class="ctable">
+        <tr>
+            <th>Description</th>
+            <th>Offer</th>
+        </tr>
+    """
 
     for group_name, cols in cartel_groups:
+
+        # Group Header (same as original, just styled)
         cartel_html += f"""
-<tr class="group-header">
-    <td colspan="2">{group_name}</td>
-</tr>
-"""
+        <tr class="group-header">
+            <td colspan="2">{group_name}</td>
+        </tr>
+        """
 
         for col in cols:
             val = row.get(col)
 
-            if isinstance(val, (int, float)):
-                val = format_indian_currency(val)
-            elif pd.isna(val):
+            # ✅ FIXED currency handling (original logic was missing this)
+            if pd.isna(val):
                 val = "₹0"
+            elif isinstance(val, (int, float)):
+                val = format_indian_currency(val)
+            elif isinstance(val, str) and val.replace(",", "").isdigit():
+                val = format_indian_currency(float(val))
             else:
                 val = str(val)
 
             cartel_html += f"""
-<tr>
-    <td>{col}</td>
-    <td>{val}</td>
-</tr>
-"""
+            <tr>
+                <td>{col}</td>
+                <td>{val}</td>
+            </tr>
+            """
 
     cartel_html += "</table>"
 
