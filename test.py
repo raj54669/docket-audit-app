@@ -296,62 +296,58 @@ def format_indian_currency(value):
     except:
         return "Invalid"
 
-def extract_cartel_groups(excel_path, sheet_name, header_row_idx, data_df):
-    """
-    Returns:
-    [
-        ("GROUP NAME", ["Column A", "Column B"]),
-        ...
-    ]
-    """
 
-    # 1️⃣ ORIGINAL, WORKING LOGIC — find cartel columns
-    pricing_end_col = "ON ROAD PRICE Without SMC Road Tax"
-
-    if pricing_end_col not in data_df.columns:
-        return []
-
-    start_idx = data_df.columns.get_loc(pricing_end_col) + 1
-    cartel_cols = list(data_df.columns[start_idx:])
-
-    if not cartel_cols:
-        return []
-
-    # 2️⃣ Read merged group headers using openpyxl
+# --- Dynamic Cartel Group Extraction (MERGED HEADER BASED) ---
+def extract_cartel_groups(excel_path, sheet_name, header_row_idx):
     wb = load_workbook(excel_path, data_only=True)
     ws = wb[sheet_name]
 
-    header_row = header_row_idx
-    group_header_row = header_row - 1
+    column_header_row = header_row_idx + 1
+    group_header_row = header_row_idx
 
+    # Read column headers
+    headers = {
+        col: ws.cell(row=column_header_row, column=col).value
+        for col in range(1, ws.max_column + 1)
+    }
+
+    # 🔑 Anchor column (always exists)
+    start_col = None
+    for col, val in headers.items():
+        if val == "ON ROAD PRICE Without SMC Road Tax":
+            start_col = col + 1
+            break
+
+    if not start_col:
+        return []
+
+    end_col = ws.max_column
     cartel_groups = []
 
-    merged_ranges = sorted(
-        ws.merged_cells.ranges,
-        key=lambda r: r.bounds[0]
-    )
+    # Sort merged cells left → right
+    merged_ranges = sorted(ws.merged_cells.ranges, key=lambda r: r.bounds[0])
 
     for merged in merged_ranges:
-        min_col, min_row, max_col, max_row = merged.bounds
+        min_col, min_row, max_col, _ = merged.bounds
 
-        # Only group header row
         if min_row != group_header_row:
+            continue
+
+        if max_col < start_col or min_col > end_col:
             continue
 
         group_name = ws.cell(row=group_header_row, column=min_col).value
         if not group_name:
             continue
 
-        group_columns = []
+        cols = []
+        for c in range(max(min_col, start_col), min(max_col, end_col) + 1):
+            header = headers.get(c)
+            if header:
+                cols.append(header)
 
-        for col_idx in range(min_col, max_col + 1):
-            if col_idx - 1 < len(data_df.columns):
-                col_name = data_df.columns[col_idx - 1]
-                if col_name in cartel_cols:
-                    group_columns.append(col_name)
-
-        if group_columns:
-            cartel_groups.append((str(group_name).strip(), group_columns))
+        if cols:
+            cartel_groups.append((group_name, cols))
 
     return cartel_groups
 
@@ -394,15 +390,13 @@ pricing_html += "</table>"
 st.markdown(pricing_html, unsafe_allow_html=True)
 
 
-# --- Cartel Offer (Excel-accurate layout - FINAL FIX) ---
+# --- Cartel Offer (FINAL – Excel Accurate) ---
 
 cartel_groups = extract_cartel_groups(
     selected_filepath,
     SHEET_NAME,
-    HEADER_ROW,
-    data
+    HEADER_ROW
 )
-
 
 st.markdown(
     "<h3 style='color:#e65100; margin-top:8px;'>🎁 Cartel Offer</h3>",
@@ -424,12 +418,12 @@ else:
 .ctable th {
     background-color: #2e7d32;
     color: white;
-    padding: 6px;
+    padding: 6px 8px;
     border: 1px solid #000;
 }
 .ctable td {
     background-color: #e8f5e9;
-    padding: 6px;
+    padding: 6px 8px;
     border: 1px solid #000;
     color: black;
 }
@@ -442,16 +436,16 @@ else:
     text-align: right;
 }
 
-/* ✅ Group Header */
+/* ✅ GROUP HEADER */
 .group-title td {
     background-color: transparent !important;
     color: #0b3c5d;
-    font-size: 16px;      /* 🔥 Bigger font */
-    font-weight: bold;
+    font-weight: 700;
+    font-size: 16px;   /* Bigger font */
     text-align: left !important;
-    border-top: 1px solid #000;
     border-left: 1px solid #000;
     border-right: 1px solid #000;
+    border-top: 1px solid #000;
     border-bottom: none;
 }
 </style>
@@ -459,8 +453,7 @@ else:
 <table class="ctable">
 """
 
-    for group_name, rows in cartel_groups:
-
+    for group_name, cols in cartel_groups:
         cartel_html += f"""
 <tr class="group-title">
     <td colspan="2">{group_name}</td>
@@ -471,24 +464,24 @@ else:
 </tr>
 """
 
-        for desc, val in rows:
+        for col in cols:
+            val = row.get(col)
 
             if isinstance(val, (int, float)):
                 val = format_indian_currency(val)
-            elif val in (None, "", "NA"):
+            elif pd.isna(val):
                 val = "₹0"
             else:
                 val = str(val)
 
             cartel_html += f"""
 <tr>
-    <td>{desc}</td>
+    <td>{col}</td>
     <td>{val}</td>
 </tr>
 """
 
     cartel_html += "</table>"
-
     st.markdown(cartel_html, unsafe_allow_html=True)
 
 
