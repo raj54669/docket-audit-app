@@ -297,59 +297,57 @@ def format_indian_currency(value):
         return "Invalid"
 
 
-# --- Dynamic Cartel Group Extraction (MERGED HEADER BASED) ---
-def extract_cartel_groups(excel_path, sheet_name, header_row_idx):
+def extract_cartel_groups(excel_path, sheet_name):
     wb = load_workbook(excel_path, data_only=True)
     ws = wb[sheet_name]
 
-    column_header_row = header_row_idx + 1
-    group_header_row = header_row_idx
+    CARTEL_START_COL = 13   # 🔒 Column M (Excel)
+    HEADER_ROW = 2          # Column headers
+    GROUP_ROW = 1           # Group titles (merged)
 
-    # Read column headers
-    headers = {
-        col: ws.cell(row=column_header_row, column=col).value
-        for col in range(1, ws.max_column + 1)
-    }
+    # ---------------------------------------
+    # 1️⃣ Read column headers from Row 2
+    # ---------------------------------------
+    headers = {}
+    for col in range(CARTEL_START_COL, ws.max_column + 1):
+        val = ws.cell(row=HEADER_ROW, column=col).value
+        if val:
+            headers[col] = str(val).strip()
 
-    # 🔑 Anchor column (always exists)
-    start_col = None
-    for col, val in headers.items():
-        if val == "ON ROAD PRICE Without SMC Road Tax":
-            start_col = col + 1
-            break
-
-    if not start_col:
+    if not headers:
         return []
 
-    end_col = ws.max_column
+    # ---------------------------------------
+    # 2️⃣ Read merged group headers (Row 1)
+    # ---------------------------------------
     cartel_groups = []
 
-    # Sort merged cells left → right
-    merged_ranges = sorted(ws.merged_cells.ranges, key=lambda r: r.bounds[0])
+    merged_ranges = sorted(
+        ws.merged_cells.ranges,
+        key=lambda r: r.bounds[0]   # left → right
+    )
 
     for merged in merged_ranges:
         min_col, min_row, max_col, _ = merged.bounds
 
-        if min_row != group_header_row:
+        # Only group headers in Row 1 & after Column M
+        if min_row != GROUP_ROW or max_col < CARTEL_START_COL:
             continue
 
-        if max_col < start_col or min_col > end_col:
-            continue
-
-        group_name = ws.cell(row=group_header_row, column=min_col).value
+        group_name = ws.cell(row=GROUP_ROW, column=min_col).value
         if not group_name:
             continue
 
         cols = []
-        for c in range(max(min_col, start_col), min(max_col, end_col) + 1):
-            header = headers.get(c)
-            if header:
-                cols.append(header)
+        for c in range(max(min_col, CARTEL_START_COL), max_col + 1):
+            if c in headers:
+                cols.append(headers[c])
 
         if cols:
-            cartel_groups.append((group_name, cols))
+            cartel_groups.append((str(group_name).strip(), cols))
 
     return cartel_groups
+
 
 
 # --- Selected Variant Title ---
@@ -394,8 +392,7 @@ st.markdown(pricing_html, unsafe_allow_html=True)
 
 cartel_groups = extract_cartel_groups(
     selected_filepath,
-    SHEET_NAME,
-    HEADER_ROW
+    SHEET_NAME
 )
 
 st.markdown(
