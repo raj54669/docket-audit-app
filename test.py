@@ -390,7 +390,7 @@ for col in vehicle_cols:
 pricing_html += "</table>"
 st.markdown(pricing_html, unsafe_allow_html=True)
 
-# --- Cartel Offer (Excel-accurate layout) ---
+# --- Cartel Offer (Excel-accurate layout - FIXED) ---
 
 cartel_groups = extract_cartel_groups(
     selected_filepath,
@@ -413,6 +413,7 @@ else:
     width: 100%;
     font-weight: bold;
     font-size: 14px;
+    border: 1px solid #000;   /* single outer border */
 }
 .ctable th {
     background-color: #2e7d32;
@@ -426,19 +427,25 @@ else:
     border: 1px solid #000;
     color: black;
 }
-.ctable td:first-child,
-.ctable th:first-child {
+.ctable th:first-child,
+.ctable td:first-child {
     text-align: left;
 }
-.ctable td:last-child,
-.ctable th:last-child {
+.ctable th:last-child,
+.ctable td:last-child {
     text-align: right;
 }
+
+/* ✅ GROUP TITLE — FIXED */
 .group-title td {
     background-color: transparent !important;
-    color: #0b3c5d;   /* Navy Blue */
+    color: #0b3c5d;          /* Navy Blue */
     font-weight: bold;
-    border-top: 2px solid #000;
+    text-align: left !important;  /* 🔥 FORCE LEFT */
+    border-left: 1px solid #000;
+    border-right: 1px solid #000;
+    border-top: 1px solid #000;   /* consistent thickness */
+    border-bottom: none;
 }
 </style>
 
@@ -447,7 +454,7 @@ else:
 
     for group_name, cols in cartel_groups:
 
-        # 🔹 Group Title (plain navy text)
+        # Group Title Row
         cartel_html += f"""
 <tr class="group-title">
     <td colspan="2">{group_name}</td>
@@ -478,6 +485,7 @@ else:
     cartel_html += "</table>"
 
     st.markdown(cartel_html, unsafe_allow_html=True)
+
 
 # --- Important Points Table ---
 try:
