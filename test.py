@@ -390,8 +390,7 @@ for col in vehicle_cols:
 pricing_html += "</table>"
 st.markdown(pricing_html, unsafe_allow_html=True)
 
-
-# --- Cartel Offer (FINAL – FIXED HTML RENDERING) ---
+# --- Cartel Offer (Excel-accurate layout) ---
 
 cartel_groups = extract_cartel_groups(
     selected_filepath,
@@ -419,52 +418,53 @@ else:
     background-color: #2e7d32;
     color: white;
     padding: 4px 6px;
-    text-align: right;
     border: 1px solid #000;
 }
 .ctable td {
     background-color: #e8f5e9;
     padding: 4px 6px;
-    text-align: right;
-    color: black;
     border: 1px solid #000;
+    color: black;
 }
 .ctable td:first-child,
 .ctable th:first-child {
     text-align: left;
 }
-.ctable tr.group-header td {
+.ctable td:last-child,
+.ctable th:last-child {
+    text-align: right;
+}
+.group-title td {
     background-color: transparent !important;
-    color: #0b3c5d;
+    color: #0b3c5d;   /* Navy Blue */
     font-weight: bold;
-    text-align: left;
     border-top: 2px solid #000;
 }
 </style>
 
 <table class="ctable">
+"""
+
+    for group_name, cols in cartel_groups:
+
+        # 🔹 Group Title (plain navy text)
+        cartel_html += f"""
+<tr class="group-title">
+    <td colspan="2">{group_name}</td>
+</tr>
 <tr>
     <th>Description</th>
     <th>Offer</th>
 </tr>
 """
 
-    for group_name, cols in cartel_groups:
-        cartel_html += f"""
-<tr class="group-header">
-    <td colspan="2">{group_name}</td>
-</tr>
-"""
-
         for col in cols:
             val = row.get(col)
 
-            if pd.isna(val):
-                val = "₹0"
-            elif isinstance(val, (int, float)):
+            if isinstance(val, (int, float)):
                 val = format_indian_currency(val)
-            elif isinstance(val, str) and val.replace(",", "").isdigit():
-                val = format_indian_currency(float(val))
+            elif pd.isna(val):
+                val = "₹0"
             else:
                 val = str(val)
 
@@ -478,7 +478,6 @@ else:
     cartel_html += "</table>"
 
     st.markdown(cartel_html, unsafe_allow_html=True)
-
 
 # --- Important Points Table ---
 try:
