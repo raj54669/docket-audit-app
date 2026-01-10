@@ -5,7 +5,6 @@ import re
 import base64
 import requests
 from datetime import datetime
-from openpyxl import load_workbook
 
 # --- Page Config ---
 st.set_page_config(page_title="🚛 Mahindra Docket Audit Tool - CV", layout="centered" )
@@ -296,71 +295,6 @@ def format_indian_currency(value):
     except:
         return "Invalid"
 
-
-def extract_cartel_groups(excel_path, sheet_name, header_row_idx):
-    wb = load_workbook(excel_path, data_only=True)
-    ws = wb[sheet_name]
-
-    START_COL = 13  # Column M is fixed
-    cartel_groups = []
-    current_group = None
-    current_rows = []
-
-    # Start reading AFTER header row
-    for r in range(header_row_idx + 1, ws.max_row + 1):
-        # Read cartel data row from Column M onwards
-        row_cells = [
-            ws.cell(row=r, column=c).value
-            for c in range(START_COL, ws.max_column + 1)
-        ]
-        
-        non_empty = [c for c in row_cells if c not in (None, "")]
-
-        # Skip empty rows
-        if not non_empty:
-            continue
-
-        # Debug: Check the non-empty values being processed
-        print(f"Row {r}: {non_empty}")
-
-        # --------------------------------------------------
-        # Check if it's a group header (only one non-empty value in the row)
-        # --------------------------------------------------
-        if len(non_empty) == 1:
-            if current_group and current_rows:
-                cartel_groups.append((current_group, current_rows))
-
-            current_group = str(non_empty[0]).strip()
-            current_rows = []
-            continue
-
-        # --------------------------------------------------
-        # Normal row (Description + Offer Value)
-        # --------------------------------------------------
-        desc = ws.cell(row=r, column=START_COL).value
-
-        # Find the first valid offer value to the right of the description
-        val = None
-        for c in range(START_COL + 1, ws.max_column + 1):
-            v = ws.cell(row=r, column=c).value
-            if v not in (None, ""):
-                val = v
-                break
-
-        if desc:
-            current_rows.append((str(desc).strip(), val))
-
-    # Add the last group if exists
-    if current_group and current_rows:
-        cartel_groups.append((current_group, current_rows))
-
-    # Debug: Show final extracted groups
-    print(f"Extracted Cartel Groups: {cartel_groups}")
-
-    return cartel_groups
-
-
-
 # --- Selected Variant Title ---
 #st.markdown(f"<h2 style='margin-top: -8px; '> 🚚 {selected_variant}", unsafe_allow_html=True)
 
@@ -399,100 +333,38 @@ pricing_html += "</table>"
 st.markdown(pricing_html, unsafe_allow_html=True)
 
 
-# --- Cartel Offer (FINAL – Excel Accurate) ---
+# --- Cartel Table ---
+st.markdown("<h3 style='color:#e65100; margin-top: -10px; margin-bottom: -8px;'>🎁 Cartel Offer</h3>", unsafe_allow_html=True)
 
-cartel_groups = extract_cartel_groups(
-    selected_filepath,
-    SHEET_NAME,
-    HEADER_ROW
-)
+# ✅ Automatically find columns after the pricing section
+pricing_end_col = "ON ROAD PRICE Without SMC Road Tax"
+if pricing_end_col in data.columns:
+    start_idx = data.columns.get_loc(pricing_end_col) + 1
+    cartel_cols = data.columns[start_idx:]
+else:
+    cartel_cols = []
 
-st.markdown(
-    "<h3 style='color:#e65100; margin-top:8px;'>🎁 Cartel Offer</h3>",
-    unsafe_allow_html=True
-)
-
-if not cartel_groups:
-    st.warning("⚠️ No cartel offer data found.")
+if cartel_cols.empty:
+    st.warning("⚠️ No additional cartel offer columns found.")
 else:
     cartel_html = """
     <style>
-    .ctable {
-        border-collapse: collapse;
-        width: 100%;
-        font-weight: bold;
-        font-size: 14px;
-        border: 1px solid #000;
-    }
-    .ctable th {
-        background-color: #2e7d32;
-        color: white;
-        padding: 6px 8px;
-        border: 1px solid #000;
-    }
-    .ctable td {
-        background-color: #e8f5e9;
-        padding: 6px 8px;
-        border: 1px solid #000;
-        color: black;
-    }
-    .ctable th:first-child,
-    .ctable td:first-child {
-        text-align: left;
-    }
-    .ctable th:last-child,
-    .ctable td:last-child {
-        text-align: right;
-    }
-    /* ✅ GROUP HEADER */
-    .group-title td {
-        background-color: transparent !important;
-        color: #0b3c5d;
-        font-weight: 700;
-        font-size: 16px;   /* Bigger font */
-        text-align: left !important;
-        border-left: 1px solid #000;
-        border-right: 1px solid #000;
-        border-top: 1px solid #000;
-        border-bottom: none;
-    }
+    .ctable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: 14px; }
+    .ctable th { background-color: #2e7d32; color: white; padding: 4px 6px; text-align: right; }
+    .ctable td { background-color: #e8f5e9; padding: 4px 6px; text-align: right; color: black; }
+    .ctable td:first-child, .ctable th:first-child { text-align: left; }
+    .ctable, .ctable th, .ctable td { border: 1px solid #000; }
     </style>
-
-    <table class="ctable">
+    <table class='ctable'><tr><th>Description</th><th>Offer</th></tr>
     """
-
-    for group_name, cols in cartel_groups:
-        cartel_html += f"""
-    <tr class="group-title">
-        <td colspan="2">{group_name}</td>
-    </tr>
-    <tr>
-        <th>Description</th>
-        <th>Offer</th>
-    </tr>
-    """
-
-        for desc, val in cols:
-            # Format the value
-            if isinstance(val, (int, float)):
-                val = format_indian_currency(val)
-            elif pd.isna(val):
-                val = "₹0"
-            else:
-                val = str(val)
-
-            cartel_html += f"""
-    <tr>
-        <td>{desc}</td>
-        <td>{val}</td>
-    </tr>
-    """
-
+    for col in cartel_cols:
+        val = row[col]
+        # ✅ Auto-format if numeric
+        if pd.api.types.is_numeric_dtype(type(val)):
+            val = format_indian_currency(val)
+        cartel_html += f"<tr><td>{col}</td><td>{val}</td></tr>"
     cartel_html += "</table>"
     st.markdown(cartel_html, unsafe_allow_html=True)
-
-
-
 
 # --- Important Points Table ---
 try:
