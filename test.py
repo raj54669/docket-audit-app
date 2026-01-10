@@ -393,7 +393,8 @@ for col in vehicle_cols:
 pricing_html += "</table>"
 st.markdown(pricing_html, unsafe_allow_html=True)
 
-# --- Cartel Offer (Excel-accurate layout - FINAL) ---
+
+# --- Cartel Offer (Excel-accurate layout - FINAL FIX) ---
 
 cartel_groups = extract_cartel_groups(
     selected_filepath,
@@ -421,12 +422,12 @@ else:
 .ctable th {
     background-color: #2e7d32;
     color: white;
-    padding: 6px 8px;
+    padding: 6px;
     border: 1px solid #000;
 }
 .ctable td {
     background-color: #e8f5e9;
-    padding: 6px 8px;
+    padding: 6px;
     border: 1px solid #000;
     color: black;
 }
@@ -439,16 +440,16 @@ else:
     text-align: right;
 }
 
-/* ✅ GROUP HEADER — BIGGER FONT, NAVY, LEFT */
+/* ✅ Group Header */
 .group-title td {
     background-color: transparent !important;
     color: #0b3c5d;
-    font-weight: 700;
-    font-size: 16px;          /* 🔥 increased size */
+    font-size: 16px;      /* 🔥 Bigger font */
+    font-weight: bold;
     text-align: left !important;
+    border-top: 1px solid #000;
     border-left: 1px solid #000;
     border-right: 1px solid #000;
-    border-top: 1px solid #000;
     border-bottom: none;
 }
 </style>
@@ -458,7 +459,6 @@ else:
 
     for group_name, rows in cartel_groups:
 
-        # Group Header
         cartel_html += f"""
 <tr class="group-title">
     <td colspan="2">{group_name}</td>
@@ -470,9 +470,10 @@ else:
 """
 
         for desc, val in rows:
+
             if isinstance(val, (int, float)):
                 val = format_indian_currency(val)
-            elif pd.isna(val):
+            elif val in (None, "", "NA"):
                 val = "₹0"
             else:
                 val = str(val)
