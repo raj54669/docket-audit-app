@@ -406,28 +406,28 @@ if not cartel_groups:
     st.warning("⚠️ No cartel offer data found.")
 else:
     cartel_html = """
-    <table class='ctable'>
-        <tr>
-            <th>Description</th>
-            <th>Offer</th>
-        </tr>
-    """
+<table class='ctable'>
+    <tr>
+        <th>Description</th>
+        <th>Offer</th>
+    </tr>
+"""
 
     for group_name, cols in cartel_groups:
 
         # 🔶 Group header row (highlighted)
         cartel_html += f"""
-        <tr>
-            <td colspan="2" style="
-                background-color:#c8e6c9;
-                font-weight:bold;
-                text-align:left;
-                border-top:2px solid #000;
-            ">
-                {group_name}
-            </td>
-        </tr>
-        """
+<tr>
+    <td colspan="2" style="
+        background-color:#c8e6c9;
+        font-weight:bold;
+        text-align:left;
+        border-top:2px solid #000;
+    ">
+        {group_name}
+    </td>
+</tr>
+"""
 
         for col in cols:
             val = row[col]
@@ -438,14 +438,16 @@ else:
                 val = "₹0"
 
             cartel_html += f"""
-            <tr>
-                <td>{col}</td>
-                <td>{val}</td>
-            </tr>
-            """
+<tr>
+    <td>{col}</td>
+    <td>{val}</td>
+</tr>
+"""
 
     cartel_html += "</table>"
+
     st.markdown(cartel_html, unsafe_allow_html=True)
+
 
 # --- Important Points Table ---
 try:
