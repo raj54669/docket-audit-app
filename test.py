@@ -31,7 +31,7 @@ st.markdown("""
 header {visibility: hidden;}
 h1 { font-size: var(--title-size) !important; }
 h2 { font-size: var(--subtitle-size) !important; }
-h3 { font-size: var(--variant-title-size) !important; }
+#h3 { font-size: var(--variant-title-size) !important; } #Unsed
 .stCaption { font-size: var(--caption-size) !important; }
 .stSelectbox label {
     font-size: var(--label-size) !important;
@@ -40,7 +40,7 @@ h3 { font-size: var(--variant-title-size) !important; }
 
 /* ✅ MINIMAL DROPDOWN STYLING */
 .stSelectbox div[data-baseweb="select"] > div {
-    font-size: 15px !important;
+    font-size: var(--select-font-size) !important;
     font-weight: bold !important;
     padding-top: 2px !important;
     padding-bottom: 2px !important;
