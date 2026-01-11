@@ -341,29 +341,32 @@ st.markdown(pricing_html, unsafe_allow_html=True)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-# --- Cartel Table (Grouped, Dynamic from Column M) ---
+# --- Cartel Table (Excel-position accurate, dynamic end, correct row mapping) ---
 st.markdown(
     "<h3 style='color:#e65100; margin-top: -10px; margin-bottom: -8px;'>🎁 Cartel Offer</h3>",
     unsafe_allow_html=True
 )
 
 try:
-    # Read first two rows for group headers & sub-headers
-    header_df = pd.read_excel(
-        selected_filepath,
-        sheet_name=SHEET_NAME,
-        header=None,
-        nrows=2
-    )
+    raw_df = pd.read_excel(selected_filepath, sheet_name=SHEET_NAME, header=None)
 
-    # Excel Column M = 13 (1-based) → Pandas index = 12
-    cartel_start_col = 13 - 1
+    CARTEL_START_COL = 12  # Column M (0-based)
 
-    group_headers = header_df.iloc[0, cartel_start_col:].ffill()
-    sub_headers = header_df.iloc[1, cartel_start_col:]
+    group_row = raw_df.iloc[0, CARTEL_START_COL:].ffill()
+    subheader_row = raw_df.iloc[1, CARTEL_START_COL:]
 
-    # Use full data row (position-safe)
-    cartel_values = row
+    last_col = subheader_row.last_valid_index()
+
+    # Find Variant column dynamically
+    variant_col_idx = raw_df.iloc[1].tolist().index("Variant")
+
+    variant_match = raw_df[raw_df.iloc[:, variant_col_idx] == selected_variant]
+
+    if variant_match.empty:
+        st.warning("⚠️ Variant not found for Cartel table.")
+        st.stop()
+
+    cartel_data_row = variant_match.iloc[0]
 
     cartel_html = (
         "<style>"
@@ -379,26 +382,19 @@ try:
     current_group = None
     group_has_rows = False
 
-    for offset, grp in enumerate(group_headers):
-        col_idx = cartel_start_col + offset
+    for col_idx in range(CARTEL_START_COL, last_col + 1):
+        grp = group_row.iloc[col_idx - CARTEL_START_COL]
+        sub = normalize_header_text(subheader_row.iloc[col_idx - CARTEL_START_COL])
+        val = cartel_data_row.iloc[col_idx]
 
-        if col_idx >= len(cartel_values):
-            continue
-
-        sub = normalize_header_text(sub_headers.iloc[offset])
-        val = cartel_values.iloc[col_idx]
-
-        # Detect new group
         if grp != current_group:
             group_has_rows = False
             pending_group = grp
             current_group = grp
 
-        # Skip empty values
         if pd.isnull(val) or val == 0 or str(val).strip() == "":
             continue
 
-        # Print group header once
         if not group_has_rows:
             cartel_html += (
                 "<tr>"
@@ -408,7 +404,6 @@ try:
             )
             group_has_rows = True
 
-        # ✅ Proper Indian currency formatting
         if pd.api.types.is_number(val):
             val = format_indian_currency(val)
 
