@@ -20,7 +20,7 @@ st.markdown("""
 <style>
 :root {
     --title-size: 40px;
-    --subtitle-size: 20px;
+    --subtitle-size: 24px;
     --caption-size: 16px;
     --label-size: 14px;
     --select-font-size: 15px;
@@ -313,7 +313,7 @@ def normalize_header_text(text):
 #st.markdown(f"<h2 style='margin-top: -8px; '> 🚚 {selected_variant}", unsafe_allow_html=True)
 
 # --- Pricing Table ---
-st.markdown("<h3 style='color:#e65100; margin-bottom: -8px;'>📝 Vehicle Pricing Details</h3>", unsafe_allow_html=True)
+st.markdown("<h2 style='color:#e65100; margin-bottom: -8px;'>📝 Vehicle Pricing Details</h2>", unsafe_allow_html=True)
 
 # Modify columns: Remove "MAXI CARE"
 vehicle_cols = [
@@ -350,7 +350,7 @@ st.markdown(pricing_html, unsafe_allow_html=True)
 
 # --- Cartel Table (Excel-position accurate, dynamic end, correct row mapping) ---
 st.markdown(
-    "<h3 style='color:#e65100; margin-top: -10px; margin-bottom: -8px;'>🎁 Cartel Offer</h3>",
+    "<h2 style='color:#e65100; margin-top: -10px; margin-bottom: -8px;'>🎁 Cartel Offer</h2>",
     unsafe_allow_html=True
 )
 
@@ -439,7 +439,7 @@ try:
 
     # Subtitle
     st.markdown(
-        "<h3 style='color:#e65100; margin-top: -10px; margin-bottom: -8px;'>⭐ Important Points</h3>",
+        "<h2 style='color:#e65100; margin-top: -10px; margin-bottom: -8px;'>⭐ Important Points</h2>",
         unsafe_allow_html=True
     )
 
