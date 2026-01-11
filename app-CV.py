@@ -20,18 +20,18 @@ st.markdown("""
 <style>
 :root {
     --title-size: 40px;
-    --subtitle-size: 20px;
+    --subtitle-size: 24px;
     --caption-size: 16px;
     --label-size: 14px;
     --select-font-size: 15px;
     --table-font-size: 14px;
-    --variant-title-size: 24px;
+    --variant-title-size: 18px;
 }
 .block-container { padding-top: 0rem; }
 header {visibility: hidden;}
 h1 { font-size: var(--title-size) !important; }
 h2 { font-size: var(--subtitle-size) !important; }
-h3 { font-size: var(--variant-title-size) !important; }
+#h3 { font-size: var(--variant-title-size) !important; } #Unsed
 .stCaption { font-size: var(--caption-size) !important; }
 .stSelectbox label {
     font-size: var(--label-size) !important;
@@ -40,7 +40,7 @@ h3 { font-size: var(--variant-title-size) !important; }
 
 /* ✅ MINIMAL DROPDOWN STYLING */
 .stSelectbox div[data-baseweb="select"] > div {
-    font-size: 15px !important;
+    font-size: var(--select-font-size) !important;
     font-weight: bold !important;
     padding-top: 2px !important;
     padding-bottom: 2px !important;
@@ -86,9 +86,16 @@ h3 { font-size: var(--variant-title-size) !important; }
     font-weight: 600 !important;
 }
 
+/* Cartel Group Header */
+.cartel-group {
+    font-size: var(--variant-title-size) !important;
+    font-weight: 800 !important;
+    color: #004080 !important;
+}
+
 /* Important Points Table  */
 /* ----------------------- */
-.iptable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: 14px; }
+.iptable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: var(--table-font-size); }
 .iptable th { background-color: #e65100; color: white; padding: 4px 6px; text-align: left; }
 .iptable td { background-color: #fff3e0; padding: 4px 6px; text-align: left; color: black; }
 .iptable, .iptable th, .iptable td { border: 1px solid #000; }
@@ -295,11 +302,18 @@ def format_indian_currency(value):
     except:
         return "Invalid"
 
+
+# --- Text Normalize ---
+def normalize_header_text(text):
+    if pd.isnull(text):
+        return ""
+    return " ".join(str(text).replace("\n", " ").split())
+
 # --- Selected Variant Title ---
 #st.markdown(f"<h2 style='margin-top: -8px; '> 🚚 {selected_variant}", unsafe_allow_html=True)
 
 # --- Pricing Table ---
-st.markdown("<h3 style='color:#e65100; margin-bottom: -8px;'>📝 Vehicle Pricing Details</h3>", unsafe_allow_html=True)
+st.markdown("<h2 style='color:#e65100; margin-bottom: -8px;'>📝 Vehicle Pricing Details</h2>", unsafe_allow_html=True)
 
 # Modify columns: Remove "MAXI CARE"
 vehicle_cols = [
@@ -319,7 +333,7 @@ if pd.notnull(maxi_care_value):
 # Render pricing table
 pricing_html = """
 <style>
-.vtable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: 14px; }
+.vtable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: var(--table-font-size); }
 .vtable th { background-color: #004080; color: white; padding: 4px 6px; text-align: right; }
 .vtable td { background-color: #f0f4f8; padding: 4px 6px; text-align: right; color: black; }
 .vtable td:first-child, .vtable th:first-child { text-align: left; }
@@ -332,39 +346,82 @@ for col in vehicle_cols:
 pricing_html += "</table>"
 st.markdown(pricing_html, unsafe_allow_html=True)
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-# --- Cartel Table ---
-st.markdown("<h3 style='color:#e65100; margin-top: -10px; margin-bottom: -8px;'>🎁 Cartel Offer</h3>", unsafe_allow_html=True)
+# --- Cartel Table (Excel-position accurate, dynamic end, correct row mapping) ---
+st.markdown(
+    "<h2 style='color:#e65100; margin-top: -10px; margin-bottom: -8px;'>🎁 Cartel Offer</h2>",
+    unsafe_allow_html=True
+)
 
-# ✅ Automatically find columns after the pricing section
-pricing_end_col = "ON ROAD PRICE Without SMC Road Tax"
-if pricing_end_col in data.columns:
-    start_idx = data.columns.get_loc(pricing_end_col) + 1
-    cartel_cols = data.columns[start_idx:]
-else:
-    cartel_cols = []
+try:
+    raw_df = pd.read_excel(selected_filepath, sheet_name=SHEET_NAME, header=None)
 
-if cartel_cols.empty:
-    st.warning("⚠️ No additional cartel offer columns found.")
-else:
-    cartel_html = """
-    <style>
-    .ctable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: 14px; }
-    .ctable th { background-color: #2e7d32; color: white; padding: 4px 6px; text-align: right; }
-    .ctable td { background-color: #e8f5e9; padding: 4px 6px; text-align: right; color: black; }
-    .ctable td:first-child, .ctable th:first-child { text-align: left; }
-    .ctable, .ctable th, .ctable td { border: 1px solid #000; }
-    </style>
-    <table class='ctable'><tr><th>Description</th><th>Offer</th></tr>
-    """
-    for col in cartel_cols:
-        val = row[col]
-        # ✅ Auto-format if numeric
-        if pd.api.types.is_numeric_dtype(type(val)):
+    CARTEL_START_COL = 12  # Column M (0-based)
+
+    group_row = raw_df.iloc[0, CARTEL_START_COL:].ffill()
+    subheader_row = raw_df.iloc[1, CARTEL_START_COL:]
+
+    last_col = subheader_row.last_valid_index()
+
+    # Find Variant column dynamically
+    variant_col_idx = raw_df.iloc[1].tolist().index("Variant")
+
+    variant_match = raw_df[raw_df.iloc[:, variant_col_idx] == selected_variant]
+
+    if variant_match.empty:
+        st.warning("⚠️ Variant not found for Cartel table.")
+        st.stop()
+
+    cartel_data_row = variant_match.iloc[0]
+
+    cartel_html = (
+        "<style>"
+        ".ctable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: var(--table-font-size); }"
+        ".ctable th { background-color: #2e7d32; color: white; padding: 4px 6px; text-align: right; }"
+        ".ctable td { background-color: #e8f5e9; padding: 4px 6px; text-align: right; color: black; }"
+        ".ctable td:first-child, .ctable th:first-child { text-align: left; }"
+        ".ctable, .ctable th, .ctable td { border: 1px solid #000; }"
+        "</style>"
+        "<table class='ctable'>"
+    )
+
+    current_group = None
+    group_has_rows = False
+
+    for col_idx in range(CARTEL_START_COL, last_col + 1):
+        grp = group_row.iloc[col_idx - CARTEL_START_COL]
+        sub = normalize_header_text(subheader_row.iloc[col_idx - CARTEL_START_COL])
+        val = cartel_data_row.iloc[col_idx]
+
+        if grp != current_group:
+            group_has_rows = False
+            pending_group = grp
+            current_group = grp
+
+        if pd.isnull(val) or val == 0 or str(val).strip() == "":
+            continue
+
+        if not group_has_rows:
+            cartel_html += (
+                "<tr>"
+                f"<th colspan='2' class='cartel-group' style='background:#ffffff; text-align:left;'>{pending_group}</th>"
+                "</tr>"
+                "<tr><th>Description</th><th>Offer</th></tr>"
+            )
+            group_has_rows = True
+
+        if pd.api.types.is_number(val):
             val = format_indian_currency(val)
-        cartel_html += f"<tr><td>{col}</td><td>{val}</td></tr>"
+
+        cartel_html += f"<tr><td>{sub}</td><td>{val}</td></tr>"
+
     cartel_html += "</table>"
     st.markdown(cartel_html, unsafe_allow_html=True)
+
+except Exception as e:
+    st.warning(f"⚠️ Could not load Cartel Offer data: {e}")
+
 
 # --- Important Points Table ---
 try:
@@ -382,7 +439,7 @@ try:
 
     # Subtitle
     st.markdown(
-        "<h3 style='color:#e65100; margin-top: -10px; margin-bottom: -8px;'>⭐ Important Points</h3>",
+        "<h2 style='color:#e65100; margin-top: -10px; margin-bottom: -8px;'>⭐ Important Points</h2>",
         unsafe_allow_html=True
     )
 
