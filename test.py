@@ -86,6 +86,13 @@ h3 { font-size: var(--variant-title-size) !important; }
     font-weight: 600 !important;
 }
 
+/* Cartel Group Header */
+.cartel-group {
+    font-size: var(--variant-title-size) !important;
+    font-weight: 800 !important;
+    color: #004080 !important;
+}
+
 /* Important Points Table  */
 /* ----------------------- */
 .iptable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: 14px; }
@@ -398,7 +405,7 @@ try:
         if not group_has_rows:
             cartel_html += (
                 "<tr>"
-                f"<th colspan='2' style='background:#ffffff; color:#004080; text-align:left;'>{pending_group}</th>"
+                f"<th colspan='2' class='cartel-group' style='background:#ffffff; text-align:left;'>{pending_group}</th>"
                 "</tr>"
                 "<tr><th>Description</th><th>Offer</th></tr>"
             )
