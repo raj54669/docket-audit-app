@@ -95,7 +95,7 @@ h3 { font-size: var(--variant-title-size) !important; }
 
 /* Important Points Table  */
 /* ----------------------- */
-.iptable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: 14px; }
+.iptable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: var(--table-font-size); }
 .iptable th { background-color: #e65100; color: white; padding: 4px 6px; text-align: left; }
 .iptable td { background-color: #fff3e0; padding: 4px 6px; text-align: left; color: black; }
 .iptable, .iptable th, .iptable td { border: 1px solid #000; }
@@ -333,7 +333,7 @@ if pd.notnull(maxi_care_value):
 # Render pricing table
 pricing_html = """
 <style>
-.vtable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: 14px; }
+.vtable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: var(--table-font-size); }
 .vtable th { background-color: #004080; color: white; padding: 4px 6px; text-align: right; }
 .vtable td { background-color: #f0f4f8; padding: 4px 6px; text-align: right; color: black; }
 .vtable td:first-child, .vtable th:first-child { text-align: left; }
@@ -377,7 +377,7 @@ try:
 
     cartel_html = (
         "<style>"
-        ".ctable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: 14px; }"
+        ".ctable { border-collapse: collapse; width: 100%; font-weight: bold; font-size: var(--table-font-size); }"
         ".ctable th { background-color: #2e7d32; color: white; padding: 4px 6px; text-align: right; }"
         ".ctable td { background-color: #e8f5e9; padding: 4px 6px; text-align: right; color: black; }"
         ".ctable td:first-child, .ctable th:first-child { text-align: left; }"
