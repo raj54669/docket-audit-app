@@ -318,8 +318,8 @@ st.markdown("<h2 style='color:#e65100; margin-bottom: -8px;'>📝 Vehicle Pricin
 # Modify columns: Remove "MAXI CARE"
 vehicle_cols = [
     "Ex-Showroom Price", "TCS", "Comprehensive + Zero Dep. Insurance",
-    "R.T.O. Charges With Hypo.", "RSA (Road Side Assistance) For 1 Year",
-    "SMC Road - Tax (If Applicable)", "Accessories",
+    "R.T.O. Charges With Hypo.", "SMC Road - Tax (If Applicable)",
+    "RSA (Road Side Assistance) For 1 Year", "Accessories",
     "ON ROAD PRICE With SMC Road Tax", "ON ROAD PRICE Without SMC Road Tax"
 ]
 
