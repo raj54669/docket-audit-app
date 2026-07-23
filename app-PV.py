@@ -8,7 +8,8 @@ from datetime import datetime
 
 # --- Page Configuration ---
 st.set_page_config(
-    page_title="🚗 Mahindra Vehicle Pricing Viewer",
+    page_title="Mahindra Vehicle Pricing Viewer",
+    page_icon="🚗"
     layout="centered",
     initial_sidebar_state="auto"
 )
